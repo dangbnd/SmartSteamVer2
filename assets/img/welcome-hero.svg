@@ -1,0 +1,140 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1400" fill="none">
+  <defs>
+    <linearGradient id="bgGlow" x1="260" y1="210" x2="1340" y2="1180" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDF8"/>
+      <stop offset="1" stop-color="#F0E7DA"/>
+    </linearGradient>
+    <linearGradient id="metalTop" x1="553" y1="414" x2="1038" y2="646" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBF7F0"/>
+      <stop offset="0.55" stop-color="#DDD3C6"/>
+      <stop offset="1" stop-color="#BCAFA0"/>
+    </linearGradient>
+    <linearGradient id="metalSide" x1="534" y1="613" x2="1068" y2="772" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D7CBBB"/>
+      <stop offset="1" stop-color="#8E8377"/>
+    </linearGradient>
+    <linearGradient id="darkPlate" x1="563" y1="735" x2="1045" y2="985" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4B433E"/>
+      <stop offset="1" stop-color="#171E27"/>
+    </linearGradient>
+    <linearGradient id="lightCore" x1="663" y1="716" x2="943" y2="867" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF9E8"/>
+      <stop offset="0.6" stop-color="#F3D8A7"/>
+      <stop offset="1" stop-color="#D7AA68"/>
+    </linearGradient>
+    <linearGradient id="trace" x1="224" y1="1010" x2="1313" y2="1010" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8DCC9"/>
+      <stop offset="0.5" stop-color="#F7EEDD"/>
+      <stop offset="1" stop-color="#D9CAB4"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(799 756) rotate(90) scale(271 399)">
+      <stop stop-color="#FFF7DE" stop-opacity="0.95"/>
+      <stop offset="0.58" stop-color="#F3D39F" stop-opacity="0.44"/>
+      <stop offset="1" stop-color="#F3D39F" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blurGlow" x="421" y="510" width="758" height="610" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="38"/>
+    </filter>
+    <filter id="softShadow" x="349" y="287" width="925" height="860" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feOffset dy="22"/>
+      <feGaussianBlur stdDeviation="30"/>
+      <feColorMatrix type="matrix" values="0 0 0 0 0.196078 0 0 0 0 0.168627 0 0 0 0 0.145098 0 0 0 0.18 0"/>
+    </filter>
+    <g id="gearShape">
+      <circle cx="0" cy="0" r="86" fill="#F2EBDF"/>
+      <circle cx="0" cy="0" r="59" fill="#C4B5A2"/>
+      <circle cx="0" cy="0" r="28" fill="#EEE6D8"/>
+      <rect x="-15" y="-129" width="30" height="42" rx="8" fill="#E2D6C8"/>
+      <rect x="-15" y="-129" width="30" height="42" rx="8" fill="#E2D6C8" transform="rotate(45)"/>
+      <rect x="-15" y="-129" width="30" height="42" rx="8" fill="#E2D6C8" transform="rotate(90)"/>
+      <rect x="-15" y="-129" width="30" height="42" rx="8" fill="#E2D6C8" transform="rotate(135)"/>
+      <rect x="-15" y="-129" width="30" height="42" rx="8" fill="#E2D6C8" transform="rotate(180)"/>
+      <rect x="-15" y="-129" width="30" height="42" rx="8" fill="#E2D6C8" transform="rotate(225)"/>
+      <rect x="-15" y="-129" width="30" height="42" rx="8" fill="#E2D6C8" transform="rotate(270)"/>
+      <rect x="-15" y="-129" width="30" height="42" rx="8" fill="#E2D6C8" transform="rotate(315)"/>
+    </g>
+    <g id="cube">
+      <polygon points="0,74 74,34 148,74 74,114" fill="#EEE4D5"/>
+      <polygon points="0,74 74,114 74,198 0,157" fill="#D4C5B2"/>
+      <polygon points="148,74 74,114 74,198 148,157" fill="#B9AA96"/>
+    </g>
+  </defs>
+
+  <g opacity="0.7" stroke="url(#trace)" stroke-width="8" stroke-linecap="round">
+    <path d="M226 1022H522L626 920"/>
+    <path d="M250 1110H563L648 1012"/>
+    <path d="M292 1188H606L712 1062"/>
+    <path d="M1382 1006H1086L992 918"/>
+    <path d="M1340 1098H1048L964 1006"/>
+    <path d="M1288 1180H1018L928 1074"/>
+    <path d="M771 1096V1236"/>
+    <path d="M829 1096V1236"/>
+  </g>
+
+  <g opacity="0.6" stroke="#DED2C0" stroke-width="6" stroke-linecap="round">
+    <path d="M366 980H456"/>
+    <path d="M1136 980H1226"/>
+    <path d="M332 1064H422"/>
+    <path d="M1172 1064H1262"/>
+  </g>
+
+  <g filter="url(#blurGlow)">
+    <ellipse cx="800" cy="796" rx="302" ry="153" fill="url(#halo)"/>
+  </g>
+
+  <g filter="url(#softShadow)">
+    <polygon points="446,820 802,625 1156,820 800,1018" fill="#F6EEDF"/>
+    <polygon points="446,820 800,1018 800,1090 446,894" fill="#D7C9B5"/>
+    <polygon points="1156,820 800,1018 800,1090 1156,894" fill="#C0AF98"/>
+
+    <polygon points="556,725 801,591 1046,725 801,857" fill="url(#darkPlate)"/>
+    <polygon points="556,725 801,857 801,934 556,805" fill="#39312C"/>
+    <polygon points="1046,725 801,857 801,934 1046,805" fill="#1E252E"/>
+
+    <polygon points="622,654 801,558 980,654 801,748" fill="#FFF6E2"/>
+    <polygon points="622,654 801,748 801,802 622,710" fill="#EBC98D"/>
+    <polygon points="980,654 801,748 801,802 980,710" fill="#C49758"/>
+
+    <polygon points="524,545 801,395 1078,545 801,691" fill="url(#metalTop)"/>
+    <polygon points="524,545 801,691 801,762 524,616" fill="url(#metalSide)"/>
+    <polygon points="1078,545 801,691 801,762 1078,616" fill="#AFA08F"/>
+
+    <polygon points="592,474 801,362 1010,474 801,584" fill="#FCF8F2"/>
+    <polygon points="592,474 801,584 801,631 592,522" fill="#DFD3C4"/>
+    <polygon points="1010,474 801,584 801,631 1010,522" fill="#B8AA99"/>
+  </g>
+
+  <g transform="translate(801 546) scale(0.74)">
+    <use href="#gearShape"/>
+  </g>
+
+  <g transform="translate(1118 278) scale(0.72)">
+    <use href="#cube"/>
+  </g>
+
+  <g transform="translate(969 196) scale(0.58)">
+    <use href="#cube"/>
+  </g>
+
+  <g transform="translate(1338 322) scale(0.42)">
+    <use href="#gearShape"/>
+  </g>
+
+  <g opacity="0.8" fill="#D9CBB7">
+    <rect x="1186" y="518" width="24" height="72" rx="12"/>
+    <rect x="1218" y="542" width="16" height="48" rx="8"/>
+    <rect x="387" y="584" width="20" height="84" rx="10"/>
+    <rect x="422" y="606" width="14" height="60" rx="7"/>
+    <rect x="1317" y="700" width="16" height="58" rx="8" transform="rotate(26 1317 700)"/>
+  </g>
+
+  <g opacity="0.9">
+    <circle cx="801" cy="748" r="118" fill="url(#lightCore)"/>
+    <circle cx="801" cy="748" r="38" fill="#FFFDF8"/>
+  </g>
+
+  <g opacity="0.44" stroke="#F3E8D6" stroke-width="10">
+    <path d="M502 924H1096"/>
+    <path d="M541 964H1057"/>
+  </g>
+</svg>

@@ -1,0 +1,15 @@
+<svg width="220" height="72" viewBox="0 0 220 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="220" y2="72" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5B7CFF"/>
+      <stop offset="1" stop-color="#8DDBFF"/>
+    </linearGradient>
+  </defs>
+  <rect x="4" y="10" width="52" height="52" rx="18" fill="#0C1226"/>
+  <path d="M18 36C18 26.059 26.059 18 36 18C45.941 18 54 26.059 54 36C54 45.941 45.941 54 36 54C26.059 54 18 45.941 18 36Z" fill="url(#g1)" opacity="0.18"/>
+  <path d="M24 36C24 29.373 29.373 24 36 24C42.627 24 48 29.373 48 36C48 42.627 42.627 48 36 48C29.373 48 24 42.627 24 36Z" stroke="url(#g1)" stroke-width="2.5"/>
+  <circle cx="36" cy="36" r="4.5" fill="url(#g1)"/>
+  <path d="M36 24V19M36 53V48M48 36H53M19 36H24M44.5 27.5L48.5 23.5M23.5 48.5L27.5 44.5M44.5 44.5L48.5 48.5M23.5 23.5L27.5 27.5" stroke="url(#g1)" stroke-width="2" stroke-linecap="round"/>
+  <text x="70" y="34" fill="#0C1226" font-family="Inter, Arial, sans-serif" font-size="24" font-weight="700">STEMORA</text>
+  <text x="70" y="54" fill="#60708A" font-family="Inter, Arial, sans-serif" font-size="12" letter-spacing="2">JOURNEY OF DISCOVERY</text>
+</svg>
