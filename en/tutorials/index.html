@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" data-locale="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>STEMORA | Tutorials</title>
+  <meta name="description" content="A library of STEM tutorials.">
+  <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/assets/css/main.css?v=20260408-r98">
+</head>
+<body data-page="tutorials" data-theme="dark">
+  <script>
+    (function () {
+      var theme = 'dark';
+      try {
+        var stored = localStorage.getItem('stemora:theme') || localStorage.getItem('stemora:welcome-theme');
+        theme = stored === 'light' ? 'light' : 'dark';
+      } catch (error) {}
+      document.body.dataset.theme = theme;
+      if (document.body.dataset.page === 'welcome') {
+        document.body.dataset.welcomeTheme = theme;
+      } else if (theme === 'dark') {
+        document.body.classList.add('page-immersive');
+      }
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
+  <div class="page-shell">
+    <header class="js-site-header"></header>
+    <main class="site-main js-page-root"></main>
+    <footer class="site-footer js-site-footer"></footer>
+  </div>
+  <script src="/assets/js/data.js?v=20260404-r69" defer></script>
+  <script src="/assets/js/app.js?v=20260408-r98" defer></script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+

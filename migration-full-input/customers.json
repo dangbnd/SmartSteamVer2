@@ -1,0 +1,4 @@
+[
+{"_id":"CUST001","fullName":"Nguyễn Văn A","email":"nguyenvana@email.com","phone":"0123456789","status":"active","createdAt":"2024-01-01T00:00:00.000Z"},
+{"_id":"CUST002","fullName":"Trần Thị B","email":"tranthib@email.com","phone":"0987654321","status":"active","createdAt":"2024-01-05T00:00:00.000Z"}
+]

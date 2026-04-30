@@ -4,18 +4,45 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>STEMORA | Welcome</title>
-  <meta name="description" content="Trang mở đầu kể chuyện về các trải nghiệm STEM theo nhịp biên tập và chuyển cảnh mượt.">
+  <meta name="description" content="Trang má»Ÿ Ä‘áº§u ká»ƒ chuyá»‡n vá» cÃ¡c tráº£i nghiá»‡m STEM theo nhá»‹p biÃªn táº­p vÃ  chuyá»ƒn cáº£nh mÆ°á»£t.">
   <link rel="icon" href="/assets/img/logo.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/assets/css/main.css?v=20260402-r14">
+  <link rel="stylesheet" href="/assets/css/main.css?v=20260408-r85">
 </head>
-<body data-page="welcome">
+<body data-page="welcome" data-theme="dark" data-welcome-theme="dark">
+  <script>
+    (function () {
+      var theme = 'dark';
+      try {
+        var stored = localStorage.getItem('stemora:theme') || localStorage.getItem('stemora:welcome-theme');
+        theme = stored === 'light' ? 'light' : 'dark';
+      } catch (error) {}
+      document.body.dataset.theme = theme;
+      if (document.body.dataset.page === 'welcome') {
+        document.body.dataset.welcomeTheme = theme;
+      } else if (theme === 'dark') {
+        document.body.classList.add('page-immersive');
+      }
+      document.documentElement.style.colorScheme = theme;
+    })();
+  </script>
   <div class="page-shell">
     <header class="js-site-header"></header>
     <main class="site-main js-page-root"></main>
     <footer class="site-footer js-site-footer"></footer>
   </div>
-  <script src="/assets/js/data.js?v=20260402-r14" defer></script>
-  <script src="/assets/js/app.js?v=20260402-r14" defer></script>
+  <script src="/assets/js/data.js?v=20260404-r69" defer></script>
+  <script src="/assets/js/app.js?v=20260408-r85" defer></script>
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
 

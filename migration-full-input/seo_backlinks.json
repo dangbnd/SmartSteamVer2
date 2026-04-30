@@ -1,0 +1,4 @@
+[
+{"_id":"689c20c937dbc25e95b3217f","sourceUrl":"https://example.com/tech-education","targetUrl":"/","anchorText":"STEM Education","domainAuthority":45,"createdAt":"2024-01-10T00:00:00.000Z"},
+{"_id":"689c20c937dbc25e95b32180","sourceUrl":"https://blog.tech.vn/arduino-tutorials","targetUrl":"/tutorials-arduino","anchorText":"Arduino Tutorials","domainAuthority":32,"createdAt":"2024-01-12T00:00:00.000Z"}
+]

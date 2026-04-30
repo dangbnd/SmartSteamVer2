@@ -1,0 +1,84 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="1920" height="1080" fill="#F0F9FF"/>
+  
+  <!-- Background Icons -->
+  <g opacity="0.1">
+    <!-- Rocket -->
+    <path d="M150 50 L140 40 L160 40 L150 50 Z" fill="#FF9900"/>
+    <path d="M150 50 L140 60 L160 60 L150 50 Z" fill="#FF6600"/>
+    
+    <!-- DNA -->
+    <path d="M200 40 Q220 50 200 60 Q180 50 200 40" stroke="#00FF00" stroke-width="2" fill="none"/>
+    <path d="M210 40 Q230 50 210 60 Q190 50 210 40" stroke="#00FF00" stroke-width="2" fill="none"/>
+    
+    <!-- Atom -->
+    <circle cx="300" cy="50" r="15" fill="#0000FF"/>
+    <circle cx="280" cy="50" r="5" fill="#0000FF"/>
+    <circle cx="320" cy="50" r="5" fill="#0000FF"/>
+    <circle cx="300" cy="30" r="5" fill="#0000FF"/>
+    <circle cx="300" cy="70" r="5" fill="#0000FF"/>
+    
+    <!-- Gear -->
+    <circle cx="400" cy="50" r="20" fill="#FFFF00"/>
+    <circle cx="400" cy="50" r="8" fill="#F0F9FF"/>
+    
+    <!-- Lightbulb -->
+    <circle cx="500" cy="50" r="10" fill="#FFFFFF"/>
+    <rect x="495" y="60" width="10" height="5" fill="#FFFFFF"/>
+  </g>
+  
+  <!-- STEAM Text -->
+  <text x="200" y="200" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#FF4444">S</text>
+  <text x="350" y="200" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#FF9900">T</text>
+  <text x="500" y="200" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#FFFF00">E</text>
+  <text x="650" y="200" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#00FF00">A</text>
+  <text x="800" y="200" font-family="Arial, sans-serif" font-size="120" font-weight="bold" fill="#0000FF">M</text>
+  
+  <!-- Children Figures -->
+  <!-- Girl 1 (Left) -->
+  <circle cx="300" cy="400" r="30" fill="#D4A574"/>
+  <rect x="280" y="430" width="40" height="60" fill="#FFFF00"/>
+  <rect x="270" y="490" width="60" height="40" fill="#0000FF"/>
+  <rect x="290" y="530" width="20" height="30" fill="#8B4513"/>
+  <rect x="310" y="530" width="20" height="30" fill="#8B4513"/>
+  
+  <!-- Boy 1 (Middle-Left) -->
+  <circle cx="500" cy="400" r="30" fill="#F4C2A1"/>
+  <rect x="480" y="430" width="40" height="60" fill="#FF0000"/>
+  <rect x="470" y="490" width="60" height="40" fill="#0000FF"/>
+  <rect x="490" y="530" width="20" height="30" fill="#8B4513"/>
+  <rect x="510" y="530" width="20" height="30" fill="#8B4513"/>
+  
+  <!-- Girl 2 (Middle-Right) -->
+  <circle cx="700" cy="400" r="30" fill="#F4C2A1"/>
+  <rect x="680" y="430" width="40" height="60" fill="#FF69B4"/>
+  <rect x="670" y="490" width="60" height="40" fill="#0000FF"/>
+  <rect x="690" y="530" width="20" height="30" fill="#8B4513"/>
+  <rect x="710" y="530" width="20" height="30" fill="#8B4513"/>
+  
+  <!-- Boy 2 (Right) -->
+  <circle cx="900" cy="400" r="30" fill="#F4C2A1"/>
+  <rect x="880" y="430" width="40" height="60" fill="#87CEEB"/>
+  <rect x="870" y="490" width="60" height="40" fill="#0000FF"/>
+  <rect x="890" y="530" width="20" height="30" fill="#8B4513"/>
+  <rect x="910" y="530" width="20" height="30" fill="#8B4513"/>
+  
+  <!-- Tools and Objects -->
+  <!-- Ruler -->
+  <rect x="250" y="450" width="40" height="5" fill="#FFFF00"/>
+  
+  <!-- Robot -->
+  <rect x="450" y="450" width="30" height="25" fill="#0000FF"/>
+  <circle cx="460" cy="460" r="3" fill="#FFFFFF"/>
+  <circle cx="470" cy="460" r="3" fill="#FFFFFF"/>
+  
+  <!-- Flask -->
+  <path d="M650 450 L640 480 L660 480 L650 450 Z" fill="#00FF00"/>
+  <rect x="645" y="480" width="10" height="20" fill="#00FF00"/>
+  
+  <!-- Gears -->
+  <circle cx="850" cy="450" r="15" fill="#FF0000"/>
+  <circle cx="870" cy="450" r="15" fill="#FFFF00"/>
+  <circle cx="860" cy="430" r="10" fill="#0000FF"/>
+</svg>
