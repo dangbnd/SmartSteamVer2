@@ -8215,7 +8215,7 @@
       const particles = new THREE.Points(particleGeometry, particleMaterial);
       stage.add(particles);
 
-      const grid = new THREE.GridHelper(52, lowPowerDevice ? 34 : 46, 0xf68c4b, 0x86ddff);
+      const grid = new THREE.GridHelper(52, lowPowerDevice ? 34 : 46, 0x86ddff, 0x86ddff);
       grid.position.set(0, -6.3, -18);
       grid.rotation.z = 0.03;
       stage.add(grid);
@@ -8284,7 +8284,7 @@
             opacity: isProductCanvas ? "0.62" : "0.68",
             particles: [0x3b85a8, 0xc96734, 0x6b7f89],
             particleOpacity: 0.7,
-            gridPrimary: 0xc96734,
+            gridPrimary: 0x3b85a8,
             gridSecondary: 0x3b85a8,
             gridOpacity: 0.24,
             core: 0x3b85a8,
@@ -8298,7 +8298,7 @@
           opacity: isProductCanvas ? "0.96" : "0.94",
           particles: [0x86ddff, 0xf68c4b, 0xf4fbff],
           particleOpacity: 0.9,
-          gridPrimary: 0xf68c4b,
+          gridPrimary: 0x86ddff,
           gridSecondary: 0x86ddff,
           gridOpacity: 0.34,
           core: 0x86ddff,
@@ -8319,8 +8319,8 @@
 
         eachMaterial(grid.material, (material, index) => {
           material.transparent = true;
-          material.opacity = palette.gridOpacity * (index ? 0.68 : 1);
-          material.color.setHex(index ? palette.gridSecondary : palette.gridPrimary);
+          material.opacity = palette.gridOpacity * 0.68;
+          material.color.setHex(palette.gridSecondary);
         });
 
         orbits.forEach((orbit, index) => {
