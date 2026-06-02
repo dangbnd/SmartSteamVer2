@@ -2580,7 +2580,6 @@
         '</div>' +
       '</div>' +
       '<div class="galaxy-overlay">' +
-        '<div class="galaxy-overlay__readout" aria-hidden="true"><span>ORBIT</span><i></i><span>INSPECT</span></div>' +
         '<p class="galaxy-overlay__hint">' + (locale === 'vi' ? 'Kéo để khám phá · Cuộn để phóng to' : 'Drag to explore · Scroll to zoom') + '</p>' +
       '</div>' +
       '<div class="galaxy-control-dock js-galaxy-controls" aria-label="' + (locale === 'vi' ? 'Điều khiển hình cầu sản phẩm' : 'Product sphere controls') + '">' +
@@ -2912,6 +2911,13 @@
     var boardTouchStartScroll = 0;
     var boardTouchMoved = false;
     var boardGridPose = {};
+    var gridMorphTimer = null;
+    var boardConnectionTimer = null;
+    var renderResultsTimer = null;
+    var morphLayerEl = null;
+    var GRID_MORPH_DURATION = reducedMotion ? 0 : 920;
+    var GRID_REFLOW_DURATION = reducedMotion ? 0 : 440;
+    var gridMorphHoldUntil = 0;
 
     function getCenteredSphereTransform(card, pose) {
       if (!card || !pose || !pose.baseSphereTransform) return pose && pose.sphereTransform ? pose.sphereTransform : '';
@@ -2963,10 +2969,8 @@
     var sphereHoverPaused = false;
     var hoverAnchorX = 0;
     var hoverAnchorY = 0;
-    var HOVER_SWITCH_RADIUS = 26;
-    var HOVER_SWITCH_DELAY = 110;
-    var HOVER_KEEP_PADDING = 12;
-    var HOVER_EXIT_PADDING = 34;
+    var HOVER_SWITCH_DELAY = 80;
+    var HOVER_KEEP_PADDING = 0;
     var HOVER_RESUME_DELAY = 620;
     var MOVE_THRESH = 10;   // px before considered a drag
     var HOVER_FOCUS_EASE = 0.2;
@@ -3099,12 +3103,6 @@
       return ((toAngle - fromAngle + 540) % 360) - 180;
     }
 
-    function pointerMovedFromHoverAnchor(clientX, clientY) {
-      var dx = clientX - hoverAnchorX;
-      var dy = clientY - hoverAnchorY;
-      return (dx * dx + dy * dy) > (HOVER_SWITCH_RADIUS * HOVER_SWITCH_RADIUS);
-    }
-
     function pointInsideCard(card, clientX, clientY, padding) {
       if (!card) return false;
       var inner = card.querySelector('.galaxy-card__inner');
@@ -3183,31 +3181,32 @@
       return (pose.y * sinX) + (zAfterY * cosX);
     }
 
+    function isHoverableSphereCard(card) {
+      return !!(card && !card.classList.contains('galaxy-card--grid') && !card.classList.contains('is-expanded') && card.style.visibility !== 'hidden' && card.style.pointerEvents !== 'none');
+    }
+
     function findFrontCardAt(clientX, clientY) {
       if (layoutMode !== 'sphere') return null;
       var rankedElements = document.elementsFromPoint(clientX, clientY);
       var topCards = [];
       rankedElements.forEach(function(el) {
         var hitCard = el.closest && el.closest('.galaxy-card');
-        if (hitCard && topCards.indexOf(hitCard) === -1) topCards.push(hitCard);
+        if (isHoverableSphereCard(hitCard) && topCards.indexOf(hitCard) === -1) topCards.push(hitCard);
       });
+      if (!topCards.length) return null;
 
       var bestCard = null;
       var bestScore = -Infinity;
-      cardNodes.forEach(function(card) {
-        if (!card || card.classList.contains('galaxy-card--grid') || card.classList.contains('is-expanded')) return;
-        if (card.style.visibility === 'hidden' || card.style.pointerEvents === 'none') return;
+      topCards.forEach(function(card, topRank) {
         var inner = card.querySelector('.galaxy-card__inner');
         var rect = (inner || card).getBoundingClientRect();
         if (!rect.width || !rect.height) return;
         if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
-        var topRank = topCards.indexOf(card);
         var centerDx = clientX - (rect.left + rect.width / 2);
         var centerDy = clientY - (rect.top + rect.height / 2);
         var centerDistance = Math.sqrt(centerDx * centerDx + centerDy * centerDy);
-        var score = getCardViewDepth(card) - (centerDistance * 0.22);
-        if (topRank !== -1) score += 260 - (topRank * 24);
-        if (card === hoverFocusCard) score += 18;
+        var score = getCardViewDepth(card) - (centerDistance * 0.18) + 280 - (topRank * 36);
+        if (card === hoverFocusCard) score += 8;
         if (score > bestScore) {
           bestScore = score;
           bestCard = card;
@@ -3279,6 +3278,7 @@
     function commitHoverCandidate(card) {
       if (!card || hoverCandidateCard !== card) return;
       if (layoutMode !== 'sphere' || isDragging || sphereFrozen || focusLockedCard || isPinching) return;
+      if (findFrontCardAt(hoverPickX, hoverPickY) !== card) return;
       if (!pointInsideCard(card, hoverPickX, hoverPickY, HOVER_KEEP_PADDING)) return;
       clearHoverCandidate();
       setSphereFocus(card, hoverPickX, hoverPickY, false);
@@ -3304,31 +3304,34 @@
 
     function updateSphereHoverFromPoint(clientX, clientY) {
       if (layoutMode !== 'sphere' || isDragging || sphereFrozen || focusLockedCard || isPinching) return;
-      if (hoverFocusCard && pointInsideCard(hoverFocusCard, clientX, clientY, HOVER_KEEP_PADDING)) {
+      var card = findFrontCardAt(clientX, clientY);
+      if (hoverFocusCard && card === hoverFocusCard && pointInsideCard(hoverFocusCard, clientX, clientY, HOVER_KEEP_PADDING)) {
         clearTimeout(hoverReleaseTimer);
         clearHoverCandidate();
         return;
       }
-      var card = findFrontCardAt(clientX, clientY);
       if (card) {
         clearTimeout(hoverReleaseTimer);
         if (card === hoverFocusCard) {
           clearHoverCandidate();
           return;
         }
+        if (hoverFocusCard) {
+          hoverFocusCard.classList.remove('galaxy-card--focused');
+          releaseSphereHoverFocus();
+        }
         if (hoverCandidateCard !== card) {
           scheduleHoverCandidate(card);
           return;
         }
         if (((performance.now ? performance.now() : Date.now()) - hoverCandidateAt) < HOVER_SWITCH_DELAY) return;
-        if (hoverFocusCard && hoverFocusCard !== card && !pointerMovedFromHoverAnchor(clientX, clientY)) return;
         clearHoverCandidate();
         setSphereFocus(card, clientX, clientY, false);
         return;
       }
       clearHoverCandidate();
-      if (hoverFocusCard && !pointInsideCard(hoverFocusCard, clientX, clientY, HOVER_EXIT_PADDING) && pointerMovedFromHoverAnchor(clientX, clientY)) {
-        scheduleSphereHoverRelease(false);
+      if (hoverFocusCard) {
+        scheduleSphereHoverRelease(true);
       }
     }
 
@@ -3783,9 +3786,341 @@
       boardLinksSvg.classList.add('is-active');
     }
 
+    function getCardProduct(card) {
+      if (!card) return null;
+      return demoProducts[parseInt(card.dataset.cardIdx, 10)] || null;
+    }
+
+    function getCardSlug(card) {
+      var product = getCardProduct(card);
+      return product ? product.slug : '';
+    }
+
+    function captureCardRects() {
+      var rects = {};
+      cardNodes.forEach(function(card) {
+        var product = getCardProduct(card);
+        if (!product) return;
+        var cardIndex = parseInt(card.dataset.cardIdx, 10);
+        var style = window.getComputedStyle(card);
+        if (style.visibility === 'hidden' || style.display === 'none' || Number(style.opacity) <= 0.02) return;
+        var rect = card.getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        rects[product.slug] = {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height,
+          transform: card.style.transform || '',
+          depth: getCardViewDepth(card),
+          index: cardIndex,
+        };
+      });
+      return rects;
+    }
+
+    function clearMorphLayer() {
+      if (!morphLayerEl) return;
+      morphLayerEl.remove();
+      morphLayerEl = null;
+    }
+
+    function clearGridMotionTimers() {
+      clearTimeout(gridMorphTimer);
+      clearTimeout(boardConnectionTimer);
+      gridMorphTimer = null;
+      boardConnectionTimer = null;
+      gridMorphHoldUntil = 0;
+      clearMorphLayer();
+    }
+
+    function cancelGridCardAnimations() {
+      cardNodes.forEach(function(card) {
+        if (!card.getAnimations) return;
+        card.getAnimations().forEach(function(animation) {
+          if (animation.id === 'galaxy-grid-morph') animation.cancel();
+        });
+      });
+    }
+
+    function setCardOpacityNow(card, opacityValue) {
+      if (!card) return;
+      if (card.getAnimations) {
+        card.getAnimations().forEach(function(animation) {
+          var target = animation.effect && animation.effect.target;
+          if (target === card && !animation.id) animation.cancel();
+        });
+      }
+      var previousTransition = card.style.transition;
+      card.style.transition = 'none';
+      card.style.opacity = String(opacityValue);
+      requestAnimationFrame(function() {
+        if (previousTransition) card.style.transition = previousTransition;
+        else card.style.removeProperty('transition');
+      });
+    }
+
+    function hideFilteredGridCards() {
+      if (layoutMode !== 'grid') return;
+      cardNodes.forEach(function(card) {
+        if (card.classList.contains('galaxy-card--grid')) return;
+        card.classList.remove('is-grid-exiting', 'is-grid-entering');
+        card.style.visibility = 'hidden';
+        card.style.opacity = '0';
+        card.style.pointerEvents = 'none';
+      });
+    }
+
+    function scheduleBoardConnections(items, boardPose, delayMs) {
+      clearTimeout(boardConnectionTimer);
+      clearBoardConnections();
+      boardConnectionTimer = setTimeout(function() {
+        if (layoutMode !== 'grid') return;
+        renderBoardConnections(items, boardPose);
+      }, reducedMotion ? 0 : (typeof delayMs === 'number' ? delayMs : 280));
+    }
+
+    function finishGridMotion(items, boardPose, delayMs) {
+      clearTimeout(gridMorphTimer);
+      gridMorphTimer = setTimeout(function() {
+        gridMorphHoldUntil = 0;
+        sceneEl.classList.remove('is-grid-reflowing', 'is-morphing-to-grid', 'is-morphing-to-sphere');
+        cardNodes.forEach(function(card) {
+          card.classList.remove('is-grid-entering', 'is-grid-exiting');
+          if (card.classList.contains('galaxy-card--grid')) {
+            setCardOpacityNow(card, 1);
+            card.style.visibility = 'visible';
+            card.style.pointerEvents = 'auto';
+          }
+        });
+        clearMorphLayer();
+        hideFilteredGridCards();
+        if (items && boardPose) scheduleBoardConnections(items, boardPose, 0);
+      }, reducedMotion ? 0 : (typeof delayMs === 'number' ? delayMs : GRID_MORPH_DURATION));
+    }
+
+    function createMorphCard(card, firstRect) {
+      var inner = card && card.querySelector('.galaxy-card__inner');
+      if (!inner || !firstRect) return null;
+      var clone = inner.cloneNode(true);
+      clone.classList.add('galaxy-morph-card');
+      clone.style.left = firstRect.left.toFixed(1) + 'px';
+      clone.style.top = firstRect.top.toFixed(1) + 'px';
+      clone.style.width = firstRect.width.toFixed(1) + 'px';
+      clone.style.height = firstRect.height.toFixed(1) + 'px';
+      clone.style.setProperty('--morph-depth', String(Math.round(firstRect.depth || 0)));
+      return clone;
+    }
+
+    function ensureMorphLayer() {
+      clearMorphLayer();
+      morphLayerEl = document.createElement('div');
+      morphLayerEl.className = 'galaxy-morph-layer';
+      document.body.appendChild(morphLayerEl);
+      return morphLayerEl;
+    }
+
+    function animateOrbitToBoard(firstRects, visibleGridCards, rankBySlug) {
+      if (reducedMotion || !firstRects || !visibleGridCards.length) return false;
+      var layer = ensureMorphLayer();
+      var entriesBySlug = {};
+      visibleGridCards.forEach(function(entry) {
+        entriesBySlug[entry.product.slug] = entry;
+      });
+      var sortedCards = cardNodes.slice().sort(function(leftCard, rightCard) {
+        var leftRect = firstRects[getCardSlug(leftCard)] || {};
+        var rightRect = firstRects[getCardSlug(rightCard)] || {};
+        return (rightRect.depth || -9999) - (leftRect.depth || -9999);
+      });
+      var depthRank = {};
+      sortedCards.forEach(function(card, index) {
+        var slug = getCardSlug(card);
+        if (slug) depthRank[slug] = index;
+      });
+
+      cardNodes.forEach(function(card) {
+        var product = getCardProduct(card);
+        if (!product) return;
+        var firstRect = firstRects[product.slug];
+        if (!firstRect) return;
+        var clone = createMorphCard(card, firstRect);
+        if (!clone) return;
+        layer.appendChild(clone);
+
+        var entry = entriesBySlug[product.slug];
+        var rank = depthRank[product.slug] || 0;
+        var delay = Math.min(rank * 7, 280);
+        var keyframes;
+        var timing;
+
+        if (entry && rankBySlug[product.slug] !== undefined) {
+          var targetRect = entry.card.getBoundingClientRect();
+          var dx = targetRect.left - firstRect.left;
+          var dy = targetRect.top - firstRect.top;
+          var sx = targetRect.width && firstRect.width ? targetRect.width / firstRect.width : 1;
+          var sy = targetRect.height && firstRect.height ? targetRect.height / firstRect.height : 1;
+          var lift = Math.max(-82, Math.min(46, -24 - (firstRect.depth || 0) * 0.035));
+          var arcX = dx * 0.52;
+          var arcY = dy * 0.42 + lift;
+          clone.classList.add('galaxy-morph-card--landing');
+          keyframes = [
+            {
+              opacity: 0.96,
+              filter: 'blur(0px) saturate(1.06) brightness(1.06)',
+              transform: 'translate3d(0,0,0) rotateX(0deg) rotateY(0deg) scale(1)'
+            },
+            {
+              opacity: 1,
+              filter: 'blur(0px) saturate(1.2) brightness(1.18)',
+              transform: 'translate3d(' + arcX.toFixed(1) + 'px,' + arcY.toFixed(1) + 'px,90px) rotateX(-5deg) rotateY(' + (dx > 0 ? -10 : 10) + 'deg) scale(' + ((1 + sx) / 2).toFixed(3) + ',' + ((1 + sy) / 2).toFixed(3) + ')',
+              offset: 0.46
+            },
+            {
+              opacity: 1,
+              filter: 'blur(0px) saturate(1) brightness(1)',
+              transform: 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) rotateX(0deg) rotateY(0deg) scale(' + sx.toFixed(4) + ',' + sy.toFixed(4) + ')'
+            }
+          ];
+          timing = {
+            duration: GRID_MORPH_DURATION,
+            delay: delay,
+            easing: 'cubic-bezier(0.16, 1, 0.3, 1)',
+            fill: 'both'
+          };
+        } else {
+          var sceneRect = sceneEl.getBoundingClientRect();
+          var seed = hashText(product.slug);
+          var fadeX = (sceneRect.left + sceneRect.width * (0.36 + ((seed % 29) / 100))) - firstRect.left;
+          var fadeY = (sceneRect.top + sceneRect.height * (0.48 + (((seed >> 3) % 21) / 120))) - firstRect.top;
+          clone.classList.add('galaxy-morph-card--discard');
+          keyframes = [
+            { opacity: 0.72, filter: 'blur(0px) saturate(0.9)', transform: 'translate3d(0,0,0) scale(1)' },
+            { opacity: 0.26, filter: 'blur(9px) saturate(0.62)', transform: 'translate3d(' + (fadeX * 0.72).toFixed(1) + 'px,' + (fadeY * 0.72 - 28).toFixed(1) + 'px,70px) rotateY(' + ((seed % 2 ? 1 : -1) * 18) + 'deg) scale(0.62)', offset: 0.58 },
+            { opacity: 0, filter: 'blur(18px) saturate(0.46)', transform: 'translate3d(' + fadeX.toFixed(1) + 'px,' + fadeY.toFixed(1) + 'px,0) rotateY(' + ((seed % 2 ? 1 : -1) * 34) + 'deg) scale(0.38)' }
+          ];
+          timing = {
+            duration: Math.max(520, GRID_MORPH_DURATION * 0.76),
+            delay: Math.min(delay, 220),
+            easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+            fill: 'both'
+          };
+        }
+
+        var animation = clone.animate(keyframes, timing);
+        animation.id = 'galaxy-orbit-board-morph';
+      });
+      return true;
+    }
+
+    function animateCardFromRect(card, firstRect, finalTransform, options) {
+      if (reducedMotion || !card || !card.animate) return;
+      var lastRect = card.getBoundingClientRect();
+      var delay = options && Number.isFinite(options.delay) ? options.delay : 0;
+      var duration = options && Number.isFinite(options.duration) ? options.duration : GRID_MORPH_DURATION;
+      var startOpacity = options && options.startOpacity !== undefined ? options.startOpacity : 1;
+      var startFilter = options && options.startFilter ? options.startFilter : 'blur(0px) saturate(1)';
+      if (!firstRect || !lastRect.width || !lastRect.height) {
+        var entryAnimation = card.animate([
+          { opacity: 0, filter: 'blur(10px) saturate(0.72)', transform: 'translate3d(0, 18px, 0) ' + finalTransform },
+          { opacity: 1, filter: 'blur(0px) saturate(1)', transform: finalTransform }
+        ], {
+          duration: Math.max(260, duration * 0.72),
+          delay: delay,
+          easing: 'cubic-bezier(0.19, 1, 0.22, 1)',
+          fill: 'both',
+        });
+        entryAnimation.id = 'galaxy-grid-morph';
+        return;
+      }
+
+      var dx = firstRect.left - lastRect.left;
+      var dy = firstRect.top - lastRect.top;
+      var distance = Math.sqrt(dx * dx + dy * dy);
+      if (distance < 1.2) return;
+
+      var animation = card.animate([
+        {
+          transform: 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) ' + finalTransform,
+          opacity: startOpacity,
+          filter: startFilter,
+        },
+        {
+          transform: finalTransform,
+          opacity: 1,
+          filter: 'blur(0px) saturate(1)',
+        }
+      ], {
+        duration: Math.min(duration + distance * 0.08, duration + 180),
+        delay: delay,
+        easing: 'cubic-bezier(0.19, 1, 0.22, 1)',
+        fill: 'both',
+      });
+      animation.id = 'galaxy-grid-morph';
+    }
+
+    function animateGridEntrances(firstRects, visibleGridCards, wasGridMode) {
+      var baseDuration = wasGridMode ? GRID_REFLOW_DURATION : GRID_MORPH_DURATION;
+      visibleGridCards.forEach(function(entry, index) {
+        var slug = entry.product.slug;
+        var firstRect = firstRects ? firstRects[slug] : null;
+        var delay = reducedMotion ? 0 : (wasGridMode ? Math.min(index * 10, 90) : Math.min(entry.row * 46 + entry.col * 18, 260));
+        entry.card.classList.toggle('is-grid-entering', !firstRect);
+        animateCardFromRect(entry.card, firstRect, entry.card.style.transform || '', {
+          delay: delay,
+          duration: baseDuration,
+          startOpacity: wasGridMode ? 0.88 : 0.58,
+          startFilter: wasGridMode ? 'blur(0px) saturate(0.92)' : 'blur(10px) saturate(0.72)',
+        });
+      });
+    }
+
+    function animateGridExits(firstRects, rankBySlug, wasGridMode) {
+      if (reducedMotion) return;
+      cardNodes.forEach(function(card) {
+        var slug = getCardSlug(card);
+        if (!slug || rankBySlug[slug] !== undefined || !firstRects || !firstRects[slug] || !card.animate) return;
+        card.classList.add('is-grid-exiting');
+        var exitAnimation = card.animate([
+          { opacity: 1, filter: 'blur(0px) saturate(1)' },
+          { opacity: 0, filter: 'blur(10px) saturate(0.58)' }
+        ], {
+          duration: wasGridMode ? 260 : 360,
+          easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+          fill: 'both',
+        });
+        exitAnimation.id = 'galaxy-grid-morph';
+      });
+    }
+
+    function animateSphereReturn(firstRects) {
+      if (reducedMotion || !firstRects) return;
+      cardNodes.forEach(function(card, index) {
+        var slug = getCardSlug(card);
+        var firstRect = slug ? firstRects[slug] : null;
+        animateCardFromRect(card, firstRect, card.style.transform || '', {
+          delay: Math.min(index * 8, 180),
+          duration: GRID_MORPH_DURATION,
+          startOpacity: 0.82,
+          startFilter: 'blur(6px) saturate(0.78)',
+        });
+      });
+    }
+
     function applySphereLayout() {
+      var wasGridMode = layoutMode === 'grid';
+      var firstRects = wasGridMode ? captureCardRects() : null;
+      clearGridMotionTimers();
+      cancelGridCardAnimations();
       layoutMode = 'sphere';
       clearSphereFocus(true);
+      if (wasGridMode) {
+        sceneEl.classList.remove('is-morphing-to-grid');
+        sphereFrozen = true;
+        isIdle = false;
+        velX = 0;
+        velY = 0;
+        sceneEl.classList.add('is-morphing-to-sphere', 'is-grid-reflowing');
+      }
       boardScrollCurrent = 0;
       boardScrollTarget = 0;
       boardScrollMin = 0;
@@ -3811,11 +4146,22 @@
       });
       if (filterMeta) {
         filterMeta.textContent = locale === 'vi'
-          ? 'Đang xem dạng hình cầu. Nhập tìm kiếm hoặc chọn bộ lọc để xếp thành lưới 4 hàng.'
-          : 'Sphere mode active. Search or filter to snap cards into a 4-row grid.';
+          ? 'Đang xem dạng hình cầu. Nhập tìm kiếm hoặc chọn bộ lọc để xếp thành lưới.'
+          : 'Sphere mode active. Search or filter to snap cards into a grid.';
       }
-      setInteractionState('idle');
-      resumeSphere();
+      if (wasGridMode) {
+        animateSphereReturn(firstRects);
+        clearTimeout(gridMorphTimer);
+        gridMorphTimer = setTimeout(function() {
+          sceneEl.classList.remove('is-grid-reflowing', 'is-morphing-to-grid', 'is-morphing-to-sphere');
+          sphereFrozen = false;
+          setInteractionState('idle');
+          resumeSphere(true);
+        }, reducedMotion ? 0 : GRID_MORPH_DURATION + 120);
+      } else {
+        setInteractionState('idle');
+        resumeSphere();
+      }
     }
 
     function syncBoardScrollHints() {
@@ -3876,13 +4222,16 @@
 
     function applyGridLayout(items) {
       var wasGridMode = layoutMode === 'grid';
+      var firstRects = captureCardRects();
       var previousBoardScrollTarget = boardScrollTarget;
+      clearGridMotionTimers();
+      cancelGridCardAnimations();
       layoutMode = 'grid';
       stopSphere('grid');
       sceneEl.classList.add('is-grid-mode');
-      if (wasGridMode) {
-        sceneEl.classList.add('is-grid-reflowing');
-      }
+      sceneEl.classList.add('is-grid-reflowing');
+      sceneEl.classList.toggle('is-morphing-to-grid', !wasGridMode);
+      gridMorphHoldUntil = !wasGridMode && !reducedMotion ? Date.now() + GRID_MORPH_DURATION + 70 : 0;
       sceneEl.style.cursor = 'default';
 
       var rankBySlug = {};
@@ -3918,10 +4267,21 @@
         var rank = rankBySlug[product.slug];
         if (rank === undefined) {
           card.classList.remove('galaxy-card--grid');
+          card.classList.remove('is-grid-entering');
+          if (firstRects[product.slug]) {
+            card.classList.add('is-grid-exiting');
+            card.style.opacity = '0';
+            card.style.visibility = 'visible';
+            card.style.pointerEvents = 'none';
+            card.style.transform = firstRects[product.slug].transform || card.style.transform;
+          } else {
+            card.classList.remove('is-grid-exiting');
+            card.style.opacity = '0';
+            card.style.visibility = 'hidden';
+            card.style.pointerEvents = 'none';
+            card.style.transform = 'translate3d(-420px, 0, -600px) rotateY(65deg) scale(0.5)';
+          }
           card.style.opacity = '0';
-          card.style.visibility = 'hidden';
-          card.style.pointerEvents = 'none';
-          card.style.transform = 'translate3d(-420px, 0, -600px) rotateY(65deg) scale(0.5)';
           card.style.removeProperty('--grid-info-height');
           return;
         }
@@ -3933,9 +4293,10 @@
         card.style.setProperty('--grid-card-width', cardWidth + 'px');
         card.style.removeProperty('--grid-title-height');
         card.style.removeProperty('--grid-info-height');
-        card.style.opacity = '1';
+        if (!wasGridMode && !reducedMotion) setCardOpacityNow(card, 0);
+        else card.style.opacity = '1';
         card.style.visibility = 'visible';
-        card.style.pointerEvents = 'auto';
+        card.style.pointerEvents = !wasGridMode && !reducedMotion ? 'none' : 'auto';
         var titleHeight = cardName ? Math.ceil(cardName.offsetHeight) : (window.innerWidth < 900 ? 18 : 20);
         var priceHeight = cardPrice ? Math.ceil(cardPrice.offsetHeight) : (window.innerWidth < 900 ? 14 : 16);
         rowTitleHeights[row] = Math.max(rowTitleHeights[row], titleHeight);
@@ -3993,18 +4354,21 @@
       boardScrollCurrent = boardScrollTarget;
 
       boardGridPose = boardPose;
-      clearBoardConnections();
       applyBoardScrollFrame(true);
-      if (wasGridMode) {
-        requestAnimationFrame(function() {
-          sceneEl.classList.remove('is-grid-reflowing');
+      if (!wasGridMode && animateOrbitToBoard(firstRects, visibleGridCards, rankBySlug)) {
+        visibleGridCards.forEach(function(entry) {
+          entry.card.classList.add('is-grid-entering');
         });
+      } else {
+        animateGridExits(firstRects, rankBySlug, wasGridMode);
+        animateGridEntrances(firstRects, visibleGridCards, wasGridMode);
       }
+      finishGridMotion(items, boardPose, (wasGridMode ? GRID_REFLOW_DURATION : GRID_MORPH_DURATION) + 240);
 
       if (filterMeta) {
         filterMeta.textContent = locale === 'vi'
-          ? (items.length + ' sản phẩm phù hợp. Card đang xếp thành 4 hàng theo bộ lọc.')
-          : (items.length + ' products matched. Cards are snapped into a 4-row grid.');
+          ? (items.length + ' sản phẩm phù hợp. Card đang xếp thành lưới theo bộ lọc.')
+          : (items.length + ' products matched. Cards are snapped into a filtered grid.');
       }
     }
 
@@ -4718,6 +5082,8 @@
     };
 
     renderResults = function() {
+      clearTimeout(renderResultsTimer);
+      renderResultsTimer = null;
       var q = searchInput.value || '';
       var categoryFilter = categorySelect ? categorySelect.value : 'all';
       var sortMode = sortSelect ? sortSelect.value : 'default';
@@ -4732,6 +5098,18 @@
         applySphereLayout();
       }
     };
+
+    function scheduleRenderResults(delayMs) {
+      clearTimeout(renderResultsTimer);
+      var delay = reducedMotion ? 0 : (typeof delayMs === 'number' ? delayMs : 90);
+      if (!reducedMotion && gridMorphHoldUntil && sceneEl.classList.contains('is-morphing-to-grid')) {
+        delay = Math.max(delay, Math.max(0, gridMorphHoldUntil - Date.now()));
+      }
+      renderResultsTimer = setTimeout(function() {
+        renderResultsTimer = null;
+        renderResults();
+      }, delay);
+    }
 
     function openSearchResults() {
       searchBrowseMode = true;
@@ -4864,7 +5242,7 @@
         dropdownUi.select.value = optionBtn.dataset.value;
         syncFilterMenuLabel(dropdownUi);
         setFilterMenuOpen(dropdownUi, false);
-        renderResults();
+        scheduleRenderResults(90);
       });
       dropdownUi.menu.addEventListener('mouseenter', function() {
         openDropdown();
@@ -4892,17 +5270,17 @@
         });
       }
       setPriceDropdownOpen(false);
-      renderResults();
+      scheduleRenderResults(90);
     }
 
     searchInput.addEventListener('input', function() {
       searchBrowseMode = true;
-      renderResults();
+      scheduleRenderResults(120);
     });
     searchInput.addEventListener('focus', openSearchResults);
     searchInput.addEventListener('click', openSearchResults);
-    if (categorySelect) categorySelect.addEventListener('change', renderResults);
-    if (sortSelect) sortSelect.addEventListener('change', renderResults);
+    if (categorySelect) categorySelect.addEventListener('change', function() { scheduleRenderResults(90); });
+    if (sortSelect) sortSelect.addEventListener('change', function() { scheduleRenderResults(90); });
     bindFilterDropdown(categoryDropdownUi);
     bindFilterDropdown(sortDropdownUi);
 
@@ -4946,7 +5324,7 @@
         activeFilter = btn.dataset.filter;
         $$('.galaxy-chip', chipsWrap).forEach(function(c) { c.classList.remove('is-active'); });
         btn.classList.add('is-active');
-        renderResults();
+        scheduleRenderResults(90);
       });
     }
     if (priceDropdown) {

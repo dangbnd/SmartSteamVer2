@@ -4704,6 +4704,12 @@ body.page-immersive .scene:not(.scene--hero) .container {
   opacity: 1;
 }
 
+.galaxy-scene.is-grid-reflowing .galaxy-board-links,
+.galaxy-scene.is-morphing-to-grid .galaxy-board-links,
+.galaxy-scene.is-morphing-to-sphere .galaxy-board-links {
+  opacity: 0;
+}
+
 .galaxy-board-link {
   fill: none;
   stroke: rgba(192, 103, 57, 0.52);
@@ -4724,6 +4730,48 @@ body.page-immersive .scene:not(.scene--hero) .container {
 .galaxy-board-pin {
   fill: #f1b08d;
   opacity: 0.95;
+}
+
+.galaxy-morph-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  pointer-events: none;
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  overflow: hidden;
+}
+
+.galaxy-morph-card {
+  position: fixed !important;
+  margin: 0 !important;
+  transform-origin: 0 0;
+  pointer-events: none;
+  overflow: hidden;
+  will-change: transform, opacity, filter;
+  box-shadow:
+    0 0 0 1px rgba(134, 221, 255, 0.28),
+    0 28px 84px rgba(0, 0, 0, 0.68),
+    0 0 64px rgba(134, 221, 255, 0.2),
+    0 0 92px rgba(246, 140, 75, 0.12) !important;
+}
+
+.galaxy-morph-card::before {
+  opacity: 1 !important;
+  filter: drop-shadow(0 0 18px rgba(134, 221, 255, 0.28));
+}
+
+.galaxy-morph-card::after {
+  opacity: 0.68 !important;
+  transform: translateX(118%) !important;
+  background: linear-gradient(116deg, transparent 16%, rgba(255, 255, 255, 0.24), rgba(134, 221, 255, 0.16), transparent 42%) !important;
+}
+
+.galaxy-morph-card--discard {
+  box-shadow:
+    0 0 0 1px rgba(246, 140, 75, 0.16),
+    0 20px 58px rgba(0, 0, 0, 0.54),
+    0 0 44px rgba(246, 140, 75, 0.12) !important;
 }
 
 @keyframes galaxyBoardWireDraw {
@@ -4801,8 +4849,8 @@ body.page-immersive .scene:not(.scene--hero) .container {
   position: absolute;
   backface-visibility: hidden;
   transform-style: preserve-3d;
-  will-change: transform;
-  transition: transform 0.34s cubic-bezier(0.23,1,0.32,1);
+  will-change: transform, opacity, filter;
+  transition: transform 0.62s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.34s ease, filter 0.34s ease;
 }
 
 .galaxy-card__inner {
@@ -6130,11 +6178,27 @@ body.is-ready .galaxy-filter-panel {
 }
 
 .galaxy-card {
-  transition: transform 0.7s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.35s ease;
+  transition: transform 0.62s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.36s ease, filter 0.36s ease;
 }
 
 .galaxy-scene.is-grid-reflowing .galaxy-card {
-  transition: opacity 0.18s ease;
+  transition: opacity 0.28s ease, filter 0.28s ease;
+}
+
+.galaxy-scene.is-morphing-to-grid .galaxy-card,
+.galaxy-scene.is-morphing-to-sphere .galaxy-card {
+  transition: opacity 0.42s ease, filter 0.42s ease;
+}
+
+.galaxy-card.is-grid-entering .galaxy-card__inner {
+  box-shadow:
+    0 0 0 1px rgba(134, 221, 255, 0.2),
+    0 24px 68px rgba(0, 0, 0, 0.62),
+    0 0 56px rgba(134, 221, 255, 0.16) !important;
+}
+
+.galaxy-card.is-grid-exiting .galaxy-card__inner {
+  filter: brightness(0.72) saturate(0.66);
 }
 
 .galaxy-card--grid .galaxy-card__inner {
@@ -12432,11 +12496,26 @@ body[data-page="products"] .galaxy-scene::before {
   mask-image: linear-gradient(180deg, transparent 0, #000 36%, transparent 86%);
 }
 
+body[data-page="products"] .galaxy-scene.is-morphing-to-grid::before {
+  opacity: 0.42;
+  background-size: 68px 68px;
+  filter: drop-shadow(0 0 18px rgba(134, 221, 255, 0.18));
+}
+
 body[data-page="products"] .galaxy-scene::after {
   opacity: 0.62;
   background:
     radial-gradient(circle at 50% 48%, rgba(134, 221, 255, 0.16), transparent 20%),
     radial-gradient(circle at 50% 48%, transparent 0 31%, rgba(246, 140, 75, 0.13) 32%, transparent 34%, transparent 42%, rgba(134, 221, 255, 0.1) 43%, transparent 44%);
+}
+
+body[data-page="products"] .galaxy-scene.is-morphing-to-grid::after {
+  opacity: 0.86;
+  filter: saturate(1.14) brightness(1.08);
+}
+
+body[data-page="products"] .galaxy-scene.is-morphing-to-grid .galaxy-card--grid {
+  pointer-events: none;
 }
 
 body[data-page="products"] .galaxy-card {
