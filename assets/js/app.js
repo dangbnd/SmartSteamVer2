@@ -31,36 +31,36 @@
   const utf8Decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8", { fatal: false }) : null;
   const SUSPICIOUS_TEXT_PATTERN = /[\u00C2-\u00C6\u00D0\u00E1\u0080-\u009F]/;
   const KNOWN_VIETNAMESE_PLAIN_PHRASES = [
-    ["Tat ca khoang gia", "Táº¥t cáº£ khoáº£ng giÃ¡"],
-    ["Tat ca danh muc", "Táº¥t cáº£ danh má»¥c"],
-    ["Tat ca san pham", "Táº¥t cáº£ sáº£n pháº©m"],
-    ["San pham goi y", "Sáº£n pháº©m gá»£i Ã½"],
-    ["Danh muc san pham", "Danh má»¥c sáº£n pháº©m"],
-    ["Khoang gia", "Khoáº£ng giÃ¡"],
-    ["Khoang tien", "Khoáº£ng tiá»n"],
-    ["Sap xep theo", "Sáº¯p xáº¿p theo"],
-    ["Sap xep: Mac dinh", "Sáº¯p xáº¿p: Máº·c Ä‘á»‹nh"],
-    ["Mac dinh", "Máº·c Ä‘á»‹nh"],
-    ["Gia tang dan", "GiÃ¡ tÄƒng dáº§n"],
-    ["Gia giam dan", "GiÃ¡ giáº£m dáº§n"],
-    ["Duoi 500k", "DÆ°á»›i 500k"],
-    ["500k den 1tr", "500k Ä‘áº¿n 1tr"],
-    ["1tr den 2tr", "1tr Ä‘áº¿n 2tr"],
-    ["Tren 2tr", "TrÃªn 2tr"],
-    ["Tim theo ten san pham...", "TÃ¬m theo tÃªn sáº£n pháº©m..."],
-    ["Tim san pham...", "TÃ¬m sáº£n pháº©m..."],
-    ["Dang cap nhat", "Äang cáº­p nháº­t"],
-    ["Con hang", "CÃ²n hÃ ng"],
-    ["Lien he", "LiÃªn há»‡"],
-    ["San pham STEM", "Sáº£n pháº©m STEM"],
-    ["Ton kho", "Tá»“n kho"],
-    ["Danh muc", "Danh má»¥c"],
-    ["Xem trang chi tiet ->", "Xem trang chi tiáº¿t ->"],
-    ["Them vao gio hang", "ThÃªm vÃ o giá» hÃ ng"],
-    ["Them vao gio", "ThÃªm vÃ o giá»"],
-    ["Huong dan mua hang", "HÆ°á»›ng dáº«n mua hÃ ng"],
-    ["Huong dan thanh toan", "HÆ°á»›ng dáº«n thanh toÃ¡n"],
-    ["Kiem tra don hang", "Kiá»ƒm tra Ä‘Æ¡n hÃ ng"],
+    ["Tat ca khoang gia", "Tất cả khoảng giá"],
+    ["Tat ca danh muc", "Tất cả danh mục"],
+    ["Tat ca san pham", "Tất cả sản phẩm"],
+    ["San pham goi y", "Sản phẩm gợi ý"],
+    ["Danh muc san pham", "Danh mục sản phẩm"],
+    ["Khoang gia", "Khoảng giá"],
+    ["Khoang tien", "Khoảng tiền"],
+    ["Sap xep theo", "Sắp xếp theo"],
+    ["Sap xep: Mac dinh", "Sắp xếp: Mặc định"],
+    ["Mac dinh", "Mặc định"],
+    ["Gia tang dan", "Giá tăng dần"],
+    ["Gia giam dan", "Giá giảm dần"],
+    ["Duoi 500k", "Dưới 500k"],
+    ["500k den 1tr", "500k đến 1tr"],
+    ["1tr den 2tr", "1tr đến 2tr"],
+    ["Tren 2tr", "Trên 2tr"],
+    ["Tim theo ten san pham...", "Tìm theo tên sản phẩm..."],
+    ["Tim san pham...", "Tìm sản phẩm..."],
+    ["Dang cap nhat", "Đang cập nhật"],
+    ["Con hang", "Còn hàng"],
+    ["Lien he", "Liên hệ"],
+    ["San pham STEM", "Sản phẩm STEM"],
+    ["Ton kho", "Tồn kho"],
+    ["Danh muc", "Danh mục"],
+    ["Xem trang chi tiet ->", "Xem trang chi tiết ->"],
+    ["Them vao gio hang", "Thêm vào giỏ hàng"],
+    ["Them vao gio", "Thêm vào giỏ"],
+    ["Huong dan mua hang", "Hướng dẫn mua hàng"],
+    ["Huong dan thanh toan", "Hướng dẫn thanh toán"],
+    ["Kiem tra don hang", "Kiểm tra đơn hàng"],
   ]
     .sort((left, right) => right[0].length - left[0].length)
     .map(([plain, accented]) => ({
@@ -104,14 +104,9 @@
   const preloadTuning = runtimeTuning.preloader || {};
   const transitionTuning = runtimeTuning.transitions || {};
   const ASSET_VERSION = runtimeTuning.assetVersion ? `?v=${runtimeTuning.assetVersion}` : "";
-  const MIGRATION_ENDPOINTS = {
-    products: "/migration-full-input/products.json",
-    projects: "/migration-full-input/projects.json",
-    tutorials: "/migration-full-input/tutorials.json",
-    tutorialCategories: "/migration-full-input/tutorial_categories.json",
-    news: "/migration-full-input/news.json",
-    newsCategories: "/migration-full-input/news_categories.json",
-  };
+  const THREE_MODULE_URL = "/assets/vendor/three/three.module.min.js";
+  const PUBLIC_ARCHIVE_ENDPOINT = "/assets/data/archive.json";
+  const MIGRATION_FETCH_TIMEOUT_MS = 2500;
   const MEDIA_FALLBACKS = {
     hero: "/assets/img/product-robotics.svg",
     editorial: "/assets/img/product-science.svg",
@@ -147,6 +142,9 @@
   const APP_THEME_STORAGE_KEY = "stemora:theme";
   const WELCOME_THEME_STORAGE_KEY = "stemora:welcome-theme";
   const PROJECT_ARCHIVE_SCROLL_KEY = "stemora:project-archive-scroll";
+  const BACKGROUND_3D_PAGES = new Set(["welcome", "products", "projects", "tutorials", "news", "contact"]);
+  const SHARED_3D_BACKGROUND_PAGES = new Set(["projects", "tutorials", "news", "contact"]);
+  let threeModulePromise = null;
 
   function $(selector, root) {
     return (root || document).querySelector(selector);
@@ -176,6 +174,21 @@
       window.clearTimeout(timer);
       timer = window.setTimeout(callback, delay);
     };
+  }
+
+  function supportsWebGLCanvas() {
+    if (!window.WebGLRenderingContext) return false;
+    try {
+      const probe = document.createElement("canvas");
+      return Boolean(probe.getContext("webgl") || probe.getContext("experimental-webgl"));
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function loadThreeModule() {
+    if (!threeModulePromise) threeModulePromise = import(THREE_MODULE_URL);
+    return threeModulePromise;
   }
 
   function getWelcomeThemeLabels() {
@@ -334,63 +347,6 @@
     return vietnameseBonus - replacementPenalty - suspiciousPenalty - controlPenalty;
   }
 
-  const LEGACY_KNOWN_VIETNAMESE_PLAIN_PHRASES = [
-    ["Tat ca khoang gia", "Tất cả khoảng giá"],
-    ["Tat ca danh muc", "Tất cả danh mục"],
-    ["Tat ca san pham", "Tất cả sản phẩm"],
-    ["San pham goi y", "Sản phẩm gợi ý"],
-    ["Danh muc san pham", "Danh mục sản phẩm"],
-    ["Khoang gia", "Khoảng giá"],
-    ["Khoang tien", "Khoảng tiền"],
-    ["Sap xep theo", "Sắp xếp theo"],
-    ["Sap xep: Mac dinh", "Sắp xếp: Mặc định"],
-    ["Mac dinh", "Mặc định"],
-    ["Gia tang dan", "Giá tăng dần"],
-    ["Gia giam dan", "Giá giảm dần"],
-    ["Duoi 500k", "Dưới 500k"],
-    ["500k den 1tr", "500k đến 1tr"],
-    ["1tr den 2tr", "1tr đến 2tr"],
-    ["Tren 2tr", "Trên 2tr"],
-    ["Tim theo ten san pham...", "Tìm theo tên sản phẩm..."],
-    ["Tim san pham...", "Tìm sản phẩm..."],
-    ["Dang cap nhat", "Đang cập nhật"],
-    ["Con hang", "Còn hàng"],
-    ["Lien he", "Liên hệ"],
-    ["San pham STEM", "Sản phẩm STEM"],
-    ["Ton kho", "Tồn kho"],
-    ["Danh muc", "Danh mục"],
-    ["Xem trang chi tiet ->", "Xem trang chi tiết ->"],
-    ["Them vao gio hang", "Thêm vào giỏ hàng"],
-    ["Them vao gio", "Thêm vào giỏ"],
-    ["Huong dan mua hang", "Hướng dẫn mua hàng"],
-    ["Huong dan thanh toan", "Hướng dẫn thanh toán"],
-    ["Kiem tra don hang", "Kiểm tra đơn hàng"],
-  ]
-    .sort((left, right) => right[0].length - left[0].length)
-    .map(([plain, accented]) => ({
-      plain,
-      accented,
-      pattern: new RegExp(plain.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi"),
-    }));
-  const LEGACY_PLAIN_VIETNAMESE_TEXT_PATTERN = new RegExp(
-    LEGACY_KNOWN_VIETNAMESE_PLAIN_PHRASES.map((entry) => entry.plain.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("|"),
-    "i",
-  );
-
-  function preserveVietnameseCaseLegacy(source, replacement) {
-    if (source === source.toUpperCase()) return replacement.toLocaleUpperCase("vi-VN");
-    if (source === source.toLowerCase()) return replacement.toLocaleLowerCase("vi-VN");
-    return replacement;
-  }
-
-  function normalizePlainVietnameseTextLegacy(value) {
-    return LEGACY_KNOWN_VIETNAMESE_PLAIN_PHRASES.reduce((result, entry) => {
-      if (!entry.pattern.test(result)) return result;
-      entry.pattern.lastIndex = 0;
-      return result.replace(entry.pattern, (match) => preserveVietnameseCaseLegacy(match, entry.accented));
-    }, value);
-  }
-
   function normalizeText(value) {
     if (value == null) return "";
     const source = normalizePlainVietnameseText(String(value));
@@ -447,7 +403,98 @@
 
   function getText(entry, viKey, enKey) {
     if (!entry) return "";
-    return normalizeText(locale === "vi" ? entry[viKey] : entry[enKey]);
+    const viValue = normalizeText(entry[viKey]);
+    const enValue = normalizeText(entry[enKey]);
+    if (locale === "vi") return viValue;
+    if (enValue && enValue !== viValue) return enValue;
+    if (enKey === "titleEn") return deriveEnglishTitle(entry, viValue);
+    if (/^(summary|intro|excerpt|tagline)En$/.test(enKey)) return deriveEnglishSummary(entry, viValue);
+    return enValue || viValue;
+  }
+
+  function titleCaseEnglish(value) {
+    return normalizeText(value)
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((word) => (/^(AI|DC|DOF|ESP32|I2C|IR|LCD|LED|LM35|STEM|STEAM|TTP223B|UNO|V8|V5DC|ULN2003|TSOP1838|R5)$/i.test(word) ? word.toUpperCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()))
+      .join(" ");
+  }
+
+  function deriveEnglishTitle(entry, fallback) {
+    const source = normalizeText((entry && (entry.slug || entry.sourceSlug || entry.id)) || fallback || "").toLowerCase();
+    let title = source.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+    const replacements = [
+      ["lap-trinh-game-voi-mblock", "mBlock game programming"],
+      ["lap-trinh-arduino", "Arduino programming"],
+      ["chu-de-giao-thong-duong-bo", "road traffic theme"],
+      ["game-ran-san-moi", "snake game"],
+      ["chem-hoa-qua", "fruit slicing game"],
+      ["giai-cau-do", "quiz game"],
+      ["khoa-hoc-quanh-ta", "science around us"],
+      ["cam-bien-thu-hong-ngoai-ir", "IR receiver sensor"],
+      ["mach-ieu-khien-ong-co-buoc", "stepper motor driver"],
+      ["cam-bien", "sensor"],
+      ["dong-co", "motor"],
+      ["bo-kit", "kit"],
+      ["bo-bien", "converter kit"],
+      ["bo-chuyen-doi", "converter kit"],
+      ["bo-mo-phong", "simulation kit"],
+      ["bo-go", "wooden kit"],
+      ["mo-hinh", "model"],
+      ["thong-minh", "smart"],
+      ["nha-thong-minh", "smart home"],
+      ["tram-sac", "charging station"],
+      ["canh-tay-robot", "robotic arm"],
+      ["dong-ho", "clock"],
+      ["den-giao-thong", "traffic light"],
+      ["man-hinh", "display"],
+      ["do-choi", "toy"],
+      ["du-nem", "throwing parachute"],
+      ["may-rot-nuoc", "automatic water dispenser"],
+      ["may-bay", "airplane"],
+      ["con-quay", "spinning toy"],
+      ["chim-canh-cut", "penguin"],
+      ["robot-cho", "robot dog"],
+      ["robot-di-bo", "walking robot"],
+      ["robot-nhen", "spider robot"],
+      ["robot-do-me-cung", "maze robot"],
+      ["giao-duc-stem-va-steam", "STEM and STEAM education"],
+      ["robot-hinh-nguoi-tesla-optimus", "Tesla Optimus humanoid robot"],
+      ["iphone-17-dung-luong-pin", "iPhone 17 battery capacity"],
+    ];
+    replacements.forEach(([needle, replacement]) => {
+      title = title.replace(new RegExp(needle, "g"), replacement);
+    });
+    title = title.replace(/-/g, " ").replace(/\b(stem|steam|ai|dc|dof|esp32|i2c|ir|lcd|led|lm35|uno|uln2003|tsop1838|ttp223b|v8|r5)\b/gi, (match) => match.toUpperCase());
+    title = titleCaseEnglish(title);
+    return title || normalizeText(fallback || "STEM learning resource");
+  }
+
+  function deriveEnglishSummary(entry, fallback) {
+    const title = deriveEnglishTitle(entry, entry && (entry.titleEn || entry.titleVi) || fallback);
+    return `English STEMORA page for ${title}, with practical STEM context, media, and related learning resources.`;
+  }
+
+  function contextualizeMetaTitle(title) {
+    const value = normalizeText(title || "");
+    if (!value || !page.endsWith("-detail")) return value;
+    const labels = locale === "vi"
+      ? { "product-detail": "Sản phẩm STEMORA", "project-detail": "Dự án STEMORA", "tutorial-detail": "Bài giảng STEMORA", "news-detail": "Tin STEMORA", "policy-detail": "Hỗ trợ STEMORA" }
+      : { "product-detail": "STEMORA Product", "project-detail": "STEMORA Project", "tutorial-detail": "STEMORA Tutorial", "news-detail": "STEMORA News", "policy-detail": "STEMORA Support" };
+    const label = labels[page];
+    if (!label || value.includes(label)) return value;
+    return value.replace(/\s*\|\s*STEMORA\s*$/i, ` | ${label}`);
+  }
+
+  function shortenMetaTitle(title) {
+    const value = normalizeText(title || "");
+    if (value.length <= 70) return value;
+    const parts = value.split("|").map((part) => normalizeText(part));
+    if (parts.length < 2) return `${value.slice(0, 67).trim()}...`;
+    const suffix = parts.pop();
+    const base = parts.join(" | ");
+    const maxBaseLength = Math.max(24, 64 - suffix.length);
+    return `${base.slice(0, maxBaseLength).replace(/\s+\S*$/, "").trim()}... | ${suffix}`;
   }
 
   function getMediaAlt(media) {
@@ -757,10 +804,101 @@
     return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
   }
 
-  function updateMeta(title, description) {
+  const SITE_ORIGIN = (function () {
+    const fromMeta = document.querySelector('meta[name="site-origin"]');
+    if (fromMeta && fromMeta.content) return fromMeta.content.replace(/\/$/, "");
+    if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+      return window.location.origin;
+    }
+    return "https://stemora.vn";
+  })();
+
+  function ensureHeadTag(selector, create) {
+    let tag = document.head.querySelector(selector);
+    if (!tag) {
+      tag = create();
+      document.head.appendChild(tag);
+    }
+    return tag;
+  }
+
+  function setMetaTag(name, content, attr) {
+    if (!content) return;
+    const key = attr || "name";
+    const tag = ensureHeadTag(`meta[${key}="${name}"]`, () => {
+      const m = document.createElement("meta");
+      m.setAttribute(key, name);
+      return m;
+    });
+    tag.setAttribute("content", content);
+  }
+
+  function setLinkTag(rel, href, extra) {
+    if (!href) return;
+    const hrefLang = (extra && extra.hreflang) || "";
+    const selector = hrefLang ? `link[rel="${rel}"][hreflang="${hrefLang}"]` : `link[rel="${rel}"]:not([hreflang])`;
+    const tag = ensureHeadTag(selector, () => {
+      const l = document.createElement("link");
+      l.setAttribute("rel", rel);
+      if (hrefLang) l.setAttribute("hreflang", hrefLang);
+      return l;
+    });
+    tag.setAttribute("href", href);
+  }
+
+  function buildCanonicalUrl() {
+    let path = window.location.pathname;
+    if (!path.endsWith("/") && !/\.[a-z0-9]+$/i.test(path)) path += "/";
+    return SITE_ORIGIN + path;
+  }
+
+  function buildAlternateUrl(targetLocale) {
+    const fromLocale = "/" + locale + "/";
+    const toLocale = "/" + targetLocale + "/";
+    let path = window.location.pathname;
+    if (path.startsWith(fromLocale)) path = toLocale + path.slice(fromLocale.length);
+    if (!path.endsWith("/") && !/\.[a-z0-9]+$/i.test(path)) path += "/";
+    return SITE_ORIGIN + path;
+  }
+
+  function updateMeta(title, description, options) {
+    const opts = options || {};
+    title = shortenMetaTitle(contextualizeMetaTitle(title));
     if (title) document.title = title;
-    const descriptionTag = $('meta[name="description"]');
-    if (descriptionTag && description) descriptionTag.setAttribute("content", description);
+    if (description) setMetaTag("description", description);
+
+    const canonical = buildCanonicalUrl();
+    setLinkTag("canonical", canonical);
+    setLinkTag("alternate", canonical, { hreflang: locale });
+    setLinkTag("alternate", buildAlternateUrl(locale === "vi" ? "en" : "vi"), {
+      hreflang: locale === "vi" ? "en" : "vi",
+    });
+    setLinkTag("alternate", buildAlternateUrl("vi"), { hreflang: "x-default" });
+
+    setMetaTag("og:type", opts.ogType || (page.endsWith("-detail") ? "article" : "website"), "property");
+    setMetaTag("og:url", canonical, "property");
+    setMetaTag("og:site_name", "STEMORA", "property");
+    setMetaTag("og:locale", locale === "vi" ? "vi_VN" : "en_US", "property");
+    if (title) setMetaTag("og:title", title, "property");
+    if (description) setMetaTag("og:description", description, "property");
+
+    const ogImage = opts.image || (data.siteMeta && data.siteMeta.ogImage) || `${SITE_ORIGIN}/assets/img/luxury-3d-chip-hero.png`;
+    setMetaTag("og:image", ogImage, "property");
+    setMetaTag("twitter:card", "summary_large_image");
+    setMetaTag("twitter:title", title || "STEMORA");
+    if (description) setMetaTag("twitter:description", description);
+    setMetaTag("twitter:image", ogImage);
+
+    if (opts.jsonLd) {
+      let script = document.getElementById("stemora-jsonld");
+      if (!script) {
+        script = document.createElement("script");
+        script.type = "application/ld+json";
+        script.id = "stemora-jsonld";
+        document.head.appendChild(script);
+      }
+      script.textContent = JSON.stringify(opts.jsonLd);
+    }
   }
 
   function isRemoteMediaSource(src) {
@@ -818,48 +956,65 @@
     return resolveAssetSource(fallbackPath);
   }
 
+  function safeMediaNumber(value, fallback, min, max) {
+    const number = Number(value);
+    if (!Number.isFinite(number)) return fallback;
+    return Math.min(max, Math.max(min, number));
+  }
+
+  function safeMediaRatio(value, fallback) {
+    const source = String(value || "").trim();
+    return /^\d+(?:\.\d+)?\s*\/\s*\d+(?:\.\d+)?$/.test(source) ? source : fallback;
+  }
+
+  function safeMediaToken(value, fallback) {
+    const source = String(value || "").trim();
+    return /^[a-z0-9_-]+$/i.test(source) ? source : fallback;
+  }
+
   function renderMedia(media, className, options) {
     const config = options || {};
     const normalizedMedia = normalizeMediaObject(media, config);
-    const tier = config.tier || normalizedMedia.loadingTier || (config.priority ? "critical" : "deferred");
+    const tier = safeMediaToken(config.tier || normalizedMedia.loadingTier || (config.priority ? "critical" : "deferred"), "deferred");
     const inlineSource = tier === "critical";
     const loading = inlineSource ? config.loading || "eager" : "lazy";
     const fetchPriority = tier === "critical" ? ' fetchpriority="high"' : "";
     const decoding = tier === "critical" ? "sync" : "async";
     const alt = config.alt !== undefined ? config.alt : getMediaAlt(normalizedMedia);
-    const fit = normalizedMedia.fit || "cover";
-    const role = normalizedMedia.role || "editorial";
-    const focalX = normalizedMedia.focalX ?? 50;
-    const focalY = normalizedMedia.focalY ?? 50;
+    const fit = safeMediaToken(normalizedMedia.fit || "cover", "cover");
+    const role = safeMediaToken(normalizedMedia.role || "editorial", "editorial");
+    const focalX = safeMediaNumber(normalizedMedia.focalX, 50, 0, 100);
+    const focalY = safeMediaNumber(normalizedMedia.focalY, 50, 0, 100);
+    const ratio = safeMediaRatio(normalizedMedia.ratio, "4 / 5");
     const safeText = normalizedMedia.preserveTextSafeArea ? "true" : "false";
-    const wrapperClass = ["media-frame", className || "", config.bare ? "media-frame--bare" : ""]
+    const wrapperClass = ["media-frame", String(className || "").replace(/[^a-z0-9_\-\s]/gi, ""), config.bare ? "media-frame--bare" : ""]
       .filter(Boolean)
       .join(" ");
-    const stage = config.stage ? ` data-stage="${config.stage}"` : "";
+    const stage = config.stage ? ` data-stage="${escapeHtmlText(safeMediaToken(config.stage, ""))}"` : "";
     const resolvedSource = resolveAssetSource(normalizedMedia.src);
     const fallbackSource = getFallbackMediaSource(normalizedMedia);
     const sourceAttributes = inlineSource
-      ? `src="${resolvedSource}" data-fallback-src="${fallbackSource}"`
-      : `src="${EMPTY_MEDIA}" data-src="${resolvedSource}" data-fallback-src="${fallbackSource}"`;
+      ? `src="${escapeHtmlText(resolvedSource)}" data-fallback-src="${escapeHtmlText(fallbackSource)}"`
+      : `src="${EMPTY_MEDIA}" data-src="${escapeHtmlText(resolvedSource)}" data-fallback-src="${escapeHtmlText(fallbackSource)}"`;
 
     return `
       <figure
-        class="${wrapperClass}"
-        data-media-tier="${tier}"
-        data-fit="${fit}"
-        data-role="${role}"
+        class="${escapeHtmlText(wrapperClass)}"
+        data-media-tier="${escapeHtmlText(tier)}"
+        data-fit="${escapeHtmlText(fit)}"
+        data-role="${escapeHtmlText(role)}"
         data-text-safe="${safeText}"${stage}
-        style="--media-ratio:${normalizedMedia.ratio || "4 / 5"};--media-position:${focalX}% ${focalY}%;--media-fit:${fit};"
+        style="--media-ratio:${ratio};--media-position:${focalX}% ${focalY}%;--media-fit:${fit};"
       >
         <img
           class="stable-media"
           ${sourceAttributes}
-          alt="${alt}"
-          width="${normalizedMedia.width}"
-          height="${normalizedMedia.height}"
-          data-media-tier="${tier}"
-          loading="${loading}"
-          decoding="${decoding}"${fetchPriority}
+          alt="${escapeHtmlText(alt)}"
+          width="${safeMediaNumber(normalizedMedia.width, 1200, 1, 6000)}"
+          height="${safeMediaNumber(normalizedMedia.height, 1200, 1, 6000)}"
+          data-media-tier="${escapeHtmlText(tier)}"
+          loading="${escapeHtmlText(safeMediaToken(loading, "lazy"))}"
+          decoding="${escapeHtmlText(safeMediaToken(decoding, "async"))}"${fetchPriority}
         >
       </figure>
     `;
@@ -963,10 +1118,18 @@
     });
   }
 
-  async function loadMigrationJson(path) {
-    const response = await fetch(path, { cache: "no-store" });
-    if (!response.ok) throw new Error(`Failed to load ${path}`);
-    return response.json();
+  async function loadJsonEndpoint(path) {
+    const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+    const timeoutId = controller
+      ? window.setTimeout(() => controller.abort(), MIGRATION_FETCH_TIMEOUT_MS)
+      : 0;
+    try {
+      const response = await fetch(path, { cache: "no-store", signal: controller ? controller.signal : undefined });
+      if (!response.ok) throw new Error(`Failed to load ${path}`);
+      return response.json();
+    } finally {
+      if (timeoutId) window.clearTimeout(timeoutId);
+    }
   }
 
   function slugifyArchiveValue(value) {
@@ -981,22 +1144,6 @@
     return normalizedValue || "item";
   }
 
-  function buildUniqueArchiveSlug(item, usedSlugs) {
-    const baseSlug = slugifyArchiveValue(item.slug || item.title || item.name || item._id);
-    let nextSlug = baseSlug;
-    if (usedSlugs.has(nextSlug)) {
-      const suffix = slugifyArchiveValue(item._id || `${Date.now()}`).slice(-8) || String(usedSlugs.size + 1);
-      nextSlug = `${baseSlug}-${suffix}`;
-    }
-    let dedupeIndex = 2;
-    while (usedSlugs.has(nextSlug)) {
-      nextSlug = `${baseSlug}-${dedupeIndex}`;
-      dedupeIndex += 1;
-    }
-    usedSlugs.add(nextSlug);
-    return nextSlug;
-  }
-
   function escapeHtmlText(value) {
     return normalizeText(String(value || ""))
       .replace(/&/g, "&amp;")
@@ -1006,13 +1153,37 @@
       .replace(/'/g, "&#39;");
   }
 
-  function getArticlePlainText(htmlValue) {
-    if (!htmlValue) return "";
-    const template = document.createElement("template");
-    template.innerHTML = String(htmlValue);
-    $$("script, style, iframe, object, embed, form, input, button, textarea, select, noscript", template.content).forEach((node) => node.remove());
-    const plainText = normalizeText(template.content.textContent || "").replace(/\s+/g, " ").trim();
-    return plainText;
+  function normalizeSafeHref(value, options) {
+    const config = options || {};
+    const fallback = config.fallback == null ? "#" : String(config.fallback);
+    const allowedProtocols = new Set(config.protocols || ["https:", "http:"]);
+    const source = normalizeText(value || "").trim();
+    if (!source || /[\u0000-\u001f<>"'`]/.test(source)) return fallback;
+    if (source.startsWith("#")) return config.allowHash === false ? fallback : source;
+    if (source.startsWith("/") && !source.startsWith("//")) {
+      return config.allowRelative === false ? fallback : source;
+    }
+    try {
+      const parsed = new URL(source, window.location.origin);
+      if (!allowedProtocols.has(parsed.protocol)) return fallback;
+      if (config.allowRelative === false && parsed.origin === window.location.origin && !/^[a-z][a-z0-9+.-]*:/i.test(source)) return fallback;
+      return parsed.href;
+    } catch (error) {
+      return fallback;
+    }
+  }
+
+  function normalizeEmailHref(value) {
+    const source = normalizeText(value || "").trim();
+    if (!/^[^\s@<>"']+@[^\s@<>"']+\.[^\s@<>"']+$/.test(source)) return "";
+    return `mailto:${source}`;
+  }
+
+  function normalizeTelHref(value) {
+    const source = normalizeText(value || "").trim();
+    const dial = source.replace(/[^+\d]/g, "");
+    if (!/^\+?\d{8,15}$/.test(dial)) return "";
+    return `tel:${dial}`;
   }
 
   function sanitizeMigratedHtml(htmlValue) {
@@ -1020,6 +1191,65 @@
     const template = document.createElement("template");
     template.innerHTML = String(htmlValue || "");
     $$("script, style, iframe, object, embed, form, input, button, textarea, select, noscript", template.content).forEach((node) => node.remove());
+    const allowedTags = new Set([
+      "A",
+      "B",
+      "BLOCKQUOTE",
+      "BR",
+      "EM",
+      "FIGCAPTION",
+      "FIGURE",
+      "H2",
+      "H3",
+      "H4",
+      "HR",
+      "I",
+      "IMG",
+      "LI",
+      "OL",
+      "P",
+      "STRONG",
+      "TABLE",
+      "TBODY",
+      "TD",
+      "TH",
+      "THEAD",
+      "TR",
+      "U",
+      "UL",
+    ]);
+    const allowedAttrs = new Set([
+      "alt",
+      "colspan",
+      "decoding",
+      "height",
+      "href",
+      "loading",
+      "rel",
+      "rowspan",
+      "src",
+      "target",
+      "title",
+      "width",
+    ]);
+
+    $$("*", template.content).forEach((element) => {
+      if (allowedTags.has(element.tagName)) return;
+      element.replaceWith(...Array.from(element.childNodes));
+    });
+
+    $$("h2 p, h3 p, h4 p", template.content).forEach((paragraph) => {
+      paragraph.replaceWith(...Array.from(paragraph.childNodes));
+    });
+
+    $$("h2, h3, h4", template.content).forEach((heading) => {
+      const hasBlockChild = $$("blockquote, div, figure, li, ol, p, table, ul", heading).length > 0;
+      if (hasBlockChild) {
+        heading.replaceWith(...Array.from(heading.childNodes));
+        return;
+      }
+      if (!normalizeText(heading.textContent || "")) heading.remove();
+    });
 
     const textWalker = document.createTreeWalker(template.content, NodeFilter.SHOW_TEXT);
     const textNodes = [];
@@ -1031,18 +1261,38 @@
     $$("*", template.content).forEach((element) => {
       Array.from(element.attributes).forEach((attribute) => {
         const attrName = attribute.name.toLowerCase();
-        if (attrName.startsWith("on") || attrName === "style" || attrName === "class" || attrName === "id") {
+        if (attrName.startsWith("on") || attrName === "style" || attrName === "class" || attrName === "id" || attrName === "srcdoc" || !allowedAttrs.has(attrName)) {
           element.removeAttribute(attribute.name);
           return;
         }
         if (attrName === "src" || attrName === "href") {
           const rawValue = normalizeText(attribute.value || "").trim();
-          if (!rawValue || rawValue.startsWith("#") || rawValue.startsWith("mailto:") || rawValue.startsWith("tel:")) {
-            element.setAttribute(attribute.name, rawValue);
+          if (!rawValue) {
+            element.removeAttribute(attribute.name);
+            return;
+          }
+          if (/^(javascript|vbscript|file):/i.test(rawValue)) {
+            element.removeAttribute(attribute.name);
+            return;
+          }
+          if (/facebook\.com|fbcdn\.net/i.test(rawValue)) {
+            element.removeAttribute(attribute.name);
+            return;
+          }
+          if (attrName === "href" && (rawValue.startsWith("#") || /^mailto:|^tel:/i.test(rawValue))) {
+            element.setAttribute("href", rawValue);
             return;
           }
           const isExternal = /^(https?:)?\/\//i.test(rawValue);
           if (attrName === "src") {
+            if (/^data:image\//i.test(rawValue)) {
+              element.removeAttribute("src");
+              return;
+            }
+            if (/^[a-z][a-z0-9+.-]*:/i.test(rawValue) && !isExternal && !/^data:image\//i.test(rawValue)) {
+              element.removeAttribute("src");
+              return;
+            }
             const nextImageSrc = resolveAssetSource(rawValue);
             element.setAttribute("src", nextImageSrc);
             element.setAttribute("loading", "lazy");
@@ -1056,6 +1306,10 @@
               element.setAttribute("rel", "noreferrer");
             }
           } else {
+            if (/^[a-z][a-z0-9+.-]*:/i.test(rawValue)) {
+              element.removeAttribute("href");
+              return;
+            }
             element.setAttribute("href", rawValue);
           }
           return;
@@ -1066,6 +1320,8 @@
       });
     });
 
+    $$("img:not([src])", template.content).forEach((element) => element.remove());
+
     $$("p, ul, ol", template.content).forEach((element) => {
       const hasRenderableChild = Boolean($("img, video, picture, iframe, table", element));
       const textContent = normalizeText(element.textContent || "").replace(/\s+/g, " ").trim();
@@ -1073,34 +1329,6 @@
     });
 
     return template.innerHTML.trim();
-  }
-
-  function getMigratedContentImage(item, fallbackMedia, title) {
-    const directImage = item.featuredImage || item.image || item.coverImage || item.thumbnail || "";
-    if (directImage) {
-      return {
-        src: directImage,
-        ratio: "16 / 10",
-        fit: "cover",
-        role: "archive",
-        alt: { vi: normalizeText(title), en: normalizeText(title) },
-      };
-    }
-
-    const template = document.createElement("template");
-    template.innerHTML = String(item.description || item.content || "");
-    const image = $("img[src]", template.content);
-    if (image && image.getAttribute("src")) {
-      return {
-        src: image.getAttribute("src"),
-        ratio: "16 / 10",
-        fit: "cover",
-        role: "archive",
-        alt: { vi: normalizeText(image.getAttribute("alt") || title), en: normalizeText(image.getAttribute("alt") || title) },
-      };
-    }
-
-    return fallbackMedia;
   }
 
   function formatArchiveDate(value) {
@@ -1114,198 +1342,38 @@
     return formatter.format(dateValue);
   }
 
-  function formatDurationLabel(value) {
-    if (value == null || value === "") return "";
-    if (typeof value === "string") return normalizeText(value);
-    const durationValue = Number(value);
-    if (!Number.isFinite(durationValue) || durationValue <= 0) return "";
-    return locale === "vi" ? `${durationValue} phút` : `${durationValue} min`;
-  }
-
-  function buildMigratedProjects(projectRows) {
-    const usedSlugs = new Set();
-    return (projectRows || [])
-      .filter((item) => item && item.isActive !== false)
-      .map((item, index) => {
-        const title = normalizeText(item.name || "");
-        const sourceSlug = normalizeText(item.slug || "");
-        const summaryText = normalizeText(item.shortDescription || "") || getArticlePlainText(item.description).slice(0, 260);
-        const cover = getMigratedContentImage(
-          item,
-          { src: "/assets/img/project-expo.svg", ratio: "16 / 10", fit: "cover", role: "archive", alt: { vi: title, en: title } },
-          title
-        );
-        const safeHtml = sanitizeMigratedHtml(item.description || "");
-        const publishedAt = item.updatedAt || item.createdAt || "";
-        return {
-          id: item._id || `project-${index + 1}`,
-          slug: buildUniqueArchiveSlug(item, usedSlugs),
-          sourceSlug,
-          cover,
-          hero: { ...cover, ratio: "16 / 10" },
-          titleVi: title,
-          titleEn: title,
-          summaryVi: summaryText,
-          summaryEn: summaryText,
-          introVi: summaryText,
-          introEn: summaryText,
-          contentHtml: safeHtml,
-          year: publishedAt ? String(new Date(publishedAt).getFullYear()) : "",
-          type: normalizeText(item.category || ""),
-          season: formatArchiveDate(publishedAt),
-          taglineVi: summaryText,
-          taglineEn: summaryText,
-          audienceVi: normalizeText(item.level || ""),
-          audienceEn: normalizeText(item.level || ""),
-          locationVi: "Smart Steam",
-          locationEn: "Smart Steam",
-          durationLabel: formatDurationLabel(item.duration),
-          isFeatured: Boolean(item.featured),
-          publishedAt,
-          authorVi: "Smart Steam",
-          authorEn: "Smart Steam",
-          tags: Array.isArray(item.tags) ? item.tags.map((entry) => normalizeText(entry)).filter(Boolean) : [],
-          featuredOrder: Boolean(item.featured) ? index + 1 : 1000 + index,
-        };
-      })
-      .sort((left, right) => {
-        if (Boolean(left.isFeatured) !== Boolean(right.isFeatured)) return Number(Boolean(right.isFeatured)) - Number(Boolean(left.isFeatured));
-        return new Date(right.publishedAt || 0).getTime() - new Date(left.publishedAt || 0).getTime();
-      })
-      .map((item, index) => ({ ...item, featuredOrder: index + 1 }));
-  }
-
-  function buildMigratedTutorials(tutorialRows, categoryRows) {
-    const usedSlugs = new Set();
-    const categoryMap = new Map((categoryRows || []).map((item) => [item._id, normalizeText(item.name || "")]));
-    return (tutorialRows || [])
-      .filter((item) => item && item.isPublished !== false)
-      .map((item, index) => {
-        const title = normalizeText(item.title || "");
-        const sourceSlug = normalizeText(item.slug || "");
-        const summaryText = normalizeText(item.description || item.shortDescription || "") || getArticlePlainText(item.content).slice(0, 240);
-        const categoryName = categoryMap.get(item.categoryId) || "";
-        const publishedAt = item.updatedAt || item.createdAt || "";
-        const cover = getMigratedContentImage(
-          item,
-          { src: "/assets/img/product-coding.svg", ratio: "16 / 10", fit: "cover", role: "archive", alt: { vi: title, en: title } },
-          title
-        );
-        return {
-          id: item._id || `tutorial-${index + 1}`,
-          slug: buildUniqueArchiveSlug(item, usedSlugs),
-          sourceSlug,
-          titleVi: title,
-          titleEn: title,
-          summaryVi: summaryText,
-          summaryEn: summaryText,
-          categoryVi: categoryName,
-          categoryEn: categoryName,
-          authorVi: normalizeText(item.author || "Smart Steam"),
-          authorEn: normalizeText(item.author || "Smart Steam"),
-          cover,
-          contentHtml: sanitizeMigratedHtml(item.content || ""),
-          difficulty: normalizeText(item.difficulty || ""),
-          durationMinutes: Number.isFinite(Number(item.duration)) ? Number(item.duration) : 0,
-          durationLabel: formatDurationLabel(item.duration),
-          publishedAt,
-          views: Number(item.views || 0),
-          likes: Number(item.likes || 0),
-          tags: Array.isArray(item.tags) ? item.tags.map((entry) => normalizeText(entry)).filter(Boolean) : [],
-        };
-      });
-  }
-
-  function buildMigratedNews(newsRows, categoryRows) {
-    const usedSlugs = new Set();
-    const categoryMap = new Map((categoryRows || []).map((item) => [item._id, normalizeText(item.name || "")]));
-    return (newsRows || [])
-      .filter((item) => item && item.status !== "draft")
-      .map((item, index) => {
-        const title = normalizeText(item.title || "");
-        const sourceSlug = normalizeText(item.slug || "");
-        const summaryText = normalizeText(item.excerpt || "") || getArticlePlainText(item.content).slice(0, 260);
-        const categoryName = categoryMap.get(item.categoryId) || "";
-        const publishedAt = item.updatedAt || item.createdAt || "";
-        const cover = getMigratedContentImage(
-          item,
-          { src: "/assets/img/project-school.svg", ratio: "16 / 10", fit: "cover", role: "archive", alt: { vi: title, en: title } },
-          title
-        );
-        return {
-          id: item._id || `news-${index + 1}`,
-          slug: buildUniqueArchiveSlug(item, usedSlugs),
-          sourceSlug,
-          titleVi: title,
-          titleEn: title,
-          summaryVi: summaryText,
-          summaryEn: summaryText,
-          categoryVi: categoryName,
-          categoryEn: categoryName,
-          authorVi: normalizeText(item.author || "Smart Steam"),
-          authorEn: normalizeText(item.author || "Smart Steam"),
-          cover,
-          contentHtml: sanitizeMigratedHtml(item.content || ""),
-          isFeatured: Boolean(item.isFeatured),
-          publishedAt,
-          tags: Array.isArray(item.tags) ? item.tags.map((entry) => normalizeText(entry)).filter(Boolean) : [],
-        };
-      });
-  }
-
-  function mergeMigratedProducts(productRows) {
-    if (!Array.isArray(data.products) || !data.products.length || !Array.isArray(productRows)) return;
-
-    const productMap = new Map(
-      productRows
-        .filter((item) => item && item.slug)
-        .map((item) => [normalizeText(item.slug), item])
-    );
-
-    data.products = data.products.map((product) => {
-      const migratedProduct = productMap.get(normalizeText(product.slug || ""));
-      if (!migratedProduct) return product;
-
-      const fullDescription = String(migratedProduct.fullDescription || "").trim();
-      if (!fullDescription) return product;
-
-      const sanitizedDescription = sanitizeMigratedHtml(fullDescription);
-      if (!sanitizedDescription) return product;
-
-      return {
-        ...product,
-        descriptionHtmlVi: sanitizedDescription,
-        descriptionHtmlEn: sanitizedDescription,
-      };
-    });
-  }
-
   function loadMigratedArchiveData() {
     if (state.migratedArchivePromise) return state.migratedArchivePromise;
 
-    state.migratedArchivePromise = Promise.all([
-      loadMigrationJson(MIGRATION_ENDPOINTS.products),
-      loadMigrationJson(MIGRATION_ENDPOINTS.projects),
-      loadMigrationJson(MIGRATION_ENDPOINTS.tutorials),
-      loadMigrationJson(MIGRATION_ENDPOINTS.tutorialCategories),
-      loadMigrationJson(MIGRATION_ENDPOINTS.news),
-      loadMigrationJson(MIGRATION_ENDPOINTS.newsCategories),
-    ])
-      .then(([productRows, projectRows, tutorialRows, tutorialCategoryRows, newsRows, newsCategoryRows]) => {
-        mergeMigratedProducts(productRows);
-        const nextProjects = buildMigratedProjects(projectRows);
-        const nextTutorials = buildMigratedTutorials(tutorialRows, tutorialCategoryRows);
-        const nextNews = buildMigratedNews(newsRows, newsCategoryRows);
-        if (nextProjects.length) data.projects = nextProjects;
-        data.tutorials = nextTutorials;
-        data.news = nextNews;
-      })
-      .catch(() => {
-        if (!Array.isArray(data.tutorials)) data.tutorials = [];
-        if (!Array.isArray(data.news)) data.news = [];
-      });
+    const shouldLoadTutorials = page === "tutorials" || page === "tutorial-detail";
+    const shouldLoadNews = page === "news" || page === "news-detail";
+    state.migratedArchivePromise = loadJsonEndpoint(PUBLIC_ARCHIVE_ENDPOINT).then((archiveData) => {
+      const nextTutorials = Array.isArray(archiveData && archiveData.tutorials) ? archiveData.tutorials : [];
+      const nextNews = Array.isArray(archiveData && archiveData.news) ? archiveData.news : [];
+      if (shouldLoadTutorials && (nextTutorials.length || !Array.isArray(data.tutorials))) data.tutorials = nextTutorials;
+      if (shouldLoadNews && (nextNews.length || !Array.isArray(data.news))) data.news = nextNews;
+    }).catch(() => {
+      if (shouldLoadTutorials && !Array.isArray(data.tutorials)) data.tutorials = [];
+      if (shouldLoadNews && !Array.isArray(data.news)) data.news = [];
+    });
 
     return state.migratedArchivePromise;
+  }
+
+  function hydrateRenderedPage() {
+    initTextNormalizer();
+    bindStableMedia(document);
+    if (!state.experienceStarted) return;
+    const pageRoot = $(".js-page-root");
+    initMediaPriorityLoading(pageRoot);
+    initScrollMotion();
+    initParallaxScenes();
+    initContactForm();
+  }
+
+
+  function shouldLoadMigratedArchiveData() {
+    return page === "tutorials" || page === "tutorial-detail" || page === "news" || page === "news-detail";
   }
 
   function markMediaFrameLoaded(image) {
@@ -1504,7 +1572,12 @@
       .join("");
 
     const socials = data.siteMeta.socials
-      .map((item) => `<a class="menu-social" href="${item.href}">${item.label}</a>`)
+      .map((item) => {
+        const href = normalizeSafeHref(item && item.href, { protocols: ["https:", "http:"], allowRelative: false });
+        if (!href || href === "#") return "";
+        return `<a class="menu-social" href="${escapeHtmlText(href)}" target="_blank" rel="noreferrer">${escapeHtmlText(item.label)}</a>`;
+      })
+      .filter(Boolean)
       .join("");
 
     return `
@@ -1563,17 +1636,22 @@
       hours: normalizeText(data.siteMeta.contact.hours[locale]),
     };
     const footerContactItems = [
-      footerCopy.email
-        ? `<a href="mailto:${footerCopy.email}">${footerCopy.email}</a>`
+      normalizeEmailHref(footerCopy.email)
+        ? `<a href="${escapeHtmlText(normalizeEmailHref(footerCopy.email))}">${escapeHtmlText(footerCopy.email)}</a>`
         : "",
-      footerCopy.phone
-        ? `<a href="tel:${footerCopy.phone.replace(/\s+/g, "")}">${footerCopy.phone}</a>`
+      normalizeTelHref(footerCopy.phone)
+        ? `<a href="${escapeHtmlText(normalizeTelHref(footerCopy.phone))}">${escapeHtmlText(footerCopy.phone)}</a>`
         : "",
-      footerCopy.address ? `<span>${footerCopy.address}</span>` : "",
-      footerCopy.hours ? `<span>${footerCopy.hours}</span>` : "",
+      footerCopy.address ? `<span>${escapeHtmlText(footerCopy.address)}</span>` : "",
+      footerCopy.hours ? `<span>${escapeHtmlText(footerCopy.hours)}</span>` : "",
     ].filter(Boolean).join("");
     const footerSocials = data.siteMeta.socials
-      .map((item) => `<a href="${item.href}" target="_blank" rel="noreferrer">${normalizeText(item.label)}</a>`)
+      .map((item) => {
+        const href = normalizeSafeHref(item && item.href, { protocols: ["https:", "http:"], allowRelative: false });
+        if (!href || href === "#") return "";
+        return `<a href="${escapeHtmlText(href)}" target="_blank" rel="noreferrer">${escapeHtmlText(item.label)}</a>`;
+      })
+      .filter(Boolean)
       .join("");
 
     const navItems = [
@@ -1799,16 +1877,21 @@
     const fallbackMs = seenVisit ? preloadTuning.repeatVisitFallback || 2200 : preloadTuning.firstVisitFallback || 3400;
     const startTime = performance.now();
     let finished = false;
+    let hardTimeoutId = 0;
 
     const done = () => {
       if (finished) return;
       finished = true;
+      if (hardTimeoutId) window.clearTimeout(hardTimeoutId);
+      percent.textContent = "100%";
+      bar.style.width = "100%";
       sessionStorage.setItem("stemora_has_visited", "1");
       body.classList.add("is-ready");
       preloader.classList.add("is-hidden");
       initPageExperience();
       window.setTimeout(() => {
         preloader.setAttribute("aria-hidden", "true");
+        preloader.remove();
       }, 700);
     };
 
@@ -1822,6 +1905,7 @@
     });
 
     const tick = (timestamp) => {
+      if (finished) return;
       const elapsed = timestamp - startTime;
       const fallbackDone = elapsed >= fallbackMs;
       const actual = total ? (loaded / total) * 100 : 100;
@@ -1843,6 +1927,7 @@
       requestAnimationFrame(tick);
     };
 
+    hardTimeoutId = window.setTimeout(done, fallbackMs + 1200);
     requestAnimationFrame(tick);
   }
 
@@ -1926,7 +2011,10 @@
       initContactForm();
     };
 
-    ensureImageReady(heroImage).finally(revealSequence);
+    Promise.race([
+      ensureImageReady(heroImage),
+      wait(preloadTuning.heroReadyFallback || 1400),
+    ]).finally(revealSequence);
   }
 
   function initMediaPriorityLoading(root) {
@@ -2051,6 +2139,25 @@
     };
   }
 
+  function renderShared3DBackground() {
+    return `
+      <div class="page-3d-ambient page-3d-ambient--${escapeHtmlText(page)}" aria-hidden="true">
+        <span class="page-3d-ambient__orb page-3d-ambient__orb--a"></span>
+        <span class="page-3d-ambient__orb page-3d-ambient__orb--b"></span>
+        <span class="page-3d-ambient__mesh"></span>
+      </div>
+      <canvas class="hero-3d-canvas page-3d-canvas js-hero-3d-canvas" aria-hidden="true" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;opacity:0.94;"></canvas>
+    `;
+  }
+
+  function mountShared3DBackground(root) {
+    if (!root || !SHARED_3D_BACKGROUND_PAGES.has(page)) return;
+    if (!$('.js-hero-3d-canvas', root)) {
+      root.insertAdjacentHTML("afterbegin", renderShared3DBackground());
+    }
+    window.setTimeout(() => initHero3DCanvas(root), 100);
+  }
+
   function renderCurrentPage() {
     runPageCleanup($(".js-page-root"));
     syncPageThemeState(getWelcomeTheme());
@@ -2076,6 +2183,28 @@
     const stats = data.welcomeStats[locale];
     const quote = data.welcomeQuotes[locale][0];
     updateMeta(strings.pageMeta.welcome.title, strings.pageMeta.welcome.description);
+
+    const missionCopy = locale === "vi" ? {
+      status: "Trạm điều phối",
+      live: "Cảnh 3D đang chạy",
+      signalLabel: "Tín hiệu",
+      signalValue: "STEMORA",
+      sequenceLabel: "Vòng học tập",
+      sequenceValue: "04 pha",
+      briefIndex: "TÓM TẮT 01",
+      factsIndex: "DỮ LIỆU 02",
+      telemetryIndex: "HỆ THỐNG 03",
+    } : {
+      status: "Mission control",
+      live: "3D scene live",
+      signalLabel: "Signal",
+      signalValue: "STEMORA",
+      sequenceLabel: "Learning loop",
+      sequenceValue: "04 phase",
+      briefIndex: "BRIEF 01",
+      factsIndex: "DATA 02",
+      telemetryIndex: "SYSTEM 03",
+    };
 
     const renderDecor = (scene) =>
       (scene.decorations || [])
@@ -2148,12 +2277,59 @@
       </article>
     `;
 
+    const renderMissionTelemetry = () => `
+      <div class="mission-telemetry" aria-hidden="true">
+        ${stats.map((item) => `
+          <div class="mission-telemetry__item">
+            <span>${item.label}</span>
+            <strong>${item.value}</strong>
+          </div>
+        `).join("")}
+      </div>
+    `;
+
+    const renderMissionHud = () => `
+      <div class="mission-hud" aria-hidden="true">
+        <div class="mission-hud__panel mission-hud__panel--signal" data-mission-layer="4">
+          <span>${missionCopy.signalLabel}</span>
+          <strong>${missionCopy.signalValue}</strong>
+          <i></i>
+        </div>
+        <div class="mission-hud__panel mission-hud__panel--sequence" data-mission-layer="3">
+          <span>${missionCopy.sequenceLabel}</span>
+          <strong>${missionCopy.sequenceValue}</strong>
+          <div class="mission-hud__steps"><i></i><i></i><i></i><i></i></div>
+        </div>
+        <div class="mission-hud__orbital" data-mission-layer="2">
+          <span class="mission-hud__ring"></span>
+          <span class="mission-hud__ring mission-hud__ring--mid"></span>
+          <span class="mission-hud__ring mission-hud__ring--inner"></span>
+          <span class="mission-hud__core"></span>
+        </div>
+      </div>
+    `;
+
+    const renderMissionRail = () => `
+      <div class="mission-scroll-progress js-mission-progress" aria-hidden="true"><span></span></div>
+      <div class="mission-ambient" aria-hidden="true">
+        <span class="mission-ambient__orb mission-ambient__orb--a"></span>
+        <span class="mission-ambient__orb mission-ambient__orb--b"></span>
+        <span class="mission-ambient__mesh"></span>
+      </div>
+    `;
+
     root.innerHTML = `
-      <section class="welcome-flow">
+      <section class="welcome-flow js-mission-experience">
+        ${renderMissionRail()}
         <canvas class="hero-3d-canvas welcome-hero-canvas js-hero-3d-canvas" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none;"></canvas>
-        <section class="scene scene--hero tone-${scenes[0].tone}" style="position: relative; overflow: hidden; perspective: 1000px;">
-          <div class="container scene-grid scene-grid--hero" style="position: relative; z-index: 1;">
-            <div class="scene-copy" data-stage="copy">
+        <section class="scene scene--hero mission-hero tone-${scenes[0].tone}" style="position: relative; overflow: hidden; perspective: 1000px;">
+          <div class="container scene-grid scene-grid--hero mission-stage" style="position: relative; z-index: 1;">
+            <div class="mission-hero__scanner" aria-hidden="true"></div>
+            <div class="scene-copy mission-copy" data-stage="copy" data-mission-layer="2">
+              <div class="mission-status-bar" aria-hidden="true">
+                <span>${missionCopy.status}</span>
+                <strong>${missionCopy.live}</strong>
+              </div>
               <p class="scene-kicker">${scenes[0].eyebrow}</p>
               <h1 class="display-title">${scenes[0].headline}</h1>
               <p class="scene-body scene-body--hero">${scenes[0].body}</p>
@@ -2161,14 +2337,24 @@
                 <a class="button button--primary" href="${scenes[0].cta.primary.href}" data-transition>${scenes[0].cta.primary.label}</a>
                 <a class="button button--ghost" href="${scenes[0].cta.secondary.href}" data-transition>${scenes[0].cta.secondary.label}</a>
               </div>
+              ${renderMissionTelemetry()}
             </div>
 
-            <div class="scene-hero-visual" data-stage="hero">
-              ${renderMedia(scenes[0].media, "scene-hero-visual__main", { priority: true, stage: "hero" })}
+            <div class="scene-hero-visual mission-visual" data-stage="hero" data-mission-layer="5">
+              <div class="mission-visual__frame">
+                ${renderMedia(scenes[0].media, "scene-hero-visual__main", { tier: "critical", stage: "hero" })}
+                <span class="mission-visual__reticle"></span>
+                <span class="mission-hotspot mission-hotspot--a"><span></span></span>
+                <span class="mission-hotspot mission-hotspot--b"><span></span></span>
+                <span class="mission-hotspot mission-hotspot--c"><span></span></span>
+              </div>
             </div>
-            
-            <div class="hero-cards-grid" data-stage="secondary">
-              <div class="hero-card">
+
+            ${renderMissionHud()}
+
+            <div class="hero-cards-grid mission-card-grid" data-stage="secondary">
+              <div class="hero-card mission-card mission-card--brief" data-mission-panel>
+                <span class="mission-card__index">${missionCopy.briefIndex}</span>
                 <h3 class="hero-card__title">${scenes[0].headline}</h3>
                 <p class="hero-card__body">${scenes[0].body}</p>
                 <div class="hero-card__actions">
@@ -2176,8 +2362,9 @@
                   <a class="button button--ghost" href="${scenes[0].cta.secondary.href}" data-transition>${scenes[0].cta.secondary.label}</a>
                 </div>
               </div>
-              
-              <div class="hero-card hero-card--facts">
+
+              <div class="hero-card hero-card--facts mission-card mission-card--facts" data-mission-panel>
+                <span class="mission-card__index">${missionCopy.factsIndex}</span>
                 <span class="hero-card__eyebrow">${locale === "vi" ? "ĐIỂM CHÍNH" : "QUICK SCAN"}</span>
                 <div class="hero-card__fact-list">
                   ${scenes[0].miniFacts.map((item, index) => `
@@ -2196,22 +2383,17 @@
                 </div>
               </div>
 
-              <div class="hero-card hero-card--stats">
+              <div class="hero-card hero-card--stats mission-card mission-card--telemetry" data-mission-panel>
+                <span class="mission-card__index">${missionCopy.telemetryIndex}</span>
                 <span class="hero-card__eyebrow">${scenes[0].eyebrow}</span>
                 <h3 class="hero-card__title">${scenes[0].noteTitle}</h3>
                 <div class="hero-card__stat-list">
-                  <div class="hero-card-stat">
-                    <strong>06</strong>
-                    <span>PROGRAM FORMATS<br>Program arranged with up to deep<br>concepts STEM meets navigation.</span>
-                  </div>
-                  <div class="hero-card-stat">
-                    <strong>04</strong>
-                    <span>PROJECT ARCHETYPES<br>Project mechanics S blocks and<br>action plans and the decow.</span>
-                  </div>
-                  <div class="hero-card-stat">
-                    <strong>05</strong>
-                    <span>SUPPORT TOPICS<br>Project associates about supports<br>mentions & support topics.</span>
-                  </div>
+                  ${stats.map((item) => `
+                    <div class="hero-card-stat">
+                      <strong>${item.value}</strong>
+                      <span>${item.label}</span>
+                    </div>
+                  `).join("")}
                 </div>
               </div>
             </div>
@@ -2339,6 +2521,7 @@
       </section>
     `;
     setTimeout(() => initHero3DCanvas(root), 100);
+    initMissionExperience(root);
   }
 
   function renderProductsPage() {
@@ -2360,11 +2543,11 @@
         hero: p.hero || p.cover,
         gallery: Array.isArray(p.gallery) && p.gallery.length ? p.gallery : [p.cover].filter(Boolean),
         titleVi: p.titleVi,
-        titleEn: p.titleEn || p.titleVi,
+        titleEn: p.titleEn && p.titleEn !== p.titleVi ? p.titleEn : deriveEnglishTitle(p, p.titleVi),
         taglineVi: p.taglineVi || '',
-        taglineEn: p.taglineEn || p.taglineVi || '',
+        taglineEn: p.taglineEn && p.taglineEn !== p.taglineVi ? p.taglineEn : deriveEnglishSummary(p, p.taglineVi || p.titleVi),
         summaryVi: p.summaryVi || '',
-        summaryEn: p.summaryEn || '',
+        summaryEn: p.summaryEn && p.summaryEn !== p.summaryVi ? p.summaryEn : deriveEnglishSummary(p, p.summaryVi || p.titleVi),
         priceVi: p.priceVi || 'Liên hệ',
         priceEn: p.priceEn || 'Contact us',
         originalPriceVi: p.originalPriceVi || '',
@@ -2383,7 +2566,10 @@
       };
     });
 
-    root.innerHTML = '<canvas class="hero-3d-canvas js-hero-3d-canvas" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;opacity:0.85;"></canvas>' +
+    root.innerHTML = '<h1 class="visually-hidden">' + (locale === 'vi' ? 'Sản phẩm STEMORA' : 'STEMORA products') + '</h1>' +
+      '<canvas class="hero-3d-canvas js-hero-3d-canvas" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;opacity:0.85;"></canvas>' +
+      '<div class="galaxy-command-aura" aria-hidden="true"><span></span><span></span><span></span></div>' +
+      '<div class="galaxy-command-core" aria-hidden="true"><span></span><span></span><span></span><i></i></div>' +
       '<div class="galaxy-scene js-galaxy-scene">' +
         '<div class="galaxy-board-hint galaxy-board-hint--top js-galaxy-board-hint-top">' +
           (locale === 'vi' ? 'Kéo xuống để xem thêm sản phẩm phía trên' : 'Scroll down to reveal more products above') +
@@ -2394,8 +2580,16 @@
         '</div>' +
       '</div>' +
       '<div class="galaxy-overlay">' +
+        '<div class="galaxy-overlay__readout" aria-hidden="true"><span>ORBIT</span><i></i><span>INSPECT</span></div>' +
         '<p class="galaxy-overlay__hint">' + (locale === 'vi' ? 'Kéo để khám phá · Cuộn để phóng to' : 'Drag to explore · Scroll to zoom') + '</p>' +
-      '</div>';
+      '</div>' +
+      '<div class="galaxy-control-dock js-galaxy-controls" aria-label="' + (locale === 'vi' ? 'Điều khiển hình cầu sản phẩm' : 'Product sphere controls') + '">' +
+        '<button class="galaxy-control-btn js-galaxy-zoom-in" type="button" aria-label="' + (locale === 'vi' ? 'Phóng to' : 'Zoom in') + '" title="' + (locale === 'vi' ? 'Phóng to' : 'Zoom in') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>' +
+        '<button class="galaxy-control-btn js-galaxy-zoom-out" type="button" aria-label="' + (locale === 'vi' ? 'Thu nhỏ' : 'Zoom out') + '" title="' + (locale === 'vi' ? 'Thu nhỏ' : 'Zoom out') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>' +
+        '<button class="galaxy-control-btn js-galaxy-motion-toggle" type="button" data-motion-state="running" aria-pressed="false" aria-label="' + (locale === 'vi' ? 'Dừng quỹ đạo' : 'Pause orbit') + '" title="' + (locale === 'vi' ? 'Dừng quỹ đạo' : 'Pause orbit') + '"><svg class="galaxy-icon galaxy-icon--pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"/></svg><svg class="galaxy-icon galaxy-icon--play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7-11-7Z"/></svg></button>' +
+        '<button class="galaxy-control-btn js-galaxy-reset" type="button" aria-label="' + (locale === 'vi' ? 'Đặt lại góc nhìn' : 'Reset view') + '" title="' + (locale === 'vi' ? 'Đặt lại góc nhìn' : 'Reset view') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.34-5.66M4 4v6h6"/></svg></button>' +
+      '</div>' +
+      '<div class="galaxy-state-chip js-galaxy-state" aria-live="polite"><i aria-hidden="true"></i><span class="js-galaxy-state-label">AUTO</span></div>';
 
     // ── Search bar: append to BODY (outside root) so position:fixed is anchored to viewport, never to 3D scene ──
     var existingBar = document.querySelector('.js-galaxy-search-bar');
@@ -2646,6 +2840,10 @@
       cardPositions.push({
         rotY: -rY,
         rotX: Math.atan2(py, Math.sqrt(px * px + pz * pz)) * (180 / Math.PI),
+        x: px,
+        y: py,
+        z: pz,
+        baseSphereTransform: sphereTransform,
         sphereTransform: sphereTransform,
       });
 
@@ -2658,7 +2856,7 @@
       var cardTitle = locale === 'vi' ? item.titleVi : item.titleEn;
       var cardTagline = locale === 'vi' ? (item.taglineVi || item.summaryVi || '') : (item.taglineEn || item.summaryEn || '');
 
-      cardsHTML += '<div class="galaxy-card ' + sc + '" data-card-idx="' + i + '" style="transform:' + sphereTransform + '">' +
+      cardsHTML += '<div class="galaxy-card ' + sc + '" data-card-idx="' + i + '" style="--card-delay:' + ((i % 18) * 42) + 'ms; --card-phase:' + ((i % 12) * 30) + 'deg; --card-depth:' + Math.round(pz) + '; transform:' + sphereTransform + '">' +
         '<div class="galaxy-card__inner">' +
           '<div class="galaxy-card__img">' + renderMedia(item.cover, '', { tier: i < 8 ? 'near' : 'deferred', loading: i < 8 ? 'eager' : 'lazy' }) + '</div>' +
           '<div class="galaxy-card__info">' +
@@ -2688,6 +2886,22 @@
     }
     sphere.innerHTML = cardsHTML;
     var cardNodes = Array.prototype.slice.call(sphere.querySelectorAll('.galaxy-card'));
+    var galaxyImagesByDepth = cardNodes
+      .slice()
+      .sort(function(leftCard, rightCard) {
+        var leftPose = cardPositions[parseInt(leftCard.dataset.cardIdx, 10)] || {};
+        var rightPose = cardPositions[parseInt(rightCard.dataset.cardIdx, 10)] || {};
+        return (rightPose.z || 0) - (leftPose.z || 0);
+      })
+      .map(function(card) { return card.querySelector('img[data-src]'); })
+      .filter(Boolean);
+    if (galaxyImagesByDepth.length) {
+      var firstGalaxyBatch = window.innerWidth < 760 ? 16 : 34;
+      loadMediaBatch(galaxyImagesByDepth.slice(0, firstGalaxyBatch), window.innerWidth < 760 ? 4 : 8)
+        .then(function() {
+          return loadMediaBatch(galaxyImagesByDepth.slice(firstGalaxyBatch), window.innerWidth < 760 ? 3 : 6);
+        });
+    }
     var layoutMode = 'sphere';
     var boardScrollCurrent = 0;
     var boardScrollTarget = 0;
@@ -2698,6 +2912,29 @@
     var boardTouchStartScroll = 0;
     var boardTouchMoved = false;
     var boardGridPose = {};
+
+    function getCenteredSphereTransform(card, pose) {
+      if (!card || !pose || !pose.baseSphereTransform) return pose && pose.sphereTransform ? pose.sphereTransform : '';
+      var inner = card.querySelector('.galaxy-card__inner');
+      if (!inner) return pose.baseSphereTransform;
+      var cardWidth = inner.offsetWidth || inner.getBoundingClientRect().width || 0;
+      var cardHeight = inner.offsetHeight || inner.getBoundingClientRect().height || 0;
+
+      return pose.baseSphereTransform.replace(/translate3d\((-?\d+(?:\.\d+)?)px,\s*(-?\d+(?:\.\d+)?)px,\s*(-?\d+(?:\.\d+)?)px\)/, function(match, x, y, z) {
+        return 'translate3d(' + (Number(x) - cardWidth / 2).toFixed(1) + 'px,' + (Number(y) - cardHeight / 2).toFixed(1) + 'px,' + z + 'px)';
+      });
+    }
+
+    function syncSphereCardOrigins() {
+      cardNodes.forEach(function(card, idx) {
+        var pose = cardPositions[idx];
+        if (!pose) return;
+        pose.sphereTransform = getCenteredSphereTransform(card, pose);
+        if (layoutMode === 'sphere' && !card.classList.contains('is-expanded')) {
+          syncSphereCardDepth(card, card.classList.contains('galaxy-card--focus-locked') ? 'locked' : (card.classList.contains('galaxy-card--focused') ? 'hover' : false));
+        }
+      });
+    }
 
     // ═══════════════════════════════════════════
     // DRAG-TO-ROTATE 360° (like Google Earth)
@@ -2715,19 +2952,148 @@
     var AUTO_SPIN_SPEED = 0.12;     // idle auto-rotation speed
     var IDLE_DELAY = 3000;          // ms before auto-spin resumes
     var MAX_TILT_X = 62;
-    var cZoom = window.innerWidth < 900 ? 0.92 : 0.96;
+    var MIN_ZOOM = window.innerWidth < 900 ? 0.44 : 0.56;
+    var MAX_ZOOM = window.innerWidth < 900 ? 1.36 : 1.48;
+    var ZOOM_STEP = window.innerWidth < 900 ? 0.055 : 0.06;
+    var DEFAULT_ZOOM = window.innerWidth < 900 ? 0.66 : 0.76;
+    var cZoom = DEFAULT_ZOOM;
     var hoverFocusActive = false;
     var hoverFocusCard = null;
+    var focusLockedCard = null;
+    var sphereHoverPaused = false;
     var hoverAnchorX = 0;
     var hoverAnchorY = 0;
-    var HOVER_SWITCH_RADIUS = 18;
+    var HOVER_SWITCH_RADIUS = 26;
+    var HOVER_SWITCH_DELAY = 110;
+    var HOVER_KEEP_PADDING = 12;
+    var HOVER_EXIT_PADDING = 34;
+    var HOVER_RESUME_DELAY = 620;
+    var MOVE_THRESH = 10;   // px before considered a drag
+    var HOVER_FOCUS_EASE = 0.2;
+    var HOVER_SNAP_EPSILON = 0.32;
+    var MOTION_DECEL_EASE = 0.12;
+    var MOTION_STOP_EPSILON = 0.002;
     var hoverTargetRotX = rotX;
     var hoverTargetRotY = rotY;
+    var zoomInBtn = document.querySelector('.js-galaxy-zoom-in');
+    var zoomOutBtn = document.querySelector('.js-galaxy-zoom-out');
+    var zoomResetBtn = document.querySelector('.js-galaxy-reset');
+    var motionToggleBtn = document.querySelector('.js-galaxy-motion-toggle');
+    var galaxyStateEl = document.querySelector('.js-galaxy-state');
+    var galaxyStateLabel = document.querySelector('.js-galaxy-state-label');
+    var interactionState = 'idle';
+    var userMotionPaused = false;
+    var interactionLabels = {
+      idle: 'AUTO',
+      dragging: 'DRAG',
+      hover: 'FOCUS',
+      locked: 'LOCK',
+      paused: 'PAUSE',
+      modal: 'MODAL',
+      grid: 'GRID',
+      zoom: 'ZOOM',
+      keyboard: 'KEY'
+    };
+
+    function setInteractionState(nextState) {
+      interactionState = nextState || 'idle';
+      sceneEl.dataset.orbitState = interactionState;
+      if (galaxyStateEl) galaxyStateEl.dataset.orbitState = interactionState;
+      if (galaxyStateLabel) galaxyStateLabel.textContent = interactionLabels[interactionState] || interactionState.toUpperCase();
+    }
+
+    function syncMotionToggleButton() {
+      if (!motionToggleBtn) return;
+      var isPaused = !!userMotionPaused;
+      var label = isPaused
+        ? (locale === 'vi' ? 'Chạy quỹ đạo' : 'Resume orbit')
+        : (locale === 'vi' ? 'Dừng quỹ đạo' : 'Pause orbit');
+      motionToggleBtn.dataset.motionState = isPaused ? 'paused' : 'running';
+      motionToggleBtn.setAttribute('aria-pressed', isPaused ? 'true' : 'false');
+      motionToggleBtn.setAttribute('aria-label', label);
+      motionToggleBtn.setAttribute('title', label);
+    }
+
+    function pauseSphereByUser() {
+      userMotionPaused = true;
+      sphereHoverPaused = false;
+      isDragging = false;
+      isIdle = false;
+      if (Math.abs(velY) < 0.015 && interactionState === 'idle') velY = AUTO_SPIN_SPEED;
+      clearTimeout(idleTimer);
+      if (!focusLockedCard && layoutMode === 'sphere' && !sphereFrozen) setInteractionState('paused');
+      syncMotionToggleButton();
+    }
+
+    function resumeSphereByUser() {
+      userMotionPaused = false;
+      sphereFrozen = false;
+      sphereHoverPaused = false;
+      if (!focusLockedCard && layoutMode === 'sphere') {
+        isIdle = true;
+        setInteractionState('idle');
+      }
+      syncMotionToggleButton();
+    }
+
+    function toggleSphereMotion() {
+      if (userMotionPaused) resumeSphereByUser();
+      else pauseSphereByUser();
+    }
+
+    function updateZoomButtons() {
+      if (zoomOutBtn) zoomOutBtn.disabled = cZoom <= MIN_ZOOM + 0.001;
+      if (zoomInBtn) zoomInBtn.disabled = cZoom >= MAX_ZOOM - 0.001;
+    }
 
     function applyRot() {
       sphere.style.transform = 'rotateX(' + rotX + 'deg) rotateY(' + rotY + 'deg) scale3d(' + cZoom + ',' + cZoom + ',' + cZoom + ')';
     }
+
+    function setSphereZoom(nextZoom, stateName) {
+      cZoom = clamp(nextZoom, MIN_ZOOM, MAX_ZOOM);
+      applyRot();
+      updateZoomButtons();
+      syncHoverPreviewPosition();
+      if (stateName) setInteractionState(stateName);
+    }
+
+    function nudgeSphereZoom(direction) {
+      setSphereZoom(cZoom + (direction * ZOOM_STEP), 'zoom');
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(function() {
+        if (focusLockedCard) {
+          setInteractionState('locked');
+          return;
+        }
+        if (userMotionPaused) {
+          setInteractionState('paused');
+          return;
+        }
+        if (!sphereFrozen && !focusLockedCard && layoutMode === 'sphere') setInteractionState('idle');
+      }, 900);
+    }
+
+    function resetSphereView() {
+      clearSphereFocus(true);
+      sphereFrozen = false;
+      userMotionPaused = false;
+      isDragging = false;
+      isIdle = false;
+      rotX = DEFAULT_ROT_X;
+      rotY = 0;
+      velX = 0;
+      velY = 0;
+      setSphereZoom(DEFAULT_ZOOM, 'idle');
+      syncMotionToggleButton();
+      resumeSphere();
+    }
+
     applyRot();
+    updateZoomButtons();
+    syncMotionToggleButton();
+    setInteractionState('idle');
+    syncSphereCardOrigins();
 
     function shortestAngleDelta(fromAngle, toAngle) {
       return ((toAngle - fromAngle + 540) % 360) - 180;
@@ -2739,6 +3105,15 @@
       return (dx * dx + dy * dy) > (HOVER_SWITCH_RADIUS * HOVER_SWITCH_RADIUS);
     }
 
+    function pointInsideCard(card, clientX, clientY, padding) {
+      if (!card) return false;
+      var inner = card.querySelector('.galaxy-card__inner');
+      var rect = (inner || card).getBoundingClientRect();
+      if (!rect.width || !rect.height) return false;
+      var buffer = typeof padding === 'number' ? padding : 0;
+      return clientX >= rect.left - buffer && clientX <= rect.right + buffer && clientY >= rect.top - buffer && clientY <= rect.bottom + buffer;
+    }
+
     function getSphereCardTransform(card, depthOffset) {
       var cardIndex = parseInt(card.dataset.cardIdx, 10);
       var cardPose = cardPositions[cardIndex];
@@ -2746,10 +3121,11 @@
       return cardPose.sphereTransform + (depthOffset ? ' translateZ(' + depthOffset + 'px)' : '');
     }
 
-    function syncSphereCardDepth(card, isFocused) {
+    function syncSphereCardDepth(card, focusMode) {
       if (!card || layoutMode !== 'sphere' || card.classList.contains('is-expanded')) return;
-      card.style.transform = getSphereCardTransform(card, isFocused ? 84 : 0);
-      card.style.zIndex = isFocused ? '260' : '';
+      var lift = focusMode === 'locked' ? 94 : 0;
+      card.style.transform = getSphereCardTransform(card, lift);
+      card.style.zIndex = focusMode ? (focusMode === 'locked' ? '280' : '240') : '';
     }
 
     function focusSphereOnCard(card, clientX, clientY) {
@@ -2761,6 +3137,7 @@
       hoverAnchorX = typeof clientX === 'number' ? clientX : hoverAnchorX;
       hoverAnchorY = typeof clientY === 'number' ? clientY : hoverAnchorY;
       hoverFocusActive = true;
+      sphereHoverPaused = false;
       hoverTargetRotX = Math.max(-MAX_TILT_X, Math.min(MAX_TILT_X, cardPose.rotX));
       hoverTargetRotY = rotY + shortestAngleDelta(rotY, cardPose.rotY);
       sphereFrozen = false;
@@ -2771,59 +3148,210 @@
       clearTimeout(idleTimer);
     }
 
+    function pauseSphereForHover() {
+      sphereHoverPaused = true;
+      sphereFrozen = false;
+      isDragging = false;
+      isIdle = false;
+      velX = 0;
+      velY = 0;
+      clearTimeout(idleTimer);
+    }
+
     function releaseSphereHoverFocus() {
+      clearHoverCandidate();
       hideHoverPreview();
       if (hoverFocusCard) {
         syncSphereCardDepth(hoverFocusCard, false);
       }
       hoverFocusActive = false;
       hoverFocusCard = null;
-      if (!sphereFrozen && !isDragging) {
-        isIdle = true;
+      sphereHoverPaused = false;
+    }
+
+    function getCardViewDepth(card) {
+      var cardIndex = parseInt(card.dataset.cardIdx, 10);
+      var pose = cardPositions[cardIndex];
+      if (!pose) return 0;
+      var ry = rotY * Math.PI / 180;
+      var rx = rotX * Math.PI / 180;
+      var cosY = Math.cos(ry);
+      var sinY = Math.sin(ry);
+      var cosX = Math.cos(rx);
+      var sinX = Math.sin(rx);
+      var zAfterY = (pose.z * cosY) - (pose.x * sinY);
+      return (pose.y * sinX) + (zAfterY * cosX);
+    }
+
+    function findFrontCardAt(clientX, clientY) {
+      if (layoutMode !== 'sphere') return null;
+      var rankedElements = document.elementsFromPoint(clientX, clientY);
+      var topCards = [];
+      rankedElements.forEach(function(el) {
+        var hitCard = el.closest && el.closest('.galaxy-card');
+        if (hitCard && topCards.indexOf(hitCard) === -1) topCards.push(hitCard);
+      });
+
+      var bestCard = null;
+      var bestScore = -Infinity;
+      cardNodes.forEach(function(card) {
+        if (!card || card.classList.contains('galaxy-card--grid') || card.classList.contains('is-expanded')) return;
+        if (card.style.visibility === 'hidden' || card.style.pointerEvents === 'none') return;
+        var inner = card.querySelector('.galaxy-card__inner');
+        var rect = (inner || card).getBoundingClientRect();
+        if (!rect.width || !rect.height) return;
+        if (clientX < rect.left || clientX > rect.right || clientY < rect.top || clientY > rect.bottom) return;
+        var topRank = topCards.indexOf(card);
+        var centerDx = clientX - (rect.left + rect.width / 2);
+        var centerDy = clientY - (rect.top + rect.height / 2);
+        var centerDistance = Math.sqrt(centerDx * centerDx + centerDy * centerDy);
+        var score = getCardViewDepth(card) - (centerDistance * 0.22);
+        if (topRank !== -1) score += 260 - (topRank * 24);
+        if (card === hoverFocusCard) score += 18;
+        if (score > bestScore) {
+          bestScore = score;
+          bestCard = card;
+        }
+      });
+      return bestCard;
+    }
+
+    function clearSphereFocus(forceLocked) {
+      if (focusLockedCard && !forceLocked) return;
+      clearHoverCandidate();
+      clearTimeout(hoverReleaseTimer);
+      sphereHoverPaused = false;
+      var focusedCards = sphere.querySelectorAll('.galaxy-card--focused, .galaxy-card--focus-locked');
+      focusedCards.forEach(function(card) {
+        card.classList.remove('galaxy-card--focused', 'galaxy-card--focus-locked');
+        syncSphereCardDepth(card, false);
+      });
+      focusLockedCard = null;
+      sceneEl.classList.remove('is-focus-locked');
+      releaseSphereHoverFocus();
+      if (layoutMode === 'sphere' && !sphereFrozen && !isDragging) setInteractionState('idle');
+    }
+
+    function setSphereFocus(card, clientX, clientY, lockFocus) {
+      if (!card || layoutMode !== 'sphere') return;
+      if (focusLockedCard && !lockFocus) return;
+      clearHoverCandidate();
+      var prevCards = sphere.querySelectorAll('.galaxy-card--focused, .galaxy-card--focus-locked');
+      prevCards.forEach(function(prev) {
+        if (prev === card) return;
+        prev.classList.remove('galaxy-card--focused', 'galaxy-card--focus-locked');
+        syncSphereCardDepth(prev, false);
+      });
+      focusLockedCard = lockFocus ? card : null;
+      sceneEl.classList.toggle('is-focus-locked', !!lockFocus);
+      card.classList.add('galaxy-card--focused');
+      card.classList.toggle('galaxy-card--focus-locked', !!lockFocus);
+      syncSphereCardDepth(card, lockFocus ? 'locked' : 'hover');
+      showHoverPreview(card, lockFocus);
+      clearTimeout(hoverReleaseTimer);
+      if (lockFocus) {
+        focusSphereOnCard(card, clientX, clientY);
+      } else {
+        hoverFocusCard = card;
+        hoverAnchorX = typeof clientX === 'number' ? clientX : hoverAnchorX;
+        hoverAnchorY = typeof clientY === 'number' ? clientY : hoverAnchorY;
+        hoverFocusActive = false;
+        pauseSphereForHover();
+      }
+      setInteractionState(lockFocus ? 'locked' : 'hover');
+    }
+
+    var hoverPickFrame = 0;
+    var hoverPickX = 0;
+    var hoverPickY = 0;
+    var hoverReleaseTimer = null;
+    var hoverCandidateCard = null;
+    var hoverCandidateAt = 0;
+    var hoverCandidateTimer = null;
+
+    function clearHoverCandidate() {
+      clearTimeout(hoverCandidateTimer);
+      hoverCandidateCard = null;
+      hoverCandidateAt = 0;
+      hoverCandidateTimer = null;
+    }
+
+    function commitHoverCandidate(card) {
+      if (!card || hoverCandidateCard !== card) return;
+      if (layoutMode !== 'sphere' || isDragging || sphereFrozen || focusLockedCard || isPinching) return;
+      if (!pointInsideCard(card, hoverPickX, hoverPickY, HOVER_KEEP_PADDING)) return;
+      clearHoverCandidate();
+      setSphereFocus(card, hoverPickX, hoverPickY, false);
+    }
+
+    function scheduleHoverCandidate(card) {
+      hoverCandidateCard = card;
+      hoverCandidateAt = performance.now ? performance.now() : Date.now();
+      clearTimeout(hoverCandidateTimer);
+      hoverCandidateTimer = setTimeout(function() {
+        commitHoverCandidate(card);
+      }, HOVER_SWITCH_DELAY);
+    }
+
+    function scheduleSphereHoverRelease(immediate) {
+      clearTimeout(hoverReleaseTimer);
+      hoverReleaseTimer = setTimeout(function() {
+        if (focusLockedCard || isDragging || sphereFrozen || layoutMode !== 'sphere') return;
+        clearSphereFocus(true);
+        resumeSphere(false, HOVER_RESUME_DELAY);
+      }, immediate ? 0 : 90);
+    }
+
+    function updateSphereHoverFromPoint(clientX, clientY) {
+      if (layoutMode !== 'sphere' || isDragging || sphereFrozen || focusLockedCard || isPinching) return;
+      if (hoverFocusCard && pointInsideCard(hoverFocusCard, clientX, clientY, HOVER_KEEP_PADDING)) {
+        clearTimeout(hoverReleaseTimer);
+        clearHoverCandidate();
+        return;
+      }
+      var card = findFrontCardAt(clientX, clientY);
+      if (card) {
+        clearTimeout(hoverReleaseTimer);
+        if (card === hoverFocusCard) {
+          clearHoverCandidate();
+          return;
+        }
+        if (hoverCandidateCard !== card) {
+          scheduleHoverCandidate(card);
+          return;
+        }
+        if (((performance.now ? performance.now() : Date.now()) - hoverCandidateAt) < HOVER_SWITCH_DELAY) return;
+        if (hoverFocusCard && hoverFocusCard !== card && !pointerMovedFromHoverAnchor(clientX, clientY)) return;
+        clearHoverCandidate();
+        setSphereFocus(card, clientX, clientY, false);
+        return;
+      }
+      clearHoverCandidate();
+      if (hoverFocusCard && !pointInsideCard(hoverFocusCard, clientX, clientY, HOVER_EXIT_PADDING) && pointerMovedFromHoverAnchor(clientX, clientY)) {
+        scheduleSphereHoverRelease(false);
       }
     }
 
-    // --- Hover card: sphere mode pulls card to center, grid mode scrolls row to center ---
-    sphere.addEventListener('mouseover', function(e) {
-      var card = e.target.closest('.galaxy-card');
-      if (!card) return;
-      if (card.contains(e.relatedTarget)) return;
+    function queueSphereHover(clientX, clientY) {
+      hoverPickX = clientX;
+      hoverPickY = clientY;
+      if (hoverPickFrame) return;
+      hoverPickFrame = requestAnimationFrame(function() {
+        hoverPickFrame = 0;
+        updateSphereHoverFromPoint(hoverPickX, hoverPickY);
+      });
+    }
 
-      if (layoutMode === 'sphere' && hoverFocusCard && hoverFocusCard !== card && !pointerMovedFromHoverAnchor(e.clientX, e.clientY)) {
-        return;
-      }
-
-      var prev = sphere.querySelector('.galaxy-card--focused');
-      if (prev && prev !== card) {
-        prev.classList.remove('galaxy-card--focused');
-        syncSphereCardDepth(prev, false);
-      }
-      card.classList.add('galaxy-card--focused');
-      if (layoutMode === 'sphere') {
-        syncSphereCardDepth(card, true);
-        showHoverPreview(card);
-        focusSphereOnCard(card, e.clientX, e.clientY);
-      }
-    });
-    sphere.addEventListener('mouseout', function(e) {
-      var card = e.target.closest('.galaxy-card');
-      if (!card || card.contains(e.relatedTarget)) return;
-      if (layoutMode === 'sphere' && hoverFocusCard === card && !pointerMovedFromHoverAnchor(e.clientX, e.clientY)) {
-        return;
-      }
-      card.classList.remove('galaxy-card--focused');
-      if (layoutMode === 'sphere') {
-        releaseSphereHoverFocus();
-      }
-      if (layoutMode === 'sphere' && !expandedCard && !modalEl.classList.contains('is-open')) {
-        resumeSphere(true);
-      }
+    sceneEl.addEventListener('pointerleave', function() {
+      if (layoutMode !== 'sphere' || focusLockedCard || isDragging || sphereFrozen) return;
+      scheduleSphereHoverRelease(true);
     });
 
     // --- Drag start ---
     function onDragStart(x, y) {
       if (layoutMode === 'grid') return;
-      releaseSphereHoverFocus();
+      clearSphereFocus(true);
+      sphereHoverPaused = false;
       isDragging = true;
       isIdle = false;
       lastX = x;
@@ -2832,6 +3360,7 @@
       velX = 0;
       velY = 0;
       clearTimeout(idleTimer);
+      setInteractionState('dragging');
       sceneEl.style.cursor = 'grabbing';
     }
 
@@ -2850,10 +3379,20 @@
     // --- Drag end / release ---
     function onDragEnd() {
       isDragging = false;
+      sphereHoverPaused = false;
       sceneEl.style.cursor = 'grab';
+      if (userMotionPaused) {
+        velX = 0;
+        velY = 0;
+        setInteractionState('paused');
+        return;
+      }
       // Schedule auto-spin resume after idle delay
       clearTimeout(idleTimer);
-      idleTimer = setTimeout(function() { isIdle = true; }, IDLE_DELAY);
+      idleTimer = setTimeout(function() {
+        isIdle = true;
+        if (!sphereFrozen && !focusLockedCard && layoutMode === 'sphere') setInteractionState('idle');
+      }, IDLE_DELAY);
     }
 
     // ═══════════════════════════════════════════
@@ -2864,9 +3403,15 @@
     var pDownX = 0, pDownY = 0;
     var pMoved = false;
     var HOLD_MS = 350;
-    var MOVE_THRESH = 15;   // px before considered a drag
     var sphereFrozen = false;  // hard freeze — animation loop does nothing
     var activePreviewCard = null; // the card currently being previewed
+    var activePreviewMode = '';
+    var activePointers = {};
+    var primaryPointerId = null;
+    var pointerStartedOnLockedCard = false;
+    var isPinching = false;
+    var pinchStartDistance = 0;
+    var pinchStartZoom = cZoom;
 
     // ─── Preview overlay (hold) ───
     var previewEl = document.createElement('div');
@@ -2883,6 +3428,7 @@
     document.body.appendChild(modalEl);
 
     function getProductByCard(card) {
+      if (!card) return null;
       return demoProducts[parseInt(card.dataset.cardIdx, 10)];
     }
 
@@ -2897,44 +3443,101 @@
       if (!inner) return;
       var rect = inner.getBoundingClientRect();
       if (!rect.width || !rect.height) return;
-      var previewWidth = Math.min(
-        Math.max(rect.width * 1.22, rect.width + 22),
-        window.innerWidth < 900 ? 196 : 238
-      );
-      var left = Math.max(10, Math.min((rect.left + rect.width * 0.5) - (previewWidth * 0.5), window.innerWidth - previewWidth - 10));
-      var top = Math.max(10, Math.min(rect.top - 10, window.innerHeight - rect.height - 10));
+      var filterRect = searchBarEl ? searchBarEl.getBoundingClientRect() : null;
+      var minTop = filterRect ? filterRect.bottom + 10 : 12;
+      var previewWidth = window.innerWidth < 540
+        ? Math.min(window.innerWidth - 24, 320)
+        : (window.innerWidth < 760 ? Math.min(window.innerWidth - 24, 348) : (window.innerWidth < 1100 ? 374 : 424));
+      var panelRect = hoverPreviewEl.firstElementChild.getBoundingClientRect();
+      var panelHeight = panelRect.height || (window.innerWidth < 760 ? 174 : 198);
+      var cardMidX = rect.left + rect.width * 0.5;
+      var cardMidY = rect.top + rect.height * 0.5;
+      var preferRight = cardMidX < window.innerWidth * 0.56;
+      var previewGap = window.innerWidth < 760 ? 12 : 26;
+      var left = preferRight ? rect.right + previewGap : rect.left - previewWidth - previewGap;
+      var top = cardMidY - panelHeight * 0.5;
+      var previewSide = preferRight ? 'right' : 'left';
+
+      if (window.innerWidth < 760) {
+        left = cardMidX - previewWidth * 0.5;
+        top = rect.bottom + previewGap;
+        previewSide = 'bottom';
+        if (top + panelHeight > window.innerHeight - 68) {
+          top = rect.top - panelHeight - previewGap;
+          previewSide = 'top';
+        }
+      }
+
+      left = Math.max(12, Math.min(left, window.innerWidth - previewWidth - 12));
+      top = Math.max(minTop, Math.min(top, window.innerHeight - panelHeight - 72));
       hoverPreviewEl.style.left = left + 'px';
       hoverPreviewEl.style.top = top + 'px';
       hoverPreviewEl.style.width = previewWidth + 'px';
+      hoverPreviewEl.dataset.side = previewSide;
+      hoverPreviewEl.style.setProperty('--spotlight-anchor-x', (cardMidX - left).toFixed(1) + 'px');
+      hoverPreviewEl.style.setProperty('--spotlight-anchor-y', (cardMidY - top).toFixed(1) + 'px');
     }
 
     function hideHoverPreview() {
       if (activePreviewCard) {
-        activePreviewCard.classList.remove('is-ghosted');
+        activePreviewCard.classList.remove('is-spotlighted', 'is-ghosted');
       }
       activePreviewCard = null;
+      activePreviewMode = '';
+      sceneEl.classList.remove('is-card-focused');
       hoverPreviewEl.classList.remove('is-visible');
+      hoverPreviewEl.removeAttribute('data-orbit-show');
+      hoverPreviewEl.removeAttribute('data-side');
       hoverPreviewEl.innerHTML = '';
       hoverPreviewEl.style.removeProperty('left');
       hoverPreviewEl.style.removeProperty('top');
       hoverPreviewEl.style.removeProperty('width');
+      hoverPreviewEl.style.removeProperty('--spotlight-anchor-x');
+      hoverPreviewEl.style.removeProperty('--spotlight-anchor-y');
     }
 
-    function showHoverPreview(card) {
+    function showHoverPreview(card, isLockedPreview) {
       if (!card || layoutMode !== 'sphere' || card.classList.contains('is-expanded')) return;
-      if (activePreviewCard !== card) {
-        hideHoverPreview();
-        activePreviewCard = card;
-        var previewCard = card.cloneNode(true);
-        previewCard.classList.remove('galaxy-card--focused', 'is-expanded', 'is-ghosted');
-        previewCard.style.transform = '';
-        previewCard.style.zIndex = '';
-        hoverPreviewEl.innerHTML = '';
-        hoverPreviewEl.appendChild(previewCard);
+      var product = getProductByCard(card);
+      if (!product) return;
+      var previewMode = isLockedPreview ? 'locked' : 'hover';
+      var shouldRenderPreview = activePreviewCard !== card || activePreviewMode !== previewMode;
+      if (activePreviewCard && activePreviewCard !== card) {
+        activePreviewCard.classList.remove('is-spotlighted', 'is-ghosted');
       }
-      card.classList.add('is-ghosted');
+      if (shouldRenderPreview) {
+        activePreviewCard = card;
+        activePreviewMode = previewMode;
+        var spotlightTitle = escapeHtmlText(locale === 'vi' ? product.titleVi : product.titleEn);
+        var spotlightPrice = escapeHtmlText(locale === 'vi' ? product.priceVi : product.priceEn);
+        var spotlightCategory = escapeHtmlText(getProductCategory(product) || (locale === 'vi' ? 'Sản phẩm STEM' : 'STEM product'));
+        var spotlightAlt = locale === 'vi' ? (product.coverAltVi || product.titleVi) : (product.coverAltEn || product.titleEn);
+        var spotlightAction = escapeHtmlText(isLockedPreview ? (locale === 'vi' ? 'Đã khóa quỹ đạo' : 'Orbit locked') : (locale === 'vi' ? 'Đang xem nhanh' : 'Quick focus'));
+        var spotlightSummary = escapeHtmlText(locale === 'vi' ? (product.taglineVi || product.summaryVi || '') : (product.taglineEn || product.summaryEn || ''));
+        var spotlightStock = escapeHtmlText(locale === 'vi'
+          ? (product.stock > 0 ? ((product.availabilityVi || 'Còn hàng') + ' · ' + product.stock) : (product.availabilityVi || 'Liên hệ'))
+          : (product.stock > 0 ? ((product.availabilityEn || 'In stock') + ' · ' + product.stock) : (product.availabilityEn || 'Contact us')));
+
+        hoverPreviewEl.innerHTML =
+          '<div class="galaxy-spotlight">' +
+            '<div class="galaxy-spotlight__media">' + renderMedia(product.cover || product.hero, 'galaxy-spotlight__frame', { tier: 'critical', loading: 'eager', alt: spotlightAlt }) + '</div>' +
+            '<div class="galaxy-spotlight__body">' +
+              '<span class="galaxy-spotlight__kicker">' + spotlightCategory + '</span>' +
+              '<strong class="galaxy-spotlight__name">' + spotlightTitle + '</strong>' +
+              '<span class="galaxy-spotlight__price">' + spotlightPrice + '</span>' +
+              (spotlightSummary ? '<p class="galaxy-spotlight__summary">' + spotlightSummary + '</p>' : '') +
+              '<span class="galaxy-spotlight__stock">' + spotlightStock + '</span>' +
+              '<span class="galaxy-spotlight__state">' + spotlightAction + '</span>' +
+            '</div>' +
+          '</div>';
+        hydrateDynamicMedia(hoverPreviewEl);
+      }
+      card.classList.add('is-spotlighted');
+      sceneEl.classList.add('is-card-focused');
+      hoverPreviewEl.setAttribute('data-orbit-show', previewMode);
       hoverPreviewEl.classList.add('is-visible');
       syncHoverPreviewPosition();
+      requestAnimationFrame(syncHoverPreviewPosition);
     }
 
     hoverPreviewEl.addEventListener('mousedown', function(e) {
@@ -2954,6 +3557,7 @@
 
     hoverPreviewEl.addEventListener('mouseleave', function() {
       if (!activePreviewCard || layoutMode !== 'sphere') return;
+      if (focusLockedCard) return;
       var card = activePreviewCard;
       card.classList.remove('galaxy-card--focused');
       releaseSphereHoverFocus();
@@ -2962,21 +3566,36 @@
       }
     });
 
-    function stopSphere() {
-      hideHoverPreview();
-      releaseSphereHoverFocus();
+    function stopSphere(reason) {
+      clearSphereFocus(true);
       sphereFrozen = true;
+      sphereHoverPaused = false;
       isIdle = false; velX = 0; velY = 0; isDragging = false;
       clearTimeout(idleTimer);
+      setInteractionState(reason || 'paused');
     }
-    function resumeSphere(immediate) {
+    function resumeSphere(immediate, delayMs) {
+      if (userMotionPaused && layoutMode === 'sphere') {
+        sphereFrozen = false;
+        sphereHoverPaused = false;
+        isIdle = false;
+        clearTimeout(idleTimer);
+        if (!focusLockedCard) setInteractionState('paused');
+        syncMotionToggleButton();
+        return;
+      }
       sphereFrozen = false;
+      sphereHoverPaused = false;
       clearTimeout(idleTimer);
       if (immediate) {
         isIdle = true;
+        if (!focusLockedCard && layoutMode === 'sphere') setInteractionState('idle');
         return;
       }
-      idleTimer = setTimeout(function() { isIdle = true; }, IDLE_DELAY);
+      idleTimer = setTimeout(function() {
+        isIdle = true;
+        if (!focusLockedCard && layoutMode === 'sphere') setInteractionState('idle');
+      }, typeof delayMs === 'number' ? delayMs : IDLE_DELAY);
     }
 
     function easeSphereTiltHome(strength, damping) {
@@ -3166,7 +3785,7 @@
 
     function applySphereLayout() {
       layoutMode = 'sphere';
-      hideHoverPreview();
+      clearSphereFocus(true);
       boardScrollCurrent = 0;
       boardScrollTarget = 0;
       boardScrollMin = 0;
@@ -3195,6 +3814,7 @@
           ? 'Đang xem dạng hình cầu. Nhập tìm kiếm hoặc chọn bộ lọc để xếp thành lưới 4 hàng.'
           : 'Sphere mode active. Search or filter to snap cards into a 4-row grid.';
       }
+      setInteractionState('idle');
       resumeSphere();
     }
 
@@ -3258,7 +3878,7 @@
       var wasGridMode = layoutMode === 'grid';
       var previousBoardScrollTarget = boardScrollTarget;
       layoutMode = 'grid';
-      stopSphere();
+      stopSphere('grid');
       sceneEl.classList.add('is-grid-mode');
       if (wasGridMode) {
         sceneEl.classList.add('is-grid-reflowing');
@@ -3518,7 +4138,7 @@
       }
       expandedCard = card;
       card.classList.add('is-expanded');
-      stopSphere();
+      stopSphere('paused');
     }
 
     function collapseCard() {
@@ -3547,14 +4167,21 @@
       }
       // Cart / Buy (visual feedback only for now)
       if (e.target.classList.contains('xbtn-cart') || e.target.classList.contains('xbtn-buy')) {
-        e.target.textContent = e.target.classList.contains('xbtn-cart') ? '✓ Added!' : '✓ Done!';
+        var actionProduct = getProductByCard(e.target.closest('.galaxy-card'));
+        addProductToLocalCart(actionProduct, 1);
+        var isCartAction = e.target.classList.contains('xbtn-cart');
+        e.target.textContent = isCartAction ? (locale === 'vi' ? 'Đã thêm' : 'Added') : (locale === 'vi' ? 'Đang chuyển' : 'Opening');
         setTimeout(function() {
-          e.target.textContent = e.target.classList.contains('xbtn-cart') ? 'Add to Cart' : 'Buy Now';
+          if (!isCartAction) {
+            window.location.href = getLocalePath("contact");
+            return;
+          }
+          e.target.textContent = locale === 'vi' ? 'Thêm vào giỏ' : 'Add to Cart';
         }, 1500);
         return;
       }
 
-      // Sphere mode opens summary modal. Grid/search/filter mode opens detail page.
+      // Sphere mode opens summary modal directly. Grid/search/filter mode opens detail page.
       if (layoutMode !== 'grid' && pMoved) return; // was a sphere drag
       var card = e.target.closest('.galaxy-card');
       if (!card) return;
@@ -3569,15 +4196,19 @@
 
     // Click backdrop (outside sphere) → collapse expanded card
     document.addEventListener('click', function(e) {
-      if (expandedCard && !e.target.closest('.galaxy-card') && !e.target.closest('.galaxy-modal') && !e.target.closest('.galaxy-search-bar')) {
+      if (expandedCard && !e.target.closest('.galaxy-card') && !e.target.closest('.galaxy-modal') && !e.target.closest('.galaxy-filter-panel') && !e.target.closest('.galaxy-control-dock')) {
         collapseCard();
+      }
+      if (focusLockedCard && !e.target.closest('.galaxy-card') && !e.target.closest('.galaxy-hover-preview') && !e.target.closest('.galaxy-modal') && !e.target.closest('.galaxy-filter-panel') && !e.target.closest('.galaxy-control-dock')) {
+        clearSphereFocus(true);
+        resumeSphere(true);
       }
     });
 
 
     // ─── MODAL (click) ───
     function openModal(product) {
-      stopSphere();
+      stopSphere('modal');
       var stock = product.stock || 0;
       var productIndex = Math.max(0, demoProducts.indexOf(product));
 
@@ -3708,96 +4339,196 @@
     // Intercept card <a> clicks — handled via sphere delegation above
     // (kept empty intentionally — replaced by sphere click handler)
 
-    // Mouse events
-    sceneEl.addEventListener('mousedown', function(e) {
+    function getActivePointerList() {
+      return Object.keys(activePointers).map(function(pointerId) { return activePointers[pointerId]; });
+    }
+
+    function getPinchDistance() {
+      var pointers = getActivePointerList();
+      if (pointers.length < 2) return 0;
+      var dx = pointers[0].clientX - pointers[1].clientX;
+      var dy = pointers[0].clientY - pointers[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    function startPinchZoom() {
+      if (layoutMode !== 'sphere') return;
+      var distance = getPinchDistance();
+      if (!distance) return;
+      clearTimeout(holdTimer);
+      clearSphereFocus(true);
+      sphereHoverPaused = false;
+      pMoved = true;
+      isPinching = true;
+      isDragging = false;
+      pointerStartedOnLockedCard = false;
+      isIdle = false;
+      pinchStartDistance = distance;
+      pinchStartZoom = cZoom;
+      setInteractionState('zoom');
+      sceneEl.style.cursor = 'grab';
+    }
+
+    function updatePinchZoom() {
+      if (!isPinching || layoutMode !== 'sphere') return;
+      var distance = getPinchDistance();
+      if (!distance || !pinchStartDistance) return;
+      setSphereZoom(pinchStartZoom * (distance / pinchStartDistance), 'zoom');
+    }
+
+    function isSceneControlTarget(target) {
+      return !!(target && target.closest && target.closest('.galaxy-filter-panel, .galaxy-control-dock, .galaxy-modal, .galaxy-hover-preview'));
+    }
+
+    function handlePointerDown(e) {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (isSceneControlTarget(e.target)) return;
+
+      activePointers[e.pointerId] = { clientX: e.clientX, clientY: e.clientY };
+
       if (layoutMode === 'grid') {
+        if (primaryPointerId !== null) return;
+        try { sceneEl.setPointerCapture(e.pointerId); } catch (error) {}
+        primaryPointerId = e.pointerId;
+        pDownX = e.clientX;
+        pDownY = e.clientY;
         pMoved = false;
         holdCard = null;
+        pointerStartedOnLockedCard = false;
+        boardTouchActive = true;
+        boardTouchStartY = e.clientY;
+        boardTouchStartScroll = boardScrollTarget;
+        boardTouchMoved = false;
+        setInteractionState('grid');
         return;
       }
-      if (e.target.closest('.galaxy-search-bar')) return;
-      pDownX = e.clientX; pDownY = e.clientY; pMoved = false;
-      holdCard = e.target.closest('.galaxy-card');
+
+      if (getActivePointerList().length >= 2) {
+        try { sceneEl.setPointerCapture(e.pointerId); } catch (error) {}
+        startPinchZoom();
+        e.preventDefault();
+        return;
+      }
+
+      if (primaryPointerId !== null) return;
+      primaryPointerId = e.pointerId;
+      pDownX = e.clientX;
+      pDownY = e.clientY;
+      pMoved = false;
+      holdCard = findFrontCardAt(e.clientX, e.clientY) || e.target.closest('.galaxy-card');
+      pointerStartedOnLockedCard = !!(holdCard && holdCard === focusLockedCard);
       if (holdCard) {
+        clearTimeout(holdTimer);
         holdTimer = setTimeout(function() {
           if (!pMoved) {
             var product = getProductByCard(holdCard);
-            if (product) expandCard(holdCard, product);  // ← expand in-sphere
+            if (product) {
+              pMoved = true;
+              expandCard(holdCard, product);
+            }
           }
         }, HOLD_MS);
       }
       e.preventDefault();
-      onDragStart(e.clientX, e.clientY);
-    });
-    window.addEventListener('mousemove', function(e) {
-      if (layoutMode === 'grid') return;
-      if (Math.abs(e.clientX - pDownX) > MOVE_THRESH || Math.abs(e.clientY - pDownY) > MOVE_THRESH) {
-        pMoved = true; clearTimeout(holdTimer);
+      if (pointerStartedOnLockedCard) {
+        isIdle = false;
+        clearTimeout(idleTimer);
+        setInteractionState('locked');
+      } else if (!holdCard) {
+        try { sceneEl.setPointerCapture(e.pointerId); } catch (error) {}
+        isIdle = false;
+        clearTimeout(idleTimer);
+        setInteractionState('dragging');
+        sceneEl.style.cursor = 'grabbing';
       }
-      onDragMove(e.clientX, e.clientY);
-    });
-    window.addEventListener('mouseup', onDragEnd);
+    }
 
-    // Touch events (mobile)
-    sceneEl.addEventListener('touchstart', function(e) {
-      if (layoutMode === 'grid') {
-        var tBoard = e.touches[0];
-        boardTouchActive = true;
-        boardTouchStartY = tBoard.clientY;
-        boardTouchStartScroll = boardScrollTarget;
-        boardTouchMoved = false;
-        return;
+    function handlePointerMove(e) {
+      if (activePointers[e.pointerId]) {
+        activePointers[e.pointerId] = { clientX: e.clientX, clientY: e.clientY };
       }
-      if (e.target.closest('.galaxy-search-bar')) return;
-      var t = e.touches[0];
-      pDownX = t.clientX; pDownY = t.clientY; pMoved = false;
-      holdCard = e.target.closest('.galaxy-card');
-      if (holdCard) {
-        holdTimer = setTimeout(function() {
-          if (!pMoved) {
-            var product = getProductByCard(holdCard);
-            if (product) expandCard(holdCard, product);  // ← expand in-sphere
-          }
-        }, HOLD_MS);
-      }
-      onDragStart(t.clientX, t.clientY);
-    }, { passive: true });
-    sceneEl.addEventListener('touchmove', function(e) {
+
       if (layoutMode === 'grid') {
-        if (!boardTouchActive) return;
-        var tBoard = e.touches[0];
-        if (Math.abs(tBoard.clientY - boardTouchStartY) > MOVE_THRESH) {
+        if (!boardTouchActive || e.pointerId !== primaryPointerId) return;
+        if (Math.abs(e.clientY - boardTouchStartY) > MOVE_THRESH || Math.abs(e.clientX - pDownX) > MOVE_THRESH) {
           boardTouchMoved = true;
         }
-        boardScrollTarget = clamp(boardTouchStartScroll + ((tBoard.clientY - boardTouchStartY) * 1.08), boardScrollMin, boardScrollMax);
+        boardScrollTarget = clamp(boardTouchStartScroll + ((e.clientY - boardTouchStartY) * 1.08), boardScrollMin, boardScrollMax);
         syncBoardScrollHints();
         e.preventDefault();
         return;
       }
-      var t = e.touches[0];
-      if (Math.abs(t.clientX - pDownX) > MOVE_THRESH || Math.abs(t.clientY - pDownY) > MOVE_THRESH) {
-        pMoved = true; clearTimeout(holdTimer);
-      }
-      onDragMove(t.clientX, t.clientY);
-    }, { passive: false });
-    sceneEl.addEventListener('touchend', function(e) {
-      clearTimeout(holdTimer);
-      if (layoutMode === 'grid') {
-        if (!boardTouchMoved) {
-          var tapCard = e.target.closest('.galaxy-card');
-          var tapProduct = getProductByCard(tapCard);
-          goToProductDetail(tapProduct);
-        }
-        boardTouchActive = false;
-        boardTouchMoved = false;
+
+      if (isPinching) {
+        updatePinchZoom();
+        e.preventDefault();
         return;
       }
-      if (!pMoved && holdCard) {
-        var product = getProductByCard(holdCard);
-        openModal(product);
+
+      if (primaryPointerId === null) {
+        if (e.pointerType !== 'touch') queueSphereHover(e.clientX, e.clientY);
+        return;
       }
-      onDragEnd();
-    });
+      if (e.pointerId !== primaryPointerId) return;
+
+      if (Math.abs(e.clientX - pDownX) > MOVE_THRESH || Math.abs(e.clientY - pDownY) > MOVE_THRESH) {
+        pMoved = true;
+        clearTimeout(holdTimer);
+        if (!isDragging) {
+          try { sceneEl.setPointerCapture(e.pointerId); } catch (error) {}
+          onDragStart(pDownX, pDownY);
+        }
+      }
+      onDragMove(e.clientX, e.clientY);
+      e.preventDefault();
+    }
+
+    function finishGridPointer(e) {
+      if (!boardTouchMoved) {
+        var tapTarget = document.elementFromPoint(e.clientX, e.clientY);
+        var tapCard = tapTarget && tapTarget.closest ? tapTarget.closest('.galaxy-card') : null;
+        var tapProduct = getProductByCard(tapCard);
+        goToProductDetail(tapProduct);
+      }
+      boardTouchActive = false;
+      boardTouchMoved = false;
+      primaryPointerId = null;
+      pointerStartedOnLockedCard = false;
+      setInteractionState('grid');
+    }
+
+    function handlePointerEnd(e) {
+      clearTimeout(holdTimer);
+      delete activePointers[e.pointerId];
+      try { sceneEl.releasePointerCapture(e.pointerId); } catch (error) {}
+
+      if (layoutMode === 'grid') {
+        if (e.pointerId === primaryPointerId) finishGridPointer(e);
+        return;
+      }
+
+      if (isPinching) {
+        if (getActivePointerList().length < 2) {
+          isPinching = false;
+          primaryPointerId = null;
+          pointerStartedOnLockedCard = false;
+          onDragEnd();
+          setInteractionState('zoom');
+        }
+        return;
+      }
+
+      if (e.pointerId !== primaryPointerId) return;
+      primaryPointerId = null;
+      if (isDragging) onDragEnd();
+      else if (!holdCard && layoutMode === 'sphere' && !sphereFrozen) resumeSphere();
+      pointerStartedOnLockedCard = false;
+    }
+
+    sceneEl.addEventListener('pointerdown', handlePointerDown);
+    sceneEl.addEventListener('pointermove', handlePointerMove);
+    sceneEl.addEventListener('pointerup', handlePointerEnd);
+    sceneEl.addEventListener('pointercancel', handlePointerEnd);
 
     // Scroll to zoom
     sceneEl.addEventListener('wheel', function(e) {
@@ -3808,14 +4539,81 @@
         return;
       }
       e.preventDefault();
-      cZoom += e.deltaY < 0 ? 0.045 : -0.045;
-      if (cZoom < 0.82) cZoom = 0.82;
-      if (cZoom > 1.18) cZoom = 1.18;
+      nudgeSphereZoom(e.deltaY < 0 ? 1 : -1);
     }, { passive: false });
+
+    if (zoomInBtn) {
+      zoomInBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        nudgeSphereZoom(1);
+      });
+    }
+    if (zoomOutBtn) {
+      zoomOutBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        nudgeSphereZoom(-1);
+      });
+    }
+    if (zoomResetBtn) {
+      zoomResetBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        resetSphereView();
+      });
+    }
+    if (motionToggleBtn) {
+      motionToggleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        toggleSphereMotion();
+      });
+    }
 
     // Close overlays on Escape
     document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') { collapseCard(); closeModal(); }
+      var targetTag = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '';
+      var isTyping = targetTag === 'input' || targetTag === 'textarea' || targetTag === 'select' || (e.target && e.target.isContentEditable);
+      if (e.key === 'Escape') {
+        collapseCard();
+        closeModal();
+        clearSphereFocus(true);
+        return;
+      }
+      if (isTyping || layoutMode !== 'sphere' || modalEl.classList.contains('is-open')) return;
+
+      if (e.key === '+' || e.key === '=') {
+        e.preventDefault();
+        nudgeSphereZoom(1);
+        return;
+      }
+      if (e.key === '-' || e.key === '_') {
+        e.preventDefault();
+        nudgeSphereZoom(-1);
+        return;
+      }
+      if (e.key === '0') {
+        e.preventDefault();
+        resetSphereView();
+        return;
+      }
+      var keyRotStep = e.shiftKey ? 16 : 8;
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault();
+        clearSphereFocus(true);
+        sphereFrozen = false;
+        isIdle = false;
+        clearTimeout(idleTimer);
+        if (e.key === 'ArrowLeft') rotY -= keyRotStep;
+        if (e.key === 'ArrowRight') rotY += keyRotStep;
+        if (e.key === 'ArrowUp') rotX = Math.max(-MAX_TILT_X, rotX - keyRotStep * 0.55);
+        if (e.key === 'ArrowDown') rotX = Math.min(MAX_TILT_X, rotX + keyRotStep * 0.55);
+        velX = 0;
+        velY = 0;
+        applyRot();
+        setInteractionState('keyboard');
+        idleTimer = setTimeout(function() {
+          isIdle = true;
+          if (!sphereFrozen && layoutMode === 'sphere') setInteractionState('idle');
+        }, IDLE_DELAY);
+      }
     });
 
     // Set initial cursor
@@ -3827,12 +4625,20 @@
         applyBoardScrollFrame(false);
       } else if (layoutMode === 'sphere') {
         if (hoverFocusActive && !sphereFrozen && !isDragging) {
-          rotY += shortestAngleDelta(rotY, hoverTargetRotY) * 0.1;
-          rotX += (hoverTargetRotX - rotX) * 0.1;
+          rotY += shortestAngleDelta(rotY, hoverTargetRotY) * HOVER_FOCUS_EASE;
+          rotX += (hoverTargetRotX - rotX) * HOVER_FOCUS_EASE;
           velX = 0;
           velY = 0;
-          if (Math.abs(shortestAngleDelta(rotY, hoverTargetRotY)) < 0.08) rotY = hoverTargetRotY;
-          if (Math.abs(hoverTargetRotX - rotX) < 0.08) rotX = hoverTargetRotX;
+          if (Math.abs(shortestAngleDelta(rotY, hoverTargetRotY)) < HOVER_SNAP_EPSILON) rotY = hoverTargetRotY;
+          if (Math.abs(hoverTargetRotX - rotX) < HOVER_SNAP_EPSILON) rotX = hoverTargetRotX;
+        } else if (userMotionPaused && !sphereFrozen && !isDragging) {
+          velY += (0 - velY) * MOTION_DECEL_EASE;
+          rotY += velY;
+          easeSphereTiltHome(0.012, 0.9);
+          if (Math.abs(velY) < MOTION_STOP_EPSILON) velY = 0;
+        } else if (sphereHoverPaused && !sphereFrozen && !isDragging) {
+          velX = 0;
+          velY = 0;
         } else if (!sphereFrozen) {  // only update when NOT frozen
           if (isDragging) {
           rotY += velY;
@@ -4114,6 +4920,7 @@
     var boardResizeTimer = null;
     window.addEventListener('resize', function() {
       syncProductFilterBarFrame();
+      syncSphereCardOrigins();
       clearTimeout(boardResizeTimer);
       boardResizeTimer = setTimeout(renderResults, 120);
     });
@@ -4369,7 +5176,29 @@
       },
     ];
 
-    updateMeta(`${title} | STEMORA`, summary);
+    const heroImageSource = item.hero && item.hero.src ? resolveAssetSource(item.hero.src) : null;
+    const ogImageUrl = heroImageSource ? (heroImageSource.startsWith("http") ? heroImageSource : SITE_ORIGIN + heroImageSource) : null;
+    const productPrice = Number(String(item.priceVi || item.priceEn || "0").replace(/[^\d]/g, "")) || 0;
+    const productJsonLd = {
+      "@context": "https://schema.org/",
+      "@type": "Product",
+      name: title,
+      description: summary,
+      image: ogImageUrl ? [ogImageUrl] : undefined,
+      brand: { "@type": "Brand", name: "STEMORA" },
+      offers: productPrice > 0 ? {
+        "@type": "Offer",
+        priceCurrency: "VND",
+        price: productPrice,
+        availability: stockCount > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
+        url: buildCanonicalUrl(),
+      } : undefined,
+    };
+    updateMeta(`${title} | STEMORA`, summary, {
+      ogType: "product",
+      image: ogImageUrl,
+      jsonLd: productJsonLd,
+    });
 
     root.innerHTML = `
       <section class="product-detail-page js-detail-stage">
@@ -4579,6 +5408,18 @@
       qtyPlus.addEventListener("click", () => {
         const current = Number(qtyValue.textContent || 1);
         qtyValue.textContent = String(stockCount > 0 ? Math.min(stockCount, current + 1) : current + 1);
+      });
+    }
+    const cartButton = $(".product-detail-cart-btn", root);
+    if (cartButton && qtyValue) {
+      const defaultLabel = cartButton.textContent;
+      cartButton.addEventListener("click", () => {
+        const quantity = Math.max(1, Number(qtyValue.textContent || 1));
+        addProductToLocalCart(item, quantity);
+        cartButton.textContent = locale === "vi" ? "ĐÃ THÊM VÀO GIỎ" : "ADDED TO CART";
+        window.setTimeout(() => {
+          cartButton.textContent = defaultLabel;
+        }, 1600);
       });
     }
 
@@ -5932,6 +6773,7 @@
         locale === "vi" ? "Ch\u01b0a c\u00f3 b\u00e0i gi\u1ea3ng \u0111\u1ec3 hi\u1ec3n th\u1ecb." : "No tutorials available yet.",
         locale === "vi" ? "Khi d\u1eef li\u1ec7u b\u00e0i gi\u1ea3ng s\u1eb5n s\u00e0ng, learning tracks s\u1ebd xu\u1ea5t hi\u1ec7n \u1edf \u0111\u00e2y." : "Once tutorial data is ready, the learning tracks will appear here."
       );
+      mountShared3DBackground(root);
       refreshInteractiveLayers(root);
       return;
     }
@@ -6032,6 +6874,7 @@
       </section>
     `;
 
+    mountShared3DBackground(root);
     hydrateDynamicMedia(root);
     refreshInteractiveLayers(root);
     initTutorialCatalogue(root, items);
@@ -6049,6 +6892,7 @@
         locale === "vi" ? "Ch\u01b0a c\u00f3 b\u1ea3n tin \u0111\u00e3 xu\u1ea5t b\u1ea3n." : "No published stories yet.",
         locale === "vi" ? "Khi c\u00f3 b\u00e0i vi\u1ebft \u0111\u01b0\u1ee3c ph\u00e1t h\u00e0nh, newsroom n\u00e0y s\u1ebd t\u1ef1 \u0111\u1ed9ng l\u1ea5p \u0111\u1ea7y." : "Once new stories are published, this newsroom will populate automatically."
       );
+      mountShared3DBackground(root);
       refreshInteractiveLayers(root);
       return;
     }
@@ -6120,6 +6964,7 @@
       </section>
     `;
 
+    mountShared3DBackground(root);
     const lead = $(".js-news-lead", root);
     const bulletButtons = $$(".js-news-bullet", root);
     let activeNewsIndex = 0;
@@ -6188,7 +7033,7 @@
     if (!root) return;
     const items = sortedProjects();
     updateMeta(
-      locale === "vi" ? "STEMORA | Dự án" : "STEMORA | Project",
+      locale === "vi" ? "STEMORA | Dự án" : "STEMORA | Projects",
       locale === "vi"
         ? "Archive dự án được kể theo nhịp biên tập: tiêu đề lớn, ảnh cover rõ, và từng case story mở sang trang đọc riêng."
         : "An editorial project archive with title-led entries, clean cover presentation, and direct long-form story pages."
@@ -6202,6 +7047,7 @@
           ? "Các câu chuyện triển khai sẽ xuất hiện tại đây khi dữ liệu dự án được xuất bản."
           : "Published campaign stories will appear here once project data is ready."
       );
+      mountShared3DBackground(root);
       refreshInteractiveLayers(root);
       return;
     }
@@ -6210,7 +7056,7 @@
       <section class="project-archive-page">
         <div class="container project-archive-page__shell">
           <header class="project-archive-page__header" data-motion="text-stagger">
-            <h1>${locale === "vi" ? "Project" : "Project"}</h1>
+            <h1>${locale === "vi" ? "Dự án" : "Projects"}</h1>
             <div class="project-archive-page__divider" aria-hidden="true"><span></span></div>
           </header>
 
@@ -6224,6 +7070,7 @@
       </section>
     `;
 
+    mountShared3DBackground(root);
     hydrateDynamicMedia(root);
     refreshInteractiveLayers(root);
     initProjectArchiveScrollMemory(root);
@@ -6232,7 +7079,7 @@
 
   function buildArchiveContentModel(item, prefix, fallbackText) {
     const fallbackMarkup = `<p>${escapeHtmlText(fallbackText || "")}</p>`;
-    const source = normalizeText(item && item.contentHtml ? item.contentHtml : "").trim();
+    const source = sanitizeMigratedHtml(item && item.contentHtml ? item.contentHtml : "");
     if (!source || typeof document === "undefined") {
       return {
         html: fallbackMarkup,
@@ -6894,17 +7741,6 @@
     if (!root) return;
     updateMeta(strings.pageMeta.news.title, strings.pageMeta.news.description);
     return renderNewsPageShowcase();
-    root.innerHTML = `
-      <section class="page-intro">
-        <div class="container page-intro__layout">
-          <div class="page-intro__copy" data-stage="copy">
-            <p class="scene-kicker">${locale === 'vi' ? 'Tin tức' : 'News'}</p>
-            <h1 class="editorial-title">${locale === 'vi' ? 'Tin tức & Cập nhật' : 'News & Updates'}</h1>
-            <p class="scene-body">${locale === 'vi' ? 'Trang tin tức đang được cập nhật. Vui lòng quay lại sau.' : 'News page is being updated. Please check back later.'}</p>
-          </div>
-        </div>
-      </section>
-    `;
   }
 
   function renderTutorialsPage() {
@@ -6912,17 +7748,6 @@
     if (!root) return;
     updateMeta(strings.pageMeta.tutorials.title, strings.pageMeta.tutorials.description);
     return renderTutorialsPageShowcase();
-    root.innerHTML = `
-      <section class="page-intro">
-        <div class="container page-intro__layout">
-          <div class="page-intro__copy" data-stage="copy">
-            <p class="scene-kicker">${locale === 'vi' ? 'Bài giảng' : 'Tutorials'}</p>
-            <h1 class="editorial-title">${locale === 'vi' ? 'Bài giảng STEM' : 'STEM Tutorials'}</h1>
-            <p class="scene-body">${locale === 'vi' ? 'Thư viện bài giảng đang được cập nhật. Vui lòng quay lại sau.' : 'Tutorials library is being updated. Please check back later.'}</p>
-          </div>
-        </div>
-      </section>
-    `;
   }
 
   function renderContactPage() {
@@ -6932,19 +7757,27 @@
     const contactData = data.siteMeta.contact || {};
     const contactAddress = contactData.address ? normalizeText(contactData.address[locale] || "") : "";
     const contactHours = contactData.hours ? normalizeText(contactData.hours[locale] || "") : "";
+    const emailHref = normalizeEmailHref(contactData.email);
+    const telHref = normalizeTelHref(contactData.phone);
+    const mapHref = normalizeSafeHref(contactData.mapUrl, { protocols: ["https:", "http:"], allowRelative: false });
     const contactChannels = [
-      contactData.email
-        ? `<a href="mailto:${normalizeText(contactData.email)}">${normalizeText(contactData.email)}</a>`
+      emailHref
+        ? `<a href="${escapeHtmlText(emailHref)}">${escapeHtmlText(contactData.email)}</a>`
         : "",
-      contactData.phone
-        ? `<a href="tel:${normalizeText(contactData.phone).replace(/\s+/g, "")}">${normalizeText(contactData.phone)}</a>`
+      telHref
+        ? `<a href="${escapeHtmlText(telHref)}">${escapeHtmlText(contactData.phone)}</a>`
         : "",
-      contactAddress ? `<span>${contactAddress}</span>` : "",
-      contactHours ? `<span>${contactHours}</span>` : "",
+      contactAddress ? `<span>${escapeHtmlText(contactAddress)}</span>` : "",
+      contactHours ? `<span>${escapeHtmlText(contactHours)}</span>` : "",
     ].filter(Boolean).join("");
     const socialLinks = (Array.isArray(data.siteMeta.socials) ? data.siteMeta.socials : [])
       .filter((item) => item && item.href && !String(item.href).startsWith("#"))
-      .map((item) => `<a href="${resolveAssetSource(item.href)}" target="_blank" rel="noreferrer">${escapeHtmlText(item.label)}</a>`)
+      .map((item) => {
+        const href = normalizeSafeHref(item.href, { protocols: ["https:", "http:"], allowRelative: false });
+        if (!href || href === "#") return "";
+        return `<a href="${escapeHtmlText(href)}" target="_blank" rel="noreferrer">${escapeHtmlText(item.label)}</a>`;
+      })
+      .filter(Boolean)
       .join("");
 
     root.innerHTML = `
@@ -6980,7 +7813,7 @@
             <article class="contact-panel contact-panel--map" data-motion="scene-enter">
               <p class="scene-kicker">${strings.contactPage.mapTitle}</p>
               <p>${strings.contactPage.mapCopy}</p>
-              <a class="button button--ghost" href="${normalizeText(contactData.mapUrl || "#")}" target="_blank" rel="noreferrer">${strings.actions.viewMap}</a>
+              <a class="button button--ghost" href="${escapeHtmlText(mapHref)}" target="_blank" rel="noreferrer">${strings.actions.viewMap}</a>
             </article>
           </div>
           <div class="contact-page__form">
@@ -7030,6 +7863,7 @@
         </div>
       </section>
     `;
+    mountShared3DBackground(root);
   }
 
   function renderPolicyPages() {
@@ -7175,105 +8009,597 @@
 
     form.addEventListener("submit", (event) => {
       event.preventDefault();
+      const contactData = data.siteMeta.contact || {};
+      const recipient = normalizeText(contactData.email || "hello@stemora.vn");
+      const formData = new FormData(form);
+      const subject = locale === "vi" ? "Yêu cầu tư vấn STEMORA" : "STEMORA consultation request";
+      const lines = [
+        `${strings.form.name}: ${normalizeText(formData.get("name") || "")}`,
+        `${strings.form.email}: ${normalizeText(formData.get("email") || "")}`,
+        `${strings.form.phone}: ${normalizeText(formData.get("phone") || "")}`,
+        `${strings.form.interest}: ${normalizeText(formData.get("interest") || "")}`,
+        "",
+        `${strings.form.message}:`,
+        normalizeText(formData.get("message") || ""),
+      ];
+      const mailtoUrl = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`;
       submitButton.disabled = true;
       submitButton.textContent = strings.form.sending;
       form.setAttribute("aria-busy", "true");
       feedback.textContent = "";
 
       window.setTimeout(() => {
-        form.reset();
         form.removeAttribute("aria-busy");
         submitButton.disabled = false;
         submitButton.textContent = strings.form.submit;
-        feedback.textContent = strings.form.success;
-      }, 900);
+        feedback.textContent = locale === "vi"
+          ? "Đã mở ứng dụng email với nội dung bạn nhập. Gửi email để hoàn tất liên hệ."
+          : "Your email app opened with the brief filled in. Send the email to complete the enquiry.";
+        window.location.href = mailtoUrl;
+      }, 250);
+    });
+  }
+
+  function addProductToLocalCart(product, quantity) {
+    if (!product || !product.slug) return;
+    const qty = Math.max(1, Number(quantity || 1));
+    const storageKey = "stemora:cart";
+    let cart = [];
+    try {
+      cart = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      if (!Array.isArray(cart)) cart = [];
+    } catch (error) {
+      cart = [];
+    }
+    const slug = product.slug;
+    const existing = cart.find((entry) => entry.slug === slug);
+    if (existing) {
+      existing.quantity = Math.max(1, Number(existing.quantity || 0)) + qty;
+      existing.updatedAt = new Date().toISOString();
+    } else {
+      cart.push({
+        slug,
+        title: getText(product, "titleVi", "titleEn") || product.name || slug,
+        priceVi: product.priceVi || "",
+        priceEn: product.priceEn || "",
+        quantity: qty,
+        addedAt: new Date().toISOString(),
+      });
+    }
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(cart));
+    } catch (error) {}
+  }
+
+  function initMissionExperience(root) {
+    const scope = $(".js-mission-experience", root);
+    if (!scope) return;
+
+    const progressFill = $(".js-mission-progress span", root);
+    const hero = $(".mission-hero", root);
+    const layers = $$("[data-mission-layer]", root);
+    const livePanels = $$("[data-mission-panel], .mission-hud__panel, .mission-hud__orbital, .process-step, .proof-collage__tile", root);
+    const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
+    let pointerRaf = 0;
+    let scrollRaf = 0;
+    let observer = null;
+
+    function applyPointerFrame() {
+      pointerRaf = 0;
+      pointer.x += (pointer.targetX - pointer.x) * 0.12;
+      pointer.y += (pointer.targetY - pointer.y) * 0.12;
+      scope.style.setProperty("--mission-x", pointer.x.toFixed(4));
+      scope.style.setProperty("--mission-y", pointer.y.toFixed(4));
+      scope.style.setProperty("--mission-tilt-x", (pointer.y * -7).toFixed(3) + "deg");
+      scope.style.setProperty("--mission-tilt-y", (pointer.x * 8).toFixed(3) + "deg");
+
+      layers.forEach((layer, index) => {
+        const depth = Number(layer.dataset.missionLayer || index + 1);
+        layer.style.setProperty("--layer-x", (pointer.x * depth * 5.5).toFixed(2) + "px");
+        layer.style.setProperty("--layer-y", (pointer.y * depth * 4.5).toFixed(2) + "px");
+      });
+
+      if (Math.abs(pointer.targetX - pointer.x) > 0.001 || Math.abs(pointer.targetY - pointer.y) > 0.001) {
+        pointerRaf = window.requestAnimationFrame(applyPointerFrame);
+      }
+    }
+
+    function handlePointer(event) {
+      if (reducedMotion) return;
+      pointer.targetX = clamp((event.clientX / Math.max(window.innerWidth, 1) - 0.5) * 2, -1, 1);
+      pointer.targetY = clamp((event.clientY / Math.max(window.innerHeight, 1) - 0.5) * 2, -1, 1);
+      if (!pointerRaf) pointerRaf = window.requestAnimationFrame(applyPointerFrame);
+    }
+
+    function applyScrollFrame() {
+      scrollRaf = 0;
+      const scopeRect = scope.getBoundingClientRect();
+      const distance = Math.max(scope.scrollHeight - window.innerHeight, 1);
+      const progress = clamp(-scopeRect.top / distance, 0, 1);
+      scope.style.setProperty("--mission-scroll", progress.toFixed(4));
+      if (progressFill) progressFill.style.transform = `scaleX(${progress})`;
+
+      if (hero) {
+        const heroRect = hero.getBoundingClientRect();
+        const heroProgress = clamp((window.innerHeight - heroRect.top) / Math.max(heroRect.height + window.innerHeight, 1), 0, 1);
+        scope.style.setProperty("--mission-hero-progress", heroProgress.toFixed(4));
+      }
+    }
+
+    function requestScrollFrame() {
+      if (!scrollRaf) scrollRaf = window.requestAnimationFrame(applyScrollFrame);
+    }
+
+    if ("IntersectionObserver" in window) {
+      observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) entry.target.classList.add("is-mission-live");
+        });
+      }, { threshold: 0.22, rootMargin: "0px 0px -8% 0px" });
+      livePanels.forEach((panel) => observer.observe(panel));
+    } else {
+      livePanels.forEach((panel) => panel.classList.add("is-mission-live"));
+    }
+
+    window.addEventListener("pointermove", handlePointer, { passive: true });
+    window.addEventListener("scroll", requestScrollFrame, { passive: true });
+    window.addEventListener("resize", requestScrollFrame);
+    applyPointerFrame();
+    applyScrollFrame();
+
+    registerPageCleanup(root, () => {
+      window.removeEventListener("pointermove", handlePointer);
+      window.removeEventListener("scroll", requestScrollFrame);
+      window.removeEventListener("resize", requestScrollFrame);
+      if (pointerRaf) window.cancelAnimationFrame(pointerRaf);
+      if (scrollRaf) window.cancelAnimationFrame(scrollRaf);
+      if (observer) observer.disconnect();
+    });
+  }
+
+  function initThreeHero3DCanvas(root, canvas) {
+    return loadThreeModule().then((THREE) => {
+      if (!root.isConnected || !canvas.isConnected || canvas.dataset.fallback2d === "true") return;
+
+      const isProductCanvas = body.dataset.page === "products";
+      const allowBackgroundMotion = BACKGROUND_3D_PAGES.has(page) || !reducedMotion;
+      const lowPowerDevice = (navigator.hardwareConcurrency || 8) <= 4 || window.innerWidth < 760;
+      const renderer = new THREE.WebGLRenderer({
+        canvas,
+        alpha: true,
+        antialias: !lowPowerDevice,
+        preserveDrawingBuffer: true,
+        powerPreference: lowPowerDevice ? "default" : "high-performance",
+      });
+      renderer.setClearColor(0x000000, 0);
+
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(58, 1, 0.1, 120);
+      camera.position.set(0, 0, 16);
+
+      const stage = new THREE.Group();
+      scene.add(stage);
+
+      const particleCount = !allowBackgroundMotion ? 260 : (lowPowerDevice ? 520 : (isProductCanvas ? 1150 : 920));
+      const particleSpreadX = isProductCanvas ? 42 : 36;
+      const particleSpreadY = isProductCanvas ? 24 : 21;
+      const particleDepth = isProductCanvas ? 68 : 58;
+      const positions = new Float32Array(particleCount * 3);
+      const colors = new Float32Array(particleCount * 3);
+      const speeds = new Float32Array(particleCount);
+      const lanes = new Float32Array(particleCount);
+
+      function resetParticle(index, initial) {
+        const offset = index * 3;
+        positions[offset] = (Math.random() - 0.5) * particleSpreadX;
+        positions[offset + 1] = (Math.random() - 0.5) * particleSpreadY;
+        positions[offset + 2] = initial ? -Math.random() * particleDepth - 2 : -particleDepth - Math.random() * 16;
+        speeds[index] = 0.0028 + Math.random() * (isProductCanvas ? 0.011 : 0.0085);
+        lanes[index] = Math.random() > 0.58 ? 1 : -1;
+      }
+
+      for (let i = 0; i < particleCount; i++) resetParticle(i, true);
+
+      const particleGeometry = new THREE.BufferGeometry();
+      particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+      particleGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      const particleMaterial = new THREE.PointsMaterial({
+        size: lowPowerDevice ? 0.055 : 0.048,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.92,
+        vertexColors: true,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const particles = new THREE.Points(particleGeometry, particleMaterial);
+      stage.add(particles);
+
+      const grid = new THREE.GridHelper(52, lowPowerDevice ? 34 : 46, 0xf68c4b, 0x86ddff);
+      grid.position.set(0, -6.3, -18);
+      grid.rotation.z = 0.03;
+      stage.add(grid);
+
+      const coreMaterial = new THREE.MeshBasicMaterial({
+        color: 0x86ddff,
+        wireframe: true,
+        transparent: true,
+        opacity: 0.14,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false,
+      });
+      const core = new THREE.Mesh(new THREE.IcosahedronGeometry(isProductCanvas ? 3.2 : 2.55, 2), coreMaterial);
+      core.position.set(isProductCanvas ? 0 : 4.6, 1.2, -19);
+      stage.add(core);
+
+      function createOrbit(radius, squash, color, opacity, tilt) {
+        const points = [];
+        const steps = lowPowerDevice ? 96 : 144;
+        for (let i = 0; i < steps; i++) {
+          const angle = (i / steps) * Math.PI * 2;
+          points.push(new THREE.Vector3(Math.cos(angle) * radius, Math.sin(angle) * radius * squash, 0));
+        }
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineBasicMaterial({
+          color,
+          transparent: true,
+          opacity,
+          blending: THREE.AdditiveBlending,
+          depthWrite: false,
+        });
+        const orbit = new THREE.LineLoop(geometry, material);
+        orbit.position.copy(core.position);
+        orbit.rotation.set(tilt.x, tilt.y, tilt.z);
+        stage.add(orbit);
+        return orbit;
+      }
+
+      const orbits = [
+        createOrbit(isProductCanvas ? 8.4 : 6.6, 0.34, 0x86ddff, 0.28, { x: 0.8, y: 0.15, z: 0.2 }),
+        createOrbit(isProductCanvas ? 11.6 : 9.2, 0.22, 0xf68c4b, 0.22, { x: 1.22, y: -0.34, z: -0.12 }),
+        createOrbit(isProductCanvas ? 14.8 : 12.4, 0.16, 0x86ddff, 0.14, { x: 1.47, y: 0.36, z: 0.4 }),
+      ];
+
+      const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
+      let rafId = 0;
+      let lastTime = 0;
+      let elapsed = 0;
+      let isDisposed = false;
+      let isVisible = !document.hidden;
+      let paletteKey = "";
+
+      function eachMaterial(material, callback) {
+        if (Array.isArray(material)) material.forEach(callback);
+        else if (material) callback(material);
+      }
+
+      function getThreePalette() {
+        const isLightTheme = body.dataset.page === "welcome"
+          ? getWelcomeTheme() === "light"
+          : body.dataset.theme === "light";
+
+        if (isLightTheme) {
+          return {
+            key: "light",
+            opacity: isProductCanvas ? "0.62" : "0.68",
+            particles: [0x3b85a8, 0xc96734, 0x6b7f89],
+            particleOpacity: 0.7,
+            gridPrimary: 0xc96734,
+            gridSecondary: 0x3b85a8,
+            gridOpacity: 0.24,
+            core: 0x3b85a8,
+            orbitA: 0x3b85a8,
+            orbitB: 0xc96734,
+          };
+        }
+
+        return {
+          key: "dark",
+          opacity: isProductCanvas ? "0.96" : "0.94",
+          particles: [0x86ddff, 0xf68c4b, 0xf4fbff],
+          particleOpacity: 0.9,
+          gridPrimary: 0xf68c4b,
+          gridSecondary: 0x86ddff,
+          gridOpacity: 0.34,
+          core: 0x86ddff,
+          orbitA: 0x86ddff,
+          orbitB: 0xf68c4b,
+        };
+      }
+
+      function applyPalette() {
+        const palette = getThreePalette();
+        if (palette.key === paletteKey) return;
+        paletteKey = palette.key;
+        canvas.dataset.theme = palette.key;
+        canvas.dataset.renderer = "three";
+        canvas.style.opacity = palette.opacity;
+        particleMaterial.opacity = palette.particleOpacity;
+        coreMaterial.color.setHex(palette.core);
+
+        eachMaterial(grid.material, (material, index) => {
+          material.transparent = true;
+          material.opacity = palette.gridOpacity * (index ? 0.68 : 1);
+          material.color.setHex(index ? palette.gridSecondary : palette.gridPrimary);
+        });
+
+        orbits.forEach((orbit, index) => {
+          orbit.material.color.setHex(index === 1 ? palette.orbitB : palette.orbitA);
+          orbit.material.opacity = index === 0 ? 0.3 : index === 1 ? 0.23 : 0.15;
+        });
+
+        for (let i = 0; i < particleCount; i++) {
+          const color = new THREE.Color(palette.particles[i % palette.particles.length]);
+          const offset = i * 3;
+          colors[offset] = color.r;
+          colors[offset + 1] = color.g;
+          colors[offset + 2] = color.b;
+        }
+        particleGeometry.attributes.color.needsUpdate = true;
+      }
+
+      function resize() {
+        const width = Math.max(1, window.innerWidth);
+        const height = Math.max(1, window.innerHeight);
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, lowPowerDevice ? 1.25 : 1.7);
+        renderer.setPixelRatio(pixelRatio);
+        renderer.setSize(width, height, false);
+        camera.aspect = width / height;
+        camera.updateProjectionMatrix();
+      }
+
+      function handlePointer(event) {
+        if (reducedMotion) return;
+        pointer.targetX = clamp((event.clientX / Math.max(window.innerWidth, 1) - 0.5) * 2, -1, 1);
+        pointer.targetY = clamp((event.clientY / Math.max(window.innerHeight, 1) - 0.5) * 2, -1, 1);
+      }
+
+      function handleVisibility() {
+        isVisible = !document.hidden;
+        if (!isVisible && rafId) {
+          window.cancelAnimationFrame(rafId);
+          rafId = 0;
+        } else if (isVisible && !rafId && allowBackgroundMotion) {
+          rafId = window.requestAnimationFrame(renderFrame);
+        }
+      }
+
+      function renderFrame(timestamp) {
+        if (isDisposed || !isVisible) {
+          rafId = 0;
+          return;
+        }
+
+        applyPalette();
+        const delta = Math.min(34, timestamp - (lastTime || timestamp || 0) || 16);
+        lastTime = timestamp;
+        elapsed += delta * 0.001;
+
+        if (allowBackgroundMotion) {
+          pointer.x += (pointer.targetX - pointer.x) * 0.055;
+          pointer.y += (pointer.targetY - pointer.y) * 0.055;
+          camera.position.x = pointer.x * 1.18;
+          camera.position.y = pointer.y * -0.82;
+          camera.lookAt(pointer.x * 1.8, pointer.y * -1.1, -18);
+
+          for (let i = 0; i < particleCount; i++) {
+            const offset = i * 3;
+            positions[offset] += Math.sin(elapsed * 1.35 + i * 0.17) * 0.0038 * lanes[i] * delta;
+            positions[offset + 1] += Math.cos(elapsed * 1.05 + i * 0.11) * 0.0024 * lanes[i] * delta;
+            positions[offset + 2] += speeds[i] * delta * 2.2;
+            if (positions[offset + 2] > 12) resetParticle(i, false);
+          }
+          particleGeometry.attributes.position.needsUpdate = true;
+
+          stage.rotation.y = pointer.x * 0.12 + Math.sin(elapsed * 0.42) * 0.05;
+          stage.rotation.x = pointer.y * -0.07 + Math.cos(elapsed * 0.36) * 0.018;
+          particles.rotation.z = elapsed * 0.048;
+          grid.position.z = -18 + ((elapsed * 8.5) % 6);
+          core.rotation.x += 0.0012 * delta;
+          core.rotation.y += 0.0016 * delta;
+          orbits.forEach((orbit, index) => {
+            orbit.rotation.z += (index === 1 ? -1 : 1) * (0.00072 + index * 0.00018) * delta;
+            orbit.rotation.y += (index === 1 ? 0.00042 : -0.00034) * delta;
+          });
+        }
+
+        renderer.render(scene, camera);
+        rafId = allowBackgroundMotion ? window.requestAnimationFrame(renderFrame) : 0;
+      }
+
+      function disposeObject(object) {
+        if (object.geometry) object.geometry.dispose();
+        eachMaterial(object.material, (material) => material.dispose());
+      }
+
+      window.addEventListener("resize", resize);
+      window.addEventListener("pointermove", handlePointer, { passive: true });
+      document.addEventListener("visibilitychange", handleVisibility);
+      resize();
+      applyPalette();
+      renderer.render(scene, camera);
+      if (allowBackgroundMotion) rafId = window.requestAnimationFrame(renderFrame);
+
+      registerPageCleanup(root, () => {
+        isDisposed = true;
+        window.removeEventListener("resize", resize);
+        window.removeEventListener("pointermove", handlePointer);
+        document.removeEventListener("visibilitychange", handleVisibility);
+        if (rafId) window.cancelAnimationFrame(rafId);
+        scene.traverse(disposeObject);
+        renderer.dispose();
+      });
     });
   }
 
   function initHero3DCanvas(root) {
-    const canvas = $('.js-hero-3d-canvas', root);
+    const canvas = $(".js-hero-3d-canvas", root);
     if (!canvas) return;
-    const ctx = canvas.getContext('2d');
+    if (canvas.dataset.fallback2d !== "true" && supportsWebGLCanvas()) {
+      initThreeHero3DCanvas(root, canvas).catch(() => {
+        canvas.dataset.fallback2d = "true";
+        initHero3DCanvas(root);
+      });
+      return;
+    }
+    const ctx = canvas.getContext("2d", { alpha: true });
+    if (!ctx) return;
+
     let rafId = 0;
     let isDisposed = false;
-    let w, h;
+    let isVisible = !document.hidden;
+    let w = 0;
+    let h = 0;
+    let dpr = 1;
+    let time = 0;
 
-    function resize() {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
+    const isProductCanvas = body.dataset.page === "products";
+    const allowBackgroundMotion = BACKGROUND_3D_PAGES.has(page) || !reducedMotion;
+    const lowPowerDevice = (navigator.hardwareConcurrency || 8) <= 4 || window.innerWidth < 760;
+    const maxNodes = !allowBackgroundMotion ? 42 : (lowPowerDevice ? 82 : (isProductCanvas ? 152 : 128));
+    const connectionRadius = isProductCanvas ? 265 : 228;
+    const fov = isProductCanvas ? 880 : 820;
+    const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
+
+    function resetNode(node, initial) {
+      node.x = Math.random() * 2600 - 1300;
+      node.y = Math.random() * 1160 - 580;
+      node.z = initial ? Math.random() * 2300 : 2050 + Math.random() * 340;
+      node.vz = -1.35 - Math.random() * (isProductCanvas ? 2.2 : 1.45);
+      node.size = 0.7 + Math.random() * 2.8;
+      node.phase = Math.random() * Math.PI * 2;
+      node.lane = Math.random() > 0.62 ? 1 : 0;
     }
 
-    window.addEventListener('resize', resize);
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, lowPowerDevice ? 1.25 : 1.7);
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = Math.max(1, Math.round(w * dpr));
+      canvas.height = Math.max(1, Math.round(h * dpr));
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function handlePointer(event) {
+      if (reducedMotion) return;
+      pointer.targetX = clamp((event.clientX / Math.max(w, 1) - 0.5) * 2, -1, 1);
+      pointer.targetY = clamp((event.clientY / Math.max(h, 1) - 0.5) * 2, -1, 1);
+    }
+
+    function handleVisibility() {
+      isVisible = !document.hidden;
+      if (!isVisible && rafId) {
+        window.cancelAnimationFrame(rafId);
+        rafId = 0;
+      } else if (isVisible && !rafId && allowBackgroundMotion) {
+        rafId = window.requestAnimationFrame(loop);
+      }
+    }
+
+    window.addEventListener("resize", resize);
+    window.addEventListener("pointermove", handlePointer, { passive: true });
+    document.addEventListener("visibilitychange", handleVisibility);
     resize();
 
     const nodes = [];
-    const maxNodes = 120;
-    const connectionRadius = 220;
-    let time = 0;
-
     for (let i = 0; i < maxNodes; i++) {
-      nodes.push({
-        x: Math.random() * 2400 - 1200,
-        y: Math.random() * 1000 - 500,
-        z: Math.random() * 2000,
-        vx: 0,
-        vy: 0,
-        vz: (Math.random() - 0.5) * 1.5 - 2.5
-      });
+      const node = {};
+      resetNode(node, true);
+      nodes.push(node);
     }
 
-    const fov = 800;
-
     function getCanvasPalette() {
-      if (getWelcomeTheme() === "light") {
+      const isLightTheme = body.dataset.page === "welcome"
+        ? getWelcomeTheme() === "light"
+        : body.dataset.theme === "light";
+
+      if (isLightTheme) {
         return {
           theme: "light",
-          opacity: "0.5",
-          grid: "rgba(191, 98, 49, 0.05)",
-          nodeRgb: "115, 150, 174",
-          nodeBoost: 0.95,
+          opacity: isProductCanvas ? "0.58" : "0.62",
+          grid: "rgba(191, 98, 49, 0.065)",
+          nodeRgb: "88, 125, 150",
+          nodeBoost: 1.05,
           linkRgb: "191, 98, 49",
-          linkBoost: 0.5,
+          linkBoost: 0.58,
+          fog: "rgba(248, 244, 236, 0.2)",
+          glowA: "rgba(191, 98, 49, 0.16)",
+          glowB: "rgba(95, 150, 182, 0.12)",
         };
       }
 
       return {
         theme: "dark",
-        opacity: "0.85",
-        grid: "rgba(191, 98, 49, 0.08)",
-        nodeRgb: "137, 168, 184",
-        nodeBoost: 1.5,
+        opacity: isProductCanvas ? "0.94" : "0.88",
+        grid: "rgba(191, 98, 49, 0.095)",
+        nodeRgb: "143, 202, 232",
+        nodeBoost: 1.45,
         linkRgb: "191, 98, 49",
-        linkBoost: 0.9,
+        linkBoost: 0.94,
+        fog: "rgba(7, 10, 14, 0.16)",
+        glowA: "rgba(226, 122, 66, 0.18)",
+        glowB: "rgba(91, 165, 204, 0.16)",
       };
     }
 
     function renderNode(node) {
+      const cameraPull = clamp(1 - node.z / 2400, 0.08, 1);
       const scale = fov / (fov + node.z);
       return {
-        x: w / 2 + node.x * scale,
-        y: h / 2 + node.y * scale,
-        scale: scale
+        x: w / 2 + (node.x + pointer.x * 150 * cameraPull) * scale,
+        y: h / 2 + (node.y + pointer.y * 105 * cameraPull) * scale,
+        scale,
       };
     }
 
-    function loop() {
-      if (isDisposed) return;
-
-      const palette = getCanvasPalette();
-      canvas.dataset.theme = palette.theme;
-      canvas.style.opacity = palette.opacity;
-
+    function drawAtmosphere(palette) {
       ctx.clearRect(0, 0, w, h);
-      time += 0.01;
+      ctx.globalCompositeOperation = "source-over";
+      ctx.fillStyle = palette.fog;
+      ctx.fillRect(0, 0, w, h);
 
-      ctx.lineWidth = 1.0;
-      for (let i = -1200; i <= 1200; i += 200) {
-        let trackZOffset = (time * 250) % 200;
-        const p1 = renderNode({ x: i, y: 500, z: -trackZOffset });
-        const p2 = renderNode({ x: i, y: 500, z: 2000 - trackZOffset });
+      ctx.globalCompositeOperation = "screen";
+      const glowA = ctx.createRadialGradient(
+        w * (0.28 + pointer.x * 0.04),
+        h * (0.22 + pointer.y * 0.03),
+        0,
+        w * 0.28,
+        h * 0.22,
+        Math.max(w, h) * 0.72
+      );
+      glowA.addColorStop(0, palette.glowA);
+      glowA.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = glowA;
+      ctx.fillRect(0, 0, w, h);
 
-        ctx.strokeStyle = palette.grid;
+      const glowB = ctx.createRadialGradient(
+        w * (0.78 + pointer.x * 0.03),
+        h * (0.34 + pointer.y * 0.04),
+        0,
+        w * 0.78,
+        h * 0.34,
+        Math.max(w, h) * 0.62
+      );
+      glowB.addColorStop(0, palette.glowB);
+      glowB.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.fillStyle = glowB;
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalCompositeOperation = "source-over";
+    }
+
+    function drawGrid(palette) {
+      ctx.save();
+      ctx.translate(pointer.x * 12, pointer.y * 8);
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = palette.grid;
+      const groundY = isProductCanvas ? 440 : 510;
+      const trackZOffset = (time * (isProductCanvas ? 310 : 235)) % 220;
+
+      for (let i = -1400; i <= 1400; i += 175) {
+        const p1 = renderNode({ x: i, y: groundY, z: -trackZOffset });
+        const p2 = renderNode({ x: i, y: groundY, z: 2200 - trackZOffset });
         if (p1.scale > 0 && p2.scale > 0) {
           ctx.beginPath();
           ctx.moveTo(p1.x, p1.y);
@@ -7281,8 +8607,8 @@
           ctx.stroke();
         }
 
-        const ph1 = renderNode({ x: -1200, y: 500, z: i * 1.5 + trackZOffset });
-        const ph2 = renderNode({ x: 1200, y: 500, z: i * 1.5 + trackZOffset });
+        const ph1 = renderNode({ x: -1400, y: groundY, z: i * 1.45 + trackZOffset });
+        const ph2 = renderNode({ x: 1400, y: groundY, z: i * 1.45 + trackZOffset });
         if (ph1.scale > 0 && ph2.scale > 0) {
           ctx.beginPath();
           ctx.moveTo(ph1.x, ph1.y);
@@ -7290,57 +8616,122 @@
           ctx.stroke();
         }
       }
+      ctx.restore();
+    }
+
+    function drawOrbitRibbons(palette) {
+      ctx.save();
+      ctx.globalCompositeOperation = "screen";
+      ctx.lineWidth = 1.1;
+      for (let i = 0; i < 3; i++) {
+        const phase = time * (0.65 + i * 0.12) + i * 1.7;
+        const cx = w * (0.58 + Math.sin(phase) * 0.025 + pointer.x * 0.025);
+        const cy = h * (0.42 + Math.cos(phase * 0.82) * 0.018 + pointer.y * 0.025);
+        const rx = Math.min(w, 980) * (0.24 + i * 0.07);
+        const ry = Math.min(h, 720) * (0.08 + i * 0.035);
+        ctx.strokeStyle = i === 1 ? palette.glowB : palette.glowA;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, rx, ry, phase * 0.22, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawFrame(advance) {
+      if (isDisposed) return;
+
+      const palette = getCanvasPalette();
+      canvas.dataset.theme = palette.theme;
+      canvas.style.opacity = palette.opacity;
+
+      if (advance && allowBackgroundMotion) {
+        time += 0.012;
+        pointer.x += (pointer.targetX - pointer.x) * 0.055;
+        pointer.y += (pointer.targetY - pointer.y) * 0.055;
+      }
+
+      drawAtmosphere(palette);
+      drawGrid(palette);
+      drawOrbitRibbons(palette);
 
       for (let i = 0; i < nodes.length; i++) {
-        let node = nodes[i];
-        node.z += node.vz;
+        const node = nodes[i];
+        if (advance && allowBackgroundMotion) {
+          node.z += node.vz;
+          node.x += Math.sin(time + node.phase) * 0.12 * (node.lane ? 1 : 0.42);
+          node.y += Math.cos(time * 0.8 + node.phase) * 0.08 * (node.lane ? 1 : 0.35);
+        }
 
         if (node.z < 10) {
-          node.z = 2000;
-          node.x = Math.random() * 2400 - 1200;
-          node.y = Math.random() * 1000 - 500;
+          resetNode(node, false);
         }
 
         const proj = renderNode(node);
         if (proj.scale > 0) {
-          ctx.fillStyle = `rgba(${palette.nodeRgb}, ${proj.scale * palette.nodeBoost})`;
+          const alpha = clamp(proj.scale * palette.nodeBoost, 0.08, 0.92);
+          ctx.fillStyle = `rgba(${palette.nodeRgb}, ${alpha})`;
           ctx.beginPath();
-          ctx.arc(proj.x, proj.y, Math.max(0.5, 3 * proj.scale), 0, Math.PI * 2);
+          ctx.arc(proj.x, proj.y, Math.max(0.55, node.size * proj.scale), 0, Math.PI * 2);
           ctx.fill();
         }
       }
 
       ctx.lineWidth = 1.5;
+      const radiusSq = connectionRadius * connectionRadius;
       for (let i = 0; i < nodes.length; i++) {
         for (let j = i + 1; j < nodes.length; j++) {
-          let n1 = nodes[i];
-          let n2 = nodes[j];
-          let dist = Math.sqrt((n1.x - n2.x) ** 2 + (n1.y - n2.y) ** 2 + (n1.z - n2.z) ** 2);
+          const n1 = nodes[i];
+          const n2 = nodes[j];
+          const dx = n1.x - n2.x;
+          const dy = n1.y - n2.y;
+          const dz = n1.z - n2.z;
+          const distSq = dx * dx + dy * dy + dz * dz;
 
-          if (dist < connectionRadius) {
-            let p1 = renderNode(n1);
-            let p2 = renderNode(n2);
+          if (distSq < radiusSq) {
+            const dist = Math.sqrt(distSq);
+            const p1 = renderNode(n1);
+            const p2 = renderNode(n2);
             if (p1.scale > 0 && p2.scale > 0) {
-              ctx.strokeStyle = `rgba(${palette.linkRgb}, ${(1 - dist / connectionRadius) * p1.scale * palette.linkBoost})`;
+              const linkAlpha = clamp((1 - dist / connectionRadius) * p1.scale * palette.linkBoost, 0, 0.72);
+              ctx.strokeStyle = `rgba(${palette.linkRgb}, ${linkAlpha})`;
               ctx.beginPath();
               ctx.moveTo(p1.x, p1.y);
               ctx.lineTo(p2.x, p2.y);
               ctx.stroke();
+
+              if (allowBackgroundMotion && (i + j) % 19 === 0) {
+                const packet = (Math.sin(time * 2.6 + i * 0.41 + j * 0.13) + 1) / 2;
+                ctx.fillStyle = `rgba(${palette.linkRgb}, ${Math.min(linkAlpha + 0.22, 0.95)})`;
+                ctx.beginPath();
+                ctx.arc(p1.x + (p2.x - p1.x) * packet, p1.y + (p2.y - p1.y) * packet, Math.max(0.8, p1.scale * 2.2), 0, Math.PI * 2);
+                ctx.fill();
+              }
             }
           }
         }
       }
+    }
 
-      rafId = requestAnimationFrame(loop);
+    function loop() {
+      if (isDisposed || !isVisible) {
+        rafId = 0;
+        return;
+      }
+
+      drawFrame(true);
+      rafId = window.requestAnimationFrame(loop);
     }
 
     registerPageCleanup(root, () => {
       isDisposed = true;
-      window.removeEventListener('resize', resize);
-      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener("resize", resize);
+      window.removeEventListener("pointermove", handlePointer);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      if (rafId) window.cancelAnimationFrame(rafId);
     });
 
-    loop();
+    drawFrame(false);
+    if (allowBackgroundMotion) rafId = window.requestAnimationFrame(loop);
   }
 
   function initCopyLink(root, successMessage) {
@@ -7362,15 +8753,20 @@
     ensureShell();
     initWelcomeTheme();
     initGlobalShell();
-    initWelcomeTheme();
     initPageTransition();
     initMenuOverlay();
-    await loadMigratedArchiveData();
     renderCurrentPage();
-    initTextNormalizer();
-    bindStableMedia(document);
+    hydrateRenderedPage();
     initPreloader();
+
+    if (!shouldLoadMigratedArchiveData()) return;
+
+    loadMigratedArchiveData().then(() => {
+      renderCurrentPage();
+      hydrateRenderedPage();
+    });
   }
+
 
   startApp();
 })();
