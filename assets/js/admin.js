@@ -47,11 +47,11 @@
     seoBacklinks: "/migration-full-input/seo_backlinks.json",
   };
   const STORAGE = {
-    users: "stemora-admin:users",
-    session: "stemora-admin:session",
-    googleClient: "stemora-admin:google-client-id",
-    view: "stemora-admin:view",
-    drafts: "stemora-admin:drafts",
+    users: "smartsteam-admin:users",
+    session: "smartsteam-admin:session",
+    googleClient: "smartsteam-admin:google-client-id",
+    view: "smartsteam-admin:view",
+    drafts: "smartsteam-admin:drafts",
   };
   const DEFAULT_IMAGE = "/assets/img/product-science.svg";
   const TINYMCE_CDN = "/assets/vendor/tinymce/tinymce.min.js";
@@ -240,7 +240,7 @@
       <section class="auth-screen">
         <article class="auth-card auth-card--wide">
           <div class="auth-media">
-            <h1>STEMORA Admin</h1>
+            <h1>SMARTSTEAM Admin</h1>
           </div>
           <div class="auth-body">
             <div class="brand-row">
@@ -332,7 +332,7 @@
           <div class="brand-row">
             <span class="brand-mark" aria-hidden="true"></span>
             <div>
-              <strong>STEMORA</strong>
+              <strong>SMARTSTEAM</strong>
               <span>Admin Console</span>
             </div>
           </div>
@@ -1805,21 +1805,21 @@
     } else if (action === "export-view") {
       exportCurrentView();
     } else if (action === "export-editor") {
-      if (state.editor) downloadJson(`stemora-${state.editor.type}-${state.editor.slug || state.editor.id}.json`, state.editor);
+      if (state.editor) downloadJson(`smartsteam-${state.editor.type}-${state.editor.slug || state.editor.id}.json`, state.editor);
     } else if (action === "export-all") {
-      downloadJson("stemora-admin-snapshot.json", buildExportSnapshot());
+      downloadJson("smartsteam-admin-snapshot.json", buildExportSnapshot());
     } else if (action === "export-orders") {
       toast("Nguồn đơn hàng đã tắt", "Không export orders từ static admin vì dữ liệu này chứa PII.");
     } else if (action === "export-users") {
       toast("Nguồn khách hàng đã tắt", "Không export users/customers từ static admin vì dữ liệu này chứa PII.");
     } else if (action === "export-seo") {
-      downloadJson("stemora-seo-export.json", {
+      downloadJson("smartsteam-seo-export.json", {
         pages: state.data.seoPages || [],
         keywords: state.data.seoKeywords || [],
         backlinks: state.data.seoBacklinks || [],
       });
     } else if (action === "export-media") {
-      downloadJson("stemora-media-export.json", collectMedia());
+      downloadJson("smartsteam-media-export.json", collectMedia());
     } else if (action === "load-orders") {
       ensureOrders(true);
     } else if (action === "load-users") {
@@ -3261,7 +3261,7 @@
   }
 
   function exportDrafts() {
-    downloadJson("stemora-admin-local-changes.json", {
+    downloadJson("smartsteam-admin-local-changes.json", {
       exportedAt: new Date().toISOString(),
       count: countLocalChanges(),
       localChanges: state.drafts,
@@ -3271,15 +3271,15 @@
 
   function exportCurrentView() {
     if (state.view === "orders") {
-      downloadJson("stemora-orders-view.json", state.data.orders || []);
+      downloadJson("smartsteam-orders-view.json", state.data.orders || []);
       return;
     }
     if (state.view === "customers") {
-      downloadJson("stemora-customers-view.json", state.data.users || []);
+      downloadJson("smartsteam-customers-view.json", state.data.users || []);
       return;
     }
     const type = state.view === "products" ? "products" : state.filters.contentType;
-    downloadJson(`stemora-${state.view}-${type}.json`, getFilteredRows(type));
+    downloadJson(`smartsteam-${state.view}-${type}.json`, getFilteredRows(type));
   }
 
   function importDrafts(file) {

@@ -132,19 +132,52 @@
     resizeHandler: null,
     migratedArchivePromise: null,
     experienceStarted: false,
-    transitionPending: sessionStorage.getItem("stemora_transition_pending") === "1",
+    transitionPending: sessionStorage.getItem("smartsteam_transition_pending") === "1",
     textNormalizationObserver: null,
     textNormalizeRaf: 0,
     normalizingText: false,
     welcomeThemeInitialized: false,
   };
   const GROUPS = ["age", "theme", "format", "occasion", "difficulty"];
-  const APP_THEME_STORAGE_KEY = "stemora:theme";
-  const WELCOME_THEME_STORAGE_KEY = "stemora:welcome-theme";
-  const PROJECT_ARCHIVE_SCROLL_KEY = "stemora:project-archive-scroll";
+  const APP_THEME_STORAGE_KEY = "smartsteam:theme";
+  const WELCOME_THEME_STORAGE_KEY = "smartsteam:welcome-theme";
+  const PROJECT_ARCHIVE_SCROLL_KEY = "smartsteam:project-archive-scroll";
   const BACKGROUND_3D_PAGES = new Set(["welcome", "products", "projects", "tutorials", "news", "contact"]);
   const SHARED_3D_BACKGROUND_PAGES = new Set(["projects", "tutorials", "news", "contact"]);
   let threeModulePromise = null;
+
+  function pageSupportsBackgroundMotion() {
+    return BACKGROUND_3D_PAGES.has(page);
+  }
+
+  function getBackgroundMotionProfile(isProductCanvas, sceneEl, lowPowerDevice) {
+    if (!pageSupportsBackgroundMotion()) {
+      return { active: false, interval: 1000, speed: 0, pointer: false };
+    }
+
+    const inProductGrid = isProductCanvas && body.classList.contains("is-product-grid-mode");
+    const busyGrid = inProductGrid && sceneEl && (
+      sceneEl.classList.contains("is-board-scrolling") ||
+      sceneEl.classList.contains("is-grid-reflowing") ||
+      sceneEl.classList.contains("is-grid-refining") ||
+      sceneEl.classList.contains("is-morphing-to-grid")
+    );
+    const baseInterval = lowPowerDevice ? 33 : 16;
+    const gridInterval = lowPowerDevice ? 66 : 42;
+    const busyInterval = lowPowerDevice ? 100 : 76;
+    const interval = reducedMotion
+      ? Math.max(inProductGrid ? gridInterval : baseInterval, 66)
+      : (busyGrid ? busyInterval : (inProductGrid ? gridInterval : baseInterval));
+    const reducedScale = reducedMotion ? 0.42 : 1;
+    const gridScale = busyGrid ? 0.28 : (inProductGrid ? 0.48 : 1);
+
+    return {
+      active: true,
+      interval,
+      speed: Math.max(0.16, reducedScale * gridScale),
+      pointer: !reducedMotion && !busyGrid,
+    };
+  }
 
   function $(selector, root) {
     return (root || document).querySelector(selector);
@@ -472,18 +505,18 @@
 
   function deriveEnglishSummary(entry, fallback) {
     const title = deriveEnglishTitle(entry, entry && (entry.titleEn || entry.titleVi) || fallback);
-    return `English STEMORA page for ${title}, with practical STEM context, media, and related learning resources.`;
+    return `English SMARTSTEAM page for ${title}, with practical STEM context, media, and related learning resources.`;
   }
 
   function contextualizeMetaTitle(title) {
     const value = normalizeText(title || "");
     if (!value || !page.endsWith("-detail")) return value;
     const labels = locale === "vi"
-      ? { "product-detail": "Sản phẩm STEMORA", "project-detail": "Dự án STEMORA", "tutorial-detail": "Bài giảng STEMORA", "news-detail": "Tin STEMORA", "policy-detail": "Hỗ trợ STEMORA" }
-      : { "product-detail": "STEMORA Product", "project-detail": "STEMORA Project", "tutorial-detail": "STEMORA Tutorial", "news-detail": "STEMORA News", "policy-detail": "STEMORA Support" };
+      ? { "product-detail": "Sản phẩm SMARTSTEAM", "project-detail": "Dự án SMARTSTEAM", "tutorial-detail": "Bài giảng SMARTSTEAM", "news-detail": "Tin SMARTSTEAM", "policy-detail": "Hỗ trợ SMARTSTEAM" }
+      : { "product-detail": "SMARTSTEAM Product", "project-detail": "SMARTSTEAM Project", "tutorial-detail": "SMARTSTEAM Tutorial", "news-detail": "SMARTSTEAM News", "policy-detail": "SMARTSTEAM Support" };
     const label = labels[page];
     if (!label || value.includes(label)) return value;
-    return value.replace(/\s*\|\s*STEMORA\s*$/i, ` | ${label}`);
+    return value.replace(/\s*\|\s*SMARTSTEAM\s*$/i, ` | ${label}`);
   }
 
   function shortenMetaTitle(title) {
@@ -739,7 +772,7 @@
   }
 
   function wrapLabel(value, maxLen, maxLines) {
-    const words = String(value || "STEMORA")
+    const words = String(value || "SMARTSTEAM")
       .trim()
       .split(/\s+/)
       .filter(Boolean);
@@ -759,7 +792,7 @@
   }
 
   function buildGeneratedFallbackSource(media) {
-    const label = getMediaAlt(media) || "STEMORA";
+    const label = getMediaAlt(media) || "SMARTSTEAM";
     const hash = hashText(`${label}-${media.role || "catalogue"}`);
     const hueA = 20 + (hash % 160);
     const hueB = 180 + (hash % 120);
@@ -810,7 +843,7 @@
     if (window.location.protocol === "http:" || window.location.protocol === "https:") {
       return window.location.origin;
     }
-    return "https://stemora.vn";
+    return "https://ssteam.netlify.app";
   })();
 
   function ensureHeadTag(selector, create) {
@@ -877,7 +910,7 @@
 
     setMetaTag("og:type", opts.ogType || (page.endsWith("-detail") ? "article" : "website"), "property");
     setMetaTag("og:url", canonical, "property");
-    setMetaTag("og:site_name", "STEMORA", "property");
+    setMetaTag("og:site_name", "SMARTSTEAM", "property");
     setMetaTag("og:locale", locale === "vi" ? "vi_VN" : "en_US", "property");
     if (title) setMetaTag("og:title", title, "property");
     if (description) setMetaTag("og:description", description, "property");
@@ -885,16 +918,16 @@
     const ogImage = opts.image || (data.siteMeta && data.siteMeta.ogImage) || `${SITE_ORIGIN}/assets/img/luxury-3d-chip-hero.png`;
     setMetaTag("og:image", ogImage, "property");
     setMetaTag("twitter:card", "summary_large_image");
-    setMetaTag("twitter:title", title || "STEMORA");
+    setMetaTag("twitter:title", title || "SMARTSTEAM");
     if (description) setMetaTag("twitter:description", description);
     setMetaTag("twitter:image", ogImage);
 
     if (opts.jsonLd) {
-      let script = document.getElementById("stemora-jsonld");
+      let script = document.getElementById("smartsteam-jsonld");
       if (!script) {
         script = document.createElement("script");
         script.type = "application/ld+json";
-        script.id = "stemora-jsonld";
+        script.id = "smartsteam-jsonld";
         document.head.appendChild(script);
       }
       script.textContent = JSON.stringify(opts.jsonLd);
@@ -937,6 +970,7 @@
     const fallbackRole = baseMedia.role || config.role || "editorial";
     return {
       src: normalizeMediaSource(baseMedia.src) || MEDIA_FALLBACKS[fallbackRole] || MEDIA_FALLBACKS.editorial,
+      fallbackSrc: normalizeMediaSource(baseMedia.fallbackSrc || config.fallbackSrc || ""),
       width: baseMedia.width || config.width || 1200,
       height: baseMedia.height || config.height || 1200,
       ratio: baseMedia.ratio || config.ratio || "4 / 5",
@@ -992,7 +1026,10 @@
       .join(" ");
     const stage = config.stage ? ` data-stage="${escapeHtmlText(safeMediaToken(config.stage, ""))}"` : "";
     const resolvedSource = resolveAssetSource(normalizedMedia.src);
-    const fallbackSource = getFallbackMediaSource(normalizedMedia);
+    const fallbackSource = normalizedMedia.fallbackSrc
+      ? resolveAssetSource(normalizedMedia.fallbackSrc)
+      : getFallbackMediaSource(normalizedMedia);
+    const manual = config.manual ? ' data-media-manual="true"' : "";
     const sourceAttributes = inlineSource
       ? `src="${escapeHtmlText(resolvedSource)}" data-fallback-src="${escapeHtmlText(fallbackSource)}"`
       : `src="${EMPTY_MEDIA}" data-src="${escapeHtmlText(resolvedSource)}" data-fallback-src="${escapeHtmlText(fallbackSource)}"`;
@@ -1013,11 +1050,33 @@
           width="${safeMediaNumber(normalizedMedia.width, 1200, 1, 6000)}"
           height="${safeMediaNumber(normalizedMedia.height, 1200, 1, 6000)}"
           data-media-tier="${escapeHtmlText(tier)}"
+          ${manual}
           loading="${escapeHtmlText(safeMediaToken(loading, "lazy"))}"
           decoding="${escapeHtmlText(safeMediaToken(decoding, "async"))}"${fetchPriority}
         >
       </figure>
     `;
+  }
+
+  function getLocalThumbnailSource(src) {
+    const normalizedSource = normalizeMediaSource(src);
+    if (!/^\/images\/[^/?#]+\.(?:webp|png|jpe?g)$/i.test(normalizedSource)) return "";
+    return normalizedSource.replace(/^\/images\//i, "/images/thumbs/").replace(/\.(?:png|jpe?g|webp)$/i, ".webp");
+  }
+
+  function getCatalogueThumbMedia(media) {
+    const normalizedMedia = normalizeMediaObject(media, { role: "catalogue" });
+    const thumbSource = getLocalThumbnailSource(normalizedMedia.src);
+    if (!thumbSource) return normalizedMedia;
+    const maxEdge = Math.max(Number(normalizedMedia.width) || 0, Number(normalizedMedia.height) || 0, 1);
+    const scale = Math.min(1, 520 / maxEdge);
+    return Object.assign({}, normalizedMedia, {
+      src: thumbSource,
+      fallbackSrc: normalizedMedia.src,
+      width: Math.max(1, Math.round((Number(normalizedMedia.width) || 520) * scale)),
+      height: Math.max(1, Math.round((Number(normalizedMedia.height) || 520) * scale)),
+      loadingTier: "deferred",
+    });
   }
 
   function getTaxonomyLabel(group, value) {
@@ -1517,7 +1576,7 @@
     if (!layer || !state.transitionPending) return;
     window.setTimeout(() => {
       layer.classList.remove("is-active", "is-holding");
-      sessionStorage.removeItem("stemora_transition_pending");
+      sessionStorage.removeItem("smartsteam_transition_pending");
       state.transitionPending = false;
       body.classList.remove("is-transitioning");
     }, delay);
@@ -1531,11 +1590,13 @@
         `
           <div class="preloader js-preloader" aria-hidden="false">
             <div class="preloader__inner">
-              <div class="preloader__mark">${data.siteMeta.shortBrand}</div>
-              <img class="preloader__logo" src="${data.siteMeta.logo.src}" alt="${getMediaAlt(data.siteMeta.logo)}" width="${data.siteMeta.logo.width}" height="${data.siteMeta.logo.height}">
-              <div class="preloader__percent js-preloader-percent">0%</div>
-              <div class="preloader__track" aria-hidden="true"><span class="js-preloader-bar"></span></div>
+              <div class="preloader__symbol" aria-hidden="true">
+                <img class="preloader__logo" src="${data.siteMeta.logo.src}" alt="" width="${data.siteMeta.logo.width}" height="${data.siteMeta.logo.height}">
+              </div>
+              <div class="preloader__mark">${data.siteMeta.brand}</div>
               <p class="preloader__copy">${strings.preloader.copy}</p>
+              <div class="preloader__track" aria-hidden="true"><span class="js-preloader-bar"></span></div>
+              <div class="preloader__percent js-preloader-percent">0%</div>
             </div>
           </div>
         `
@@ -1547,7 +1608,15 @@
         "beforeend",
         `
           <div class="transition-layer js-transition-layer" aria-hidden="true">
-            <div class="transition-layer__mark">${data.siteMeta.shortBrand}</div>
+            <div class="preloader__inner transition-layer__inner">
+              <div class="preloader__symbol" aria-hidden="true">
+                <img class="preloader__logo" src="${data.siteMeta.logo.src}" alt="" width="${data.siteMeta.logo.width}" height="${data.siteMeta.logo.height}">
+              </div>
+              <div class="preloader__mark">${data.siteMeta.brand}</div>
+              <p class="preloader__copy">${strings.preloader.copy}</p>
+              <div class="preloader__track" aria-hidden="true"><span class="js-transition-bar"></span></div>
+              <div class="preloader__percent js-transition-percent">18%</div>
+            </div>
           </div>
         `
       );
@@ -1830,32 +1899,19 @@
   function initPageTransition() {
     const layer = $(".js-transition-layer");
     if (!layer) return;
-    if (state.transitionPending) layer.classList.add("is-active", "is-holding");
+
+    const clearTransitionState = () => {
+      layer.classList.remove("is-active", "is-holding");
+      sessionStorage.removeItem("smartsteam_transition_pending");
+      state.transitionPending = false;
+      body.classList.remove("is-transitioning");
+    };
+
+    clearTransitionState();
 
     window.addEventListener("pageshow", (event) => {
       if (!event.persisted) return;
-      layer.classList.remove("is-active", "is-holding");
-      sessionStorage.removeItem("stemora_transition_pending");
-      state.transitionPending = false;
-      body.classList.remove("is-transitioning");
-    });
-
-    document.addEventListener("click", (event) => {
-      const link = event.target.closest("a[data-transition]");
-      if (!link) return;
-      const href = link.getAttribute("href");
-      if (!href || href.startsWith("#") || link.target === "_blank" || link.hasAttribute("download") || event.metaKey || event.ctrlKey || event.shiftKey) return;
-      const next = new URL(href, window.location.origin);
-      if (next.origin !== window.location.origin) return;
-      if (normalizePath(next.pathname) === currentPath && next.search === window.location.search && next.hash === window.location.hash) return;
-      event.preventDefault();
-      sessionStorage.setItem("stemora_transition_pending", "1");
-      body.classList.add("is-transitioning");
-      layer.classList.remove("is-holding");
-      layer.classList.add("is-active");
-      window.setTimeout(() => {
-        window.location.href = `${next.pathname}${next.search}${next.hash}`;
-      }, transitionTuning.leaveDuration || 420);
+      clearTransitionState();
     });
   }
 
@@ -1871,10 +1927,10 @@
     const assets = getCriticalAssetsForPage();
     const total = assets.length;
     let loaded = 0;
-    let displayProgress = 0;
+    let displayProgress = 8;
     let resolved = total === 0;
-    const seenVisit = sessionStorage.getItem("stemora_has_visited") === "1";
-    const fallbackMs = seenVisit ? preloadTuning.repeatVisitFallback || 2200 : preloadTuning.firstVisitFallback || 3400;
+    const seenVisit = sessionStorage.getItem("smartsteam_has_visited") === "1";
+    const fallbackMs = seenVisit ? preloadTuning.repeatVisitFallback || 650 : preloadTuning.firstVisitFallback || 1450;
     const startTime = performance.now();
     let finished = false;
     let hardTimeoutId = 0;
@@ -1885,14 +1941,14 @@
       if (hardTimeoutId) window.clearTimeout(hardTimeoutId);
       percent.textContent = "100%";
       bar.style.width = "100%";
-      sessionStorage.setItem("stemora_has_visited", "1");
+      sessionStorage.setItem("smartsteam_has_visited", "1");
       body.classList.add("is-ready");
       preloader.classList.add("is-hidden");
       initPageExperience();
       window.setTimeout(() => {
         preloader.setAttribute("aria-hidden", "true");
         preloader.remove();
-      }, 700);
+      }, 520);
     };
 
     const handleResolved = () => {
@@ -1909,12 +1965,12 @@
       const elapsed = timestamp - startTime;
       const fallbackDone = elapsed >= fallbackMs;
       const actual = total ? (loaded / total) * 100 : 100;
-      const timedFloor = clamp(elapsed / 22, 4, 78);
+      const timedFloor = clamp(elapsed / 10, 14, 88);
       let target = Math.max(actual, timedFloor);
       if (resolved || fallbackDone) target = 100;
       else target = Math.min(target, 96);
 
-      displayProgress += (target - displayProgress) * (resolved || fallbackDone ? 0.18 : 0.1);
+      displayProgress += (target - displayProgress) * (resolved || fallbackDone ? 0.32 : 0.16);
       const rounded = Math.round(displayProgress);
       percent.textContent = `${rounded}%`;
       bar.style.width = `${rounded}%`;
@@ -1927,7 +1983,7 @@
       requestAnimationFrame(tick);
     };
 
-    hardTimeoutId = window.setTimeout(done, fallbackMs + 1200);
+    hardTimeoutId = window.setTimeout(done, fallbackMs + 650);
     requestAnimationFrame(tick);
   }
 
@@ -2027,7 +2083,7 @@
     }
 
     const deferredImages = $$('img[data-media-tier="deferred"]', document).filter(
-      (image) => image.dataset.mediaLoaded !== "true" && image.dataset.src
+      (image) => image.dataset.mediaLoaded !== "true" && image.dataset.src && image.dataset.mediaManual !== "true"
     );
 
     if (state.deferredObserver) state.deferredObserver.disconnect();
@@ -2150,12 +2206,26 @@
     `;
   }
 
+  function scheduleHero3DCanvas(root, delayMs) {
+    const delay = Number.isFinite(delayMs) ? delayMs : 180;
+    window.setTimeout(() => {
+      const start = () => {
+        if (root && root.isConnected) initHero3DCanvas(root);
+      };
+      if (typeof window.requestIdleCallback === "function") {
+        window.requestIdleCallback(start, { timeout: 900 });
+      } else {
+        window.requestAnimationFrame(() => window.setTimeout(start, 0));
+      }
+    }, reducedMotion ? 0 : delay);
+  }
+
   function mountShared3DBackground(root) {
     if (!root || !SHARED_3D_BACKGROUND_PAGES.has(page)) return;
     if (!$('.js-hero-3d-canvas', root)) {
       root.insertAdjacentHTML("afterbegin", renderShared3DBackground());
     }
-    window.setTimeout(() => initHero3DCanvas(root), 100);
+    scheduleHero3DCanvas(root, 220);
   }
 
   function renderCurrentPage() {
@@ -2188,7 +2258,7 @@
       status: "Trạm điều phối",
       live: "Cảnh 3D đang chạy",
       signalLabel: "Tín hiệu",
-      signalValue: "STEMORA",
+      signalValue: "SMARTSTEAM",
       sequenceLabel: "Vòng học tập",
       sequenceValue: "04 pha",
       briefIndex: "TÓM TẮT 01",
@@ -2198,7 +2268,7 @@
       status: "Mission control",
       live: "3D scene live",
       signalLabel: "Signal",
-      signalValue: "STEMORA",
+      signalValue: "SMARTSTEAM",
       sequenceLabel: "Learning loop",
       sequenceValue: "04 phase",
       briefIndex: "BRIEF 01",
@@ -2520,7 +2590,7 @@
         </section>
       </section>
     `;
-    setTimeout(() => initHero3DCanvas(root), 100);
+    scheduleHero3DCanvas(root, 360);
     initMissionExperience(root);
   }
 
@@ -2566,7 +2636,7 @@
       };
     });
 
-    root.innerHTML = '<h1 class="visually-hidden">' + (locale === 'vi' ? 'Sản phẩm STEMORA' : 'STEMORA products') + '</h1>' +
+    root.innerHTML = '<h1 class="visually-hidden">' + (locale === 'vi' ? 'Sản phẩm SMARTSTEAM' : 'SMARTSTEAM products') + '</h1>' +
       '<canvas class="hero-3d-canvas js-hero-3d-canvas" style="position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:-1;pointer-events:none;opacity:0.85;"></canvas>' +
       '<div class="galaxy-command-aura" aria-hidden="true"><span></span><span></span><span></span></div>' +
       '<div class="galaxy-command-core" aria-hidden="true"><span></span><span></span><span></span><i></i></div>' +
@@ -2791,6 +2861,10 @@
     boardLinksSvg.setAttribute('class', 'galaxy-board-links js-galaxy-board-links');
     boardLinksSvg.setAttribute('aria-hidden', 'true');
     sceneEl.insertBefore(boardLinksSvg, sphere);
+    var boardScrollSpacerEl = document.createElement('div');
+    boardScrollSpacerEl.className = 'galaxy-board-scroll-spacer';
+    boardScrollSpacerEl.setAttribute('aria-hidden', 'true');
+    sceneEl.appendChild(boardScrollSpacerEl);
     var searchInput = document.querySelector('.js-galaxy-search');
     var categorySelect = document.querySelector('.js-galaxy-category');
     var sortSelect = document.querySelector('.js-galaxy-sort');
@@ -2801,6 +2875,7 @@
     var priceMenu = document.querySelector('.js-galaxy-price-menu');
     var priceValueLabel = document.querySelector('.js-galaxy-price-label');
     var priceCloseTimer = null;
+    var productDetailNavigationPending = false;
 
     function syncProductFilterBarFrame() {
       var headerInner = document.querySelector('.header-shell__inner');
@@ -2857,7 +2932,7 @@
 
       cardsHTML += '<div class="galaxy-card ' + sc + '" data-card-idx="' + i + '" style="--card-delay:' + ((i % 18) * 42) + 'ms; --card-phase:' + ((i % 12) * 30) + 'deg; --card-depth:' + Math.round(pz) + '; transform:' + sphereTransform + '">' +
         '<div class="galaxy-card__inner">' +
-          '<div class="galaxy-card__img">' + renderMedia(item.cover, '', { tier: i < 8 ? 'near' : 'deferred', loading: i < 8 ? 'eager' : 'lazy' }) + '</div>' +
+          '<div class="galaxy-card__img">' + renderMedia(getCatalogueThumbMedia(item.cover), '', { tier: 'deferred', loading: 'lazy', manual: true }) + '</div>' +
           '<div class="galaxy-card__info">' +
             '<span class="galaxy-card__name">' + cardTitle + '</span>' +
             '<span class="galaxy-card__price">' + (locale === 'vi' ? item.priceVi : item.priceEn) + '</span>' +
@@ -2894,18 +2969,57 @@
       })
       .map(function(card) { return card.querySelector('img[data-src]'); })
       .filter(Boolean);
-    if (galaxyImagesByDepth.length) {
-      var firstGalaxyBatch = window.innerWidth < 760 ? 16 : 34;
-      loadMediaBatch(galaxyImagesByDepth.slice(0, firstGalaxyBatch), window.innerWidth < 760 ? 4 : 8)
-        .then(function() {
-          return loadMediaBatch(galaxyImagesByDepth.slice(firstGalaxyBatch), window.innerWidth < 760 ? 3 : 6);
+    function loadGalaxyImages(images, batchSize) {
+      var pendingImages = (images || []).filter(function(image) {
+        return image && image.dataset.mediaLoaded !== 'true' && image.dataset.src;
+      });
+      if (!pendingImages.length) return Promise.resolve([]);
+      return loadMediaBatch(pendingImages, batchSize || (window.innerWidth < 760 ? 3 : 5));
+    }
+
+    function scheduleGalaxyIdleImages(images, startIndex) {
+      var pendingImages = (images || []).slice(startIndex || 0).filter(Boolean);
+      if (!pendingImages.length) return;
+      var index = 0;
+      var loadNext = function(deadline) {
+        if (!pendingImages.length || layoutMode !== 'sphere') return;
+        var timeLeft = deadline && typeof deadline.timeRemaining === 'function' ? deadline.timeRemaining() : 8;
+        var batch = [];
+        while (index < pendingImages.length && batch.length < 2 && timeLeft > 4) {
+          batch.push(pendingImages[index]);
+          index += 1;
+          timeLeft -= 3;
+        }
+        loadGalaxyImages(batch, 1).finally(function() {
+          if (index >= pendingImages.length || layoutMode !== 'sphere') return;
+          window.setTimeout(function() {
+            if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(loadNext, { timeout: 1200 });
+            else window.requestAnimationFrame(function() { loadNext(null); });
+          }, 900);
         });
+      };
+      window.setTimeout(function() {
+        if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(loadNext, { timeout: 1500 });
+        else window.requestAnimationFrame(function() { loadNext(null); });
+      }, 4200);
+    }
+
+    if (galaxyImagesByDepth.length) {
+      var firstGalaxyBatch = window.innerWidth < 760 ? 10 : 18;
+      loadGalaxyImages(galaxyImagesByDepth.slice(0, firstGalaxyBatch), window.innerWidth < 760 ? 3 : 5);
+      scheduleGalaxyIdleImages(galaxyImagesByDepth, firstGalaxyBatch);
     }
     var layoutMode = 'sphere';
     var boardScrollCurrent = 0;
     var boardScrollTarget = 0;
     var boardScrollMin = 0;
     var boardScrollMax = 0;
+    var boardScrollEffectTimer = null;
+    var lastBoardTransformY = null;
+    var lastCanRevealTop = null;
+    var lastCanRevealBottom = null;
+    var boardScrollRange = 0;
+    var isSyncingBoardScroll = false;
     var boardTouchActive = false;
     var boardTouchStartY = 0;
     var boardTouchStartScroll = 0;
@@ -2913,10 +3027,13 @@
     var boardGridPose = {};
     var gridMorphTimer = null;
     var boardConnectionTimer = null;
+    var boardConnectionToken = 0;
     var renderResultsTimer = null;
     var morphLayerEl = null;
-    var GRID_MORPH_DURATION = reducedMotion ? 0 : 920;
-    var GRID_REFLOW_DURATION = reducedMotion ? 0 : 440;
+    var gravityOverlayEl = null;
+    var gravityOverlayTimer = null;
+    var GRID_MORPH_DURATION = reducedMotion ? 0 : 640;
+    var GRID_REFLOW_DURATION = reducedMotion ? 0 : 180;
     var gridMorphHoldUntil = 0;
 
     function getCenteredSphereTransform(card, pose) {
@@ -3245,6 +3362,7 @@
       sceneEl.classList.toggle('is-focus-locked', !!lockFocus);
       card.classList.add('galaxy-card--focused');
       card.classList.toggle('galaxy-card--focus-locked', !!lockFocus);
+      loadGalaxyImages([card.querySelector('img[data-src]')], 1);
       syncSphereCardDepth(card, lockFocus ? 'locked' : 'hover');
       showHoverPreview(card, lockFocus);
       clearTimeout(hoverReleaseTimer);
@@ -3436,7 +3554,18 @@
     }
 
     function goToProductDetail(product) {
-      if (!product || !product.slug) return;
+      if (!product || !product.slug || productDetailNavigationPending) return;
+      productDetailNavigationPending = true;
+      clearTimeout(holdTimer);
+      clearTimeout(renderResultsTimer);
+      clearTimeout(gridMorphTimer);
+      clearTimeout(boardConnectionTimer);
+      if (resultsPanel) resultsPanel.style.display = 'none';
+      if (sceneEl) {
+        sceneEl.classList.remove('is-morphing-to-sphere');
+        sceneEl.style.pointerEvents = 'none';
+      }
+      if (searchBarEl) searchBarEl.style.pointerEvents = 'none';
       window.location.href = getLocalePath('product-detail', product.slug);
     }
 
@@ -3711,7 +3840,7 @@
     function clearBoardConnections() {
       if (!boardLinksSvg) return;
       boardLinksSvg.innerHTML = '';
-      boardLinksSvg.classList.remove('is-active');
+      boardLinksSvg.classList.remove('is-active', 'is-static');
     }
 
     function renderBoardConnections(items, boardPose) {
@@ -3783,6 +3912,7 @@
       });
 
       boardLinksSvg.innerHTML = svgParts.join('');
+      boardLinksSvg.classList.toggle('is-static', items.length > 8);
       boardLinksSvg.classList.add('is-active');
     }
 
@@ -3825,13 +3955,55 @@
       morphLayerEl = null;
     }
 
+    function clearGravityCollapseFx() {
+      clearTimeout(gravityOverlayTimer);
+      gravityOverlayTimer = null;
+      if (gravityOverlayEl) {
+        gravityOverlayEl.remove();
+        gravityOverlayEl = null;
+      }
+      if (searchBarEl) searchBarEl.classList.remove('is-gravity-command');
+      sceneEl.classList.remove('is-gravity-collapsing', 'is-gravity-portal-open');
+    }
+
+    function playGravityCollapseFx() {
+      if (reducedMotion) return;
+      clearGravityCollapseFx();
+      var sceneRect = sceneEl.getBoundingClientRect();
+      var portalX = sceneRect.left + sceneRect.width * 0.5;
+      var portalY = sceneRect.top + sceneRect.height * 0.48;
+      var portalSize = Math.max(240, Math.min(sceneRect.width, sceneRect.height) * 0.42);
+
+      gravityOverlayEl = document.createElement('div');
+      gravityOverlayEl.className = 'galaxy-gravity-fx';
+      gravityOverlayEl.style.setProperty('--portal-x', portalX.toFixed(1) + 'px');
+      gravityOverlayEl.style.setProperty('--portal-y', portalY.toFixed(1) + 'px');
+      gravityOverlayEl.style.setProperty('--portal-size', portalSize.toFixed(1) + 'px');
+      gravityOverlayEl.innerHTML =
+        '<div class="galaxy-gravity-fx__wash"></div>' +
+        '<div class="galaxy-gravity-fx__scan"></div>' +
+        '<div class="galaxy-gravity-fx__portal"><span></span><span></span><i></i></div>';
+      document.body.appendChild(gravityOverlayEl);
+      if (searchBarEl) searchBarEl.classList.add('is-gravity-command');
+      sceneEl.classList.add('is-gravity-collapsing');
+      gravityOverlayTimer = setTimeout(function() {
+        sceneEl.classList.add('is-gravity-portal-open');
+      }, 160);
+    }
+
     function clearGridMotionTimers() {
       clearTimeout(gridMorphTimer);
       clearTimeout(boardConnectionTimer);
+      clearTimeout(boardScrollEffectTimer);
       gridMorphTimer = null;
       boardConnectionTimer = null;
+      boardConnectionToken += 1;
+      boardScrollEffectTimer = null;
       gridMorphHoldUntil = 0;
+      sceneEl.classList.remove('is-board-scrolling', 'is-wormhole-transition', 'is-grid-refining');
+      if (searchBarEl) searchBarEl.classList.remove('is-grid-scanning');
       clearMorphLayer();
+      clearGravityCollapseFx();
     }
 
     function cancelGridCardAnimations() {
@@ -3873,10 +4045,17 @@
 
     function scheduleBoardConnections(items, boardPose, delayMs) {
       clearTimeout(boardConnectionTimer);
+      boardConnectionToken += 1;
+      var connectionToken = boardConnectionToken;
       clearBoardConnections();
       boardConnectionTimer = setTimeout(function() {
         if (layoutMode !== 'grid') return;
-        renderBoardConnections(items, boardPose);
+        var draw = function() {
+          if (layoutMode !== 'grid' || connectionToken !== boardConnectionToken) return;
+          renderBoardConnections(items, boardPose);
+        };
+        if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(draw, { timeout: 900 });
+        else window.requestAnimationFrame(draw);
       }, reducedMotion ? 0 : (typeof delayMs === 'number' ? delayMs : 280));
     }
 
@@ -3885,15 +4064,19 @@
       gridMorphTimer = setTimeout(function() {
         gridMorphHoldUntil = 0;
         sceneEl.classList.remove('is-grid-reflowing', 'is-morphing-to-grid', 'is-morphing-to-sphere');
+        sceneEl.classList.remove('is-wormhole-transition', 'is-grid-refining');
+        if (searchBarEl) searchBarEl.classList.remove('is-grid-scanning');
         cardNodes.forEach(function(card) {
-          card.classList.remove('is-grid-entering', 'is-grid-exiting');
+          card.classList.remove('is-grid-entering', 'is-grid-exiting', 'is-grid-scanned');
           if (card.classList.contains('galaxy-card--grid')) {
             setCardOpacityNow(card, 1);
             card.style.visibility = 'visible';
             card.style.pointerEvents = 'auto';
           }
         });
+        cancelGridCardAnimations();
         clearMorphLayer();
+        clearGravityCollapseFx();
         hideFilteredGridCards();
         if (items && boardPose) scheduleBoardConnections(items, boardPose, 0);
       }, reducedMotion ? 0 : (typeof delayMs === 'number' ? delayMs : GRID_MORPH_DURATION));
@@ -3912,17 +4095,21 @@
       return clone;
     }
 
-    function ensureMorphLayer() {
+    function ensureMorphLayer(mode) {
       clearMorphLayer();
       morphLayerEl = document.createElement('div');
       morphLayerEl.className = 'galaxy-morph-layer';
+      if (mode) morphLayerEl.classList.add('galaxy-morph-layer--' + mode);
       document.body.appendChild(morphLayerEl);
       return morphLayerEl;
     }
 
     function animateOrbitToBoard(firstRects, visibleGridCards, rankBySlug) {
-      if (reducedMotion || !firstRects || !visibleGridCards.length) return false;
-      var layer = ensureMorphLayer();
+      if (reducedMotion || !firstRects) return false;
+      var layer = ensureMorphLayer('board');
+      var sceneRect = sceneEl.getBoundingClientRect();
+      var portalX = sceneRect.left + sceneRect.width * 0.5;
+      var portalY = sceneRect.top + sceneRect.height * 0.48;
       var entriesBySlug = {};
       visibleGridCards.forEach(function(entry) {
         entriesBySlug[entry.product.slug] = entry;
@@ -3943,13 +4130,20 @@
         if (!product) return;
         var firstRect = firstRects[product.slug];
         if (!firstRect) return;
+        var entry = entriesBySlug[product.slug];
+        if (!entry) return;
         var clone = createMorphCard(card, firstRect);
         if (!clone) return;
         layer.appendChild(clone);
 
-        var entry = entriesBySlug[product.slug];
         var rank = depthRank[product.slug] || 0;
-        var delay = Math.min(rank * 7, 280);
+        var seed = hashText(product.slug);
+        var twist = seed % 2 ? 1 : -1;
+        var delay = Math.min(rank * 8, 320);
+        var cardCenterX = firstRect.left + firstRect.width * 0.5;
+        var cardCenterY = firstRect.top + firstRect.height * 0.5;
+        var portalDx = portalX - cardCenterX;
+        var portalDy = portalY - cardCenterY;
         var keyframes;
         var timing;
 
@@ -3959,25 +4153,39 @@
           var dy = targetRect.top - firstRect.top;
           var sx = targetRect.width && firstRect.width ? targetRect.width / firstRect.width : 1;
           var sy = targetRect.height && firstRect.height ? targetRect.height / firstRect.height : 1;
-          var lift = Math.max(-82, Math.min(46, -24 - (firstRect.depth || 0) * 0.035));
-          var arcX = dx * 0.52;
-          var arcY = dy * 0.42 + lift;
+          var orbitBend = 54 + (seed % 70);
+          var portalArcX = portalDx * 0.72 + twist * orbitBend;
+          var portalArcY = portalDy * 0.72 - orbitBend * 0.46;
+          var dealX = dx * 0.82 + twist * Math.min(46, Math.abs(dx) * 0.08);
+          var dealY = dy * 0.82 - 38;
           clone.classList.add('galaxy-morph-card--landing');
           keyframes = [
             {
-              opacity: 0.96,
-              filter: 'blur(0px) saturate(1.06) brightness(1.06)',
-              transform: 'translate3d(0,0,0) rotateX(0deg) rotateY(0deg) scale(1)'
+              opacity: 0.78,
+              filter: 'brightness(0.96) saturate(0.96)',
+              transform: 'translate3d(0,0,0) rotateX(0deg) rotateY(0deg) rotateZ(0deg) scale(0.92)'
             },
             {
               opacity: 1,
-              filter: 'blur(0px) saturate(1.2) brightness(1.18)',
-              transform: 'translate3d(' + arcX.toFixed(1) + 'px,' + arcY.toFixed(1) + 'px,90px) rotateX(-5deg) rotateY(' + (dx > 0 ? -10 : 10) + 'deg) scale(' + ((1 + sx) / 2).toFixed(3) + ',' + ((1 + sy) / 2).toFixed(3) + ')',
-              offset: 0.46
+              filter: 'brightness(1.04) saturate(1.04)',
+              transform: 'translate3d(' + (portalDx * 0.22 + twist * 26).toFixed(1) + 'px,' + (portalDy * 0.2 - 34).toFixed(1) + 'px,120px) rotateX(9deg) rotateY(' + (-twist * 32) + 'deg) rotateZ(' + (twist * 18) + 'deg) scale(1.08)',
+              offset: 0.18
             },
             {
               opacity: 1,
-              filter: 'blur(0px) saturate(1) brightness(1)',
+              filter: 'brightness(1.06) saturate(1.05)',
+              transform: 'translate3d(' + portalArcX.toFixed(1) + 'px,' + portalArcY.toFixed(1) + 'px,260px) rotateX(-12deg) rotateY(' + (twist * 58) + 'deg) rotateZ(' + (twist * 56) + 'deg) scale(0.72)',
+              offset: 0.44
+            },
+            {
+              opacity: 1,
+              filter: 'brightness(1.02) saturate(1.02)',
+              transform: 'translate3d(' + dealX.toFixed(1) + 'px,' + dealY.toFixed(1) + 'px,110px) rotateX(-3deg) rotateY(0deg) rotateZ(' + (-twist * 7) + 'deg) scale(' + Math.max(0.84, ((1 + sx) / 2)).toFixed(3) + ',' + Math.max(0.84, ((1 + sy) / 2)).toFixed(3) + ')',
+              offset: 0.74
+            },
+            {
+              opacity: 1,
+              filter: 'brightness(1) saturate(1)',
               transform: 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) rotateX(0deg) rotateY(0deg) scale(' + sx.toFixed(4) + ',' + sy.toFixed(4) + ')'
             }
           ];
@@ -3988,20 +4196,20 @@
             fill: 'both'
           };
         } else {
-          var sceneRect = sceneEl.getBoundingClientRect();
-          var seed = hashText(product.slug);
-          var fadeX = (sceneRect.left + sceneRect.width * (0.36 + ((seed % 29) / 100))) - firstRect.left;
-          var fadeY = (sceneRect.top + sceneRect.height * (0.48 + (((seed >> 3) % 21) / 120))) - firstRect.top;
+          var collapseBend = 34 + (seed % 58);
+          var fadeX = portalDx + twist * collapseBend;
+          var fadeY = portalDy - collapseBend * 0.38;
           clone.classList.add('galaxy-morph-card--discard');
           keyframes = [
-            { opacity: 0.72, filter: 'blur(0px) saturate(0.9)', transform: 'translate3d(0,0,0) scale(1)' },
-            { opacity: 0.26, filter: 'blur(9px) saturate(0.62)', transform: 'translate3d(' + (fadeX * 0.72).toFixed(1) + 'px,' + (fadeY * 0.72 - 28).toFixed(1) + 'px,70px) rotateY(' + ((seed % 2 ? 1 : -1) * 18) + 'deg) scale(0.62)', offset: 0.58 },
-            { opacity: 0, filter: 'blur(18px) saturate(0.46)', transform: 'translate3d(' + fadeX.toFixed(1) + 'px,' + fadeY.toFixed(1) + 'px,0) rotateY(' + ((seed % 2 ? 1 : -1) * 34) + 'deg) scale(0.38)' }
+            { opacity: 0.62, filter: 'brightness(0.94) saturate(0.92)', transform: 'translate3d(0,0,0) rotateZ(0deg) scale(0.9)' },
+            { opacity: 0.34, filter: 'brightness(0.82) saturate(0.82)', transform: 'translate3d(' + (fadeX * 0.42).toFixed(1) + 'px,' + (fadeY * 0.42).toFixed(1) + 'px,120px) rotateY(' + (twist * 26) + 'deg) rotateZ(' + (twist * 24) + 'deg) scale(0.54)', offset: 0.34 },
+            { opacity: 0.1, filter: 'brightness(0.7) saturate(0.72)', transform: 'translate3d(' + (portalDx * 0.86).toFixed(1) + 'px,' + (portalDy * 0.86).toFixed(1) + 'px,260px) rotateY(' + (-twist * 64) + 'deg) rotateZ(' + (twist * 74) + 'deg) scale(0.18)', offset: 0.72 },
+            { opacity: 0, filter: 'brightness(0.62) saturate(0.66)', transform: 'translate3d(' + portalDx.toFixed(1) + 'px,' + portalDy.toFixed(1) + 'px,320px) rotateY(' + (-twist * 90) + 'deg) rotateZ(' + (twist * 120) + 'deg) scale(0.05)' }
           ];
           timing = {
-            duration: Math.max(520, GRID_MORPH_DURATION * 0.76),
+            duration: Math.max(620, GRID_MORPH_DURATION * 0.72),
             delay: Math.min(delay, 220),
-            easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+            easing: 'cubic-bezier(0.2, 0.74, 0.22, 1)',
             fill: 'both'
           };
         }
@@ -4019,14 +4227,22 @@
       var duration = options && Number.isFinite(options.duration) ? options.duration : GRID_MORPH_DURATION;
       var startOpacity = options && options.startOpacity !== undefined ? options.startOpacity : 1;
       var startFilter = options && options.startFilter ? options.startFilter : 'blur(0px) saturate(1)';
+      var mode = options && options.mode ? options.mode : '';
       if (!firstRect || !lastRect.width || !lastRect.height) {
-        var entryAnimation = card.animate([
-          { opacity: 0, filter: 'blur(10px) saturate(0.72)', transform: 'translate3d(0, 18px, 0) ' + finalTransform },
-          { opacity: 1, filter: 'blur(0px) saturate(1)', transform: finalTransform }
-        ], {
-          duration: Math.max(260, duration * 0.72),
+        var entryKeyframes = mode === 'grid-refine'
+          ? [
+            { opacity: 0, transform: finalTransform + ' translateZ(-72px) rotateX(7deg) scale(0.94)' },
+            { opacity: 1, transform: finalTransform + ' translateZ(34px) rotateX(-2deg) scale(1.012)', offset: 0.58 },
+            { opacity: 1, transform: finalTransform }
+          ]
+          : [
+            { opacity: 0, filter: 'blur(10px) saturate(0.72)', transform: 'translate3d(0, 18px, 0) ' + finalTransform },
+            { opacity: 1, filter: 'blur(0px) saturate(1)', transform: finalTransform }
+          ];
+        var entryAnimation = card.animate(entryKeyframes, {
+          duration: mode === 'grid-refine' ? Math.max(140, duration) : Math.max(220, duration * 0.72),
           delay: delay,
-          easing: 'cubic-bezier(0.19, 1, 0.22, 1)',
+          easing: mode === 'grid-refine' ? 'cubic-bezier(0.16, 1, 0.3, 1)' : 'cubic-bezier(0.19, 1, 0.22, 1)',
           fill: 'both',
         });
         entryAnimation.id = 'galaxy-grid-morph';
@@ -4038,21 +4254,38 @@
       var distance = Math.sqrt(dx * dx + dy * dy);
       if (distance < 1.2) return;
 
-      var animation = card.animate([
-        {
-          transform: 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) ' + finalTransform,
-          opacity: startOpacity,
-          filter: startFilter,
-        },
-        {
-          transform: finalTransform,
-          opacity: 1,
-          filter: 'blur(0px) saturate(1)',
-        }
-      ], {
-        duration: Math.min(duration + distance * 0.08, duration + 180),
+      var pathKeyframes = mode === 'grid-refine'
+        ? [
+          {
+            transform: 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) ' + finalTransform + ' translateZ(-24px) rotateX(4deg) scale(0.985)',
+            opacity: startOpacity,
+          },
+          {
+            transform: 'translate3d(' + (dx * 0.34).toFixed(1) + 'px,' + (dy * 0.34).toFixed(1) + 'px,42px) ' + finalTransform + ' rotateX(-2deg) scale(1.012)',
+            opacity: 1,
+            offset: 0.52,
+          },
+          {
+            transform: finalTransform,
+            opacity: 1,
+          }
+        ]
+        : [
+          {
+            transform: 'translate3d(' + dx.toFixed(1) + 'px,' + dy.toFixed(1) + 'px,0) ' + finalTransform,
+            opacity: startOpacity,
+            filter: startFilter,
+          },
+          {
+            transform: finalTransform,
+            opacity: 1,
+            filter: 'blur(0px) saturate(1)',
+          }
+        ];
+      var animation = card.animate(pathKeyframes, {
+        duration: Math.min(duration + distance * (mode === 'grid-refine' ? 0.02 : 0.06), duration + (mode === 'grid-refine' ? 40 : 120)),
         delay: delay,
-        easing: 'cubic-bezier(0.19, 1, 0.22, 1)',
+        easing: mode === 'grid-refine' ? 'cubic-bezier(0.16, 1, 0.3, 1)' : 'cubic-bezier(0.19, 1, 0.22, 1)',
         fill: 'both',
       });
       animation.id = 'galaxy-grid-morph';
@@ -4063,13 +4296,15 @@
       visibleGridCards.forEach(function(entry, index) {
         var slug = entry.product.slug;
         var firstRect = firstRects ? firstRects[slug] : null;
-        var delay = reducedMotion ? 0 : (wasGridMode ? Math.min(index * 10, 90) : Math.min(entry.row * 46 + entry.col * 18, 260));
+        var delay = reducedMotion ? 0 : (wasGridMode ? Math.min(index * 3, 36) : Math.min(entry.row * 32 + entry.col * 12, 180));
         entry.card.classList.toggle('is-grid-entering', !firstRect);
+        entry.card.classList.remove('is-grid-scanned');
         animateCardFromRect(entry.card, firstRect, entry.card.style.transform || '', {
           delay: delay,
           duration: baseDuration,
-          startOpacity: wasGridMode ? 0.88 : 0.58,
-          startFilter: wasGridMode ? 'blur(0px) saturate(0.92)' : 'blur(10px) saturate(0.72)',
+          startOpacity: wasGridMode ? 0.96 : 0.72,
+          startFilter: wasGridMode ? 'blur(0px) saturate(1)' : 'blur(6px) saturate(0.82)',
+          mode: wasGridMode ? 'grid-refine' : '',
         });
       });
     }
@@ -4080,12 +4315,20 @@
         var slug = getCardSlug(card);
         if (!slug || rankBySlug[slug] !== undefined || !firstRects || !firstRects[slug] || !card.animate) return;
         card.classList.add('is-grid-exiting');
-        var exitAnimation = card.animate([
-          { opacity: 1, filter: 'blur(0px) saturate(1)' },
-          { opacity: 0, filter: 'blur(10px) saturate(0.58)' }
-        ], {
-          duration: wasGridMode ? 260 : 360,
-          easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
+        var exitBaseTransform = firstRects[slug].transform || card.style.transform || 'none';
+        var exitKeyframes = wasGridMode
+          ? [
+            { opacity: 1, transform: exitBaseTransform },
+            { opacity: 0.62, transform: exitBaseTransform + ' translateZ(-72px) rotateX(10deg) scale(0.94)', offset: 0.48 },
+            { opacity: 0, transform: exitBaseTransform + ' translateZ(-150px) rotateX(16deg) scale(0.8)' }
+          ]
+          : [
+            { opacity: 1, filter: 'blur(0px) saturate(1)' },
+            { opacity: 0, filter: 'blur(10px) saturate(0.58)' }
+          ];
+        var exitAnimation = card.animate(exitKeyframes, {
+          duration: wasGridMode ? 300 : 360,
+          easing: wasGridMode ? 'cubic-bezier(0.4, 0, 0.2, 1)' : 'cubic-bezier(0.22, 0.61, 0.36, 1)',
           fill: 'both',
         });
         exitAnimation.id = 'galaxy-grid-morph';
@@ -4112,6 +4355,7 @@
       clearGridMotionTimers();
       cancelGridCardAnimations();
       layoutMode = 'sphere';
+      body.classList.remove('is-product-grid-mode');
       clearSphereFocus(true);
       if (wasGridMode) {
         sceneEl.classList.remove('is-morphing-to-grid');
@@ -4127,6 +4371,12 @@
       boardScrollMax = 0;
       boardTouchActive = false;
       boardGridPose = {};
+      lastBoardTransformY = null;
+      lastCanRevealTop = null;
+      lastCanRevealBottom = null;
+      boardScrollRange = 0;
+      if (boardScrollSpacerEl) boardScrollSpacerEl.style.height = '0px';
+      sceneEl.scrollTop = 0;
       syncBoardSceneFrame();
       clearBoardConnections();
       if (boardLinksSvg) boardLinksSvg.style.transform = '';
@@ -4162,6 +4412,7 @@
         setInteractionState('idle');
         resumeSphere();
       }
+      requestGalaxyFrame();
     }
 
     function syncBoardScrollHints() {
@@ -4169,16 +4420,67 @@
       var canRevealTop = hasBoardScroll && boardScrollTarget < boardScrollMax - 2;
       var canRevealBottom = hasBoardScroll && boardScrollTarget > boardScrollMin + 2;
 
-      if (boardHintTop) {
+      if (boardHintTop && canRevealTop !== lastCanRevealTop) {
         boardHintTop.classList.toggle('is-visible', canRevealTop);
       }
-      if (boardHintBottom) {
+      if (boardHintBottom && canRevealBottom !== lastCanRevealBottom) {
         boardHintBottom.classList.toggle('is-visible', canRevealBottom);
       }
+      lastCanRevealTop = canRevealTop;
+      lastCanRevealBottom = canRevealBottom;
+    }
+
+    function syncBoardScrollSpacer(boardSpace) {
+      if (!boardScrollSpacerEl || layoutMode !== 'grid') return;
+      boardScrollRange = Math.max(0, boardScrollMax - boardScrollMin);
+      var viewportHeight = boardSpace && boardSpace.height
+        ? boardSpace.height
+        : Math.max(sceneEl.clientHeight || 0, sceneEl.getBoundingClientRect().height || 0);
+      boardScrollSpacerEl.style.height = Math.max(viewportHeight + boardScrollRange, viewportHeight) + 'px';
+    }
+
+    function getBoardScrollTopForTarget(targetY) {
+      return Math.max(0, boardScrollMax - clamp(targetY, boardScrollMin, boardScrollMax));
+    }
+
+    function syncBoardScrollTop() {
+      if (layoutMode !== 'grid' || !sceneEl) return;
+      var nextTop = getBoardScrollTopForTarget(boardScrollTarget);
+      if (Math.abs(sceneEl.scrollTop - nextTop) < 1) return;
+      isSyncingBoardScroll = true;
+      sceneEl.scrollTop = nextTop;
+      isSyncingBoardScroll = false;
+    }
+
+    function handleBoardNativeScroll() {
+      if (layoutMode !== 'grid') return;
+      if ((boardScrollMax - boardScrollMin) <= 1) {
+        boardScrollTarget = boardScrollMax;
+        boardScrollCurrent = boardScrollTarget;
+        applyBoardScrollFrame(true);
+        return;
+      }
+      var nextTarget = clamp(boardScrollMax - sceneEl.scrollTop, boardScrollMin, boardScrollMax);
+      if (Math.abs(nextTarget - boardScrollTarget) < 0.1 && !isSyncingBoardScroll) return;
+      boardScrollTarget = nextTarget;
+      markBoardScrollActive();
+      applyBoardScrollFrame(true);
     }
 
     function updateBoardCardVisibility() {
       if (layoutMode !== 'grid') return;
+    }
+
+    function markBoardScrollActive() {
+      if (!sceneEl.classList.contains('is-board-scrolling')) sceneEl.classList.add('is-board-scrolling');
+      clearTimeout(boardScrollEffectTimer);
+      boardScrollEffectTimer = setTimeout(function() {
+        boardScrollEffectTimer = null;
+        sceneEl.classList.remove('is-board-scrolling');
+        if (boardLinksSvg) {
+          boardLinksSvg.style.transform = 'translate3d(0,' + boardScrollCurrent.toFixed(2) + 'px,0)';
+        }
+      }, 120);
     }
 
     function applyBoardScrollFrame(force) {
@@ -4187,27 +4489,54 @@
       if (force) {
         boardScrollCurrent = boardScrollTarget;
       } else {
-        boardScrollCurrent += (boardScrollTarget - boardScrollCurrent) * 0.14;
-        if (Math.abs(boardScrollTarget - boardScrollCurrent) < 0.12) {
+        var scrollDelta = boardScrollTarget - boardScrollCurrent;
+        if (Math.abs(scrollDelta) < 0.12) {
+          if (lastBoardTransformY !== null && Math.abs(boardScrollTarget - lastBoardTransformY) < 0.12) {
+            syncBoardScrollHints();
+            return;
+          }
           boardScrollCurrent = boardScrollTarget;
+        } else {
+          boardScrollCurrent += scrollDelta * 0.42;
         }
       }
 
-      var boardTransform = 'translate3d(0,' + boardScrollCurrent.toFixed(2) + 'px,0)';
+      var roundedBoardY = Math.round(boardScrollCurrent * 100) / 100;
+      if (!force && lastBoardTransformY !== null && Math.abs(roundedBoardY - lastBoardTransformY) < 0.1) {
+        syncBoardScrollHints();
+        return;
+      }
+      var boardTransform = 'translate3d(0,' + roundedBoardY.toFixed(2) + 'px,0)';
       sphere.style.transform = boardTransform;
-      if (boardLinksSvg) {
+      if (boardLinksSvg && !sceneEl.classList.contains('is-board-scrolling')) {
         boardLinksSvg.style.transform = boardTransform;
       }
+      lastBoardTransformY = roundedBoardY;
 
       updateBoardCardVisibility();
       syncBoardScrollHints();
     }
 
-    function nudgeBoardScroll(deltaY) {
+    function nudgeBoardScroll(deltaY, options) {
       if (layoutMode !== 'grid' || (boardScrollMax - boardScrollMin) <= 1) return false;
-      boardScrollTarget = clamp(boardScrollTarget - deltaY, boardScrollMin, boardScrollMax);
-      syncBoardScrollHints();
+      var nextScrollTarget = clamp(boardScrollTarget - deltaY, boardScrollMin, boardScrollMax);
+      if (Math.abs(nextScrollTarget - boardScrollTarget) < 0.01) return true;
+      boardScrollTarget = nextScrollTarget;
+      syncBoardScrollTop();
+      if (options && options.immediate) {
+        markBoardScrollActive();
+        applyBoardScrollFrame(true);
+      } else {
+        syncBoardScrollHints();
+      }
       return true;
+    }
+
+    function normalizeWheelDeltaY(event) {
+      var deltaY = event.deltaY || 0;
+      if (event.deltaMode === 1) return deltaY * 16;
+      if (event.deltaMode === 2) return deltaY * Math.max(320, window.innerHeight || 800);
+      return deltaY;
     }
 
     function focusBoardCard(card) {
@@ -4217,20 +4546,25 @@
       var pose = boardGridPose[product.slug];
       if (!pose) return;
       boardScrollTarget = clamp(-(pose.y + pose.height * 0.5), boardScrollMin, boardScrollMax);
-      syncBoardScrollHints();
+      syncBoardScrollTop();
+      applyBoardScrollFrame(true);
     }
 
     function applyGridLayout(items) {
       var wasGridMode = layoutMode === 'grid';
-      var firstRects = captureCardRects();
+      var firstRects = wasGridMode ? {} : captureCardRects();
       var previousBoardScrollTarget = boardScrollTarget;
       clearGridMotionTimers();
       cancelGridCardAnimations();
       layoutMode = 'grid';
+      body.classList.add('is-product-grid-mode');
       stopSphere('grid');
       sceneEl.classList.add('is-grid-mode');
       sceneEl.classList.add('is-grid-reflowing');
       sceneEl.classList.toggle('is-morphing-to-grid', !wasGridMode);
+      sceneEl.classList.remove('is-wormhole-transition');
+      sceneEl.classList.remove('is-grid-refining');
+      if (searchBarEl) searchBarEl.classList.remove('is-grid-scanning');
       gridMorphHoldUntil = !wasGridMode && !reducedMotion ? Date.now() + GRID_MORPH_DURATION + 70 : 0;
       sceneEl.style.cursor = 'default';
 
@@ -4258,8 +4592,8 @@
       var visibleGridCards = [];
 
       for (var rowInit = 0; rowInit < rows; rowInit += 1) {
-        rowTitleHeights[rowInit] = window.innerWidth < 900 ? 18 : 20;
-        rowInfoHeights[rowInit] = window.innerWidth < 900 ? 54 : 58;
+        rowTitleHeights[rowInit] = window.innerWidth < 900 ? 34 : 38;
+        rowInfoHeights[rowInit] = window.innerWidth < 900 ? 72 : 76;
       }
 
       cardNodes.forEach(function(card) {
@@ -4287,8 +4621,6 @@
         }
         var row = Math.floor(rank / columns);
         var col = rank % columns;
-        var cardName = card.querySelector('.galaxy-card__name');
-        var cardPrice = card.querySelector('.galaxy-card__price');
         card.classList.add('galaxy-card--grid');
         card.style.setProperty('--grid-card-width', cardWidth + 'px');
         card.style.removeProperty('--grid-title-height');
@@ -4297,10 +4629,6 @@
         else card.style.opacity = '1';
         card.style.visibility = 'visible';
         card.style.pointerEvents = !wasGridMode && !reducedMotion ? 'none' : 'auto';
-        var titleHeight = cardName ? Math.ceil(cardName.offsetHeight) : (window.innerWidth < 900 ? 18 : 20);
-        var priceHeight = cardPrice ? Math.ceil(cardPrice.offsetHeight) : (window.innerWidth < 900 ? 14 : 16);
-        rowTitleHeights[row] = Math.max(rowTitleHeights[row], titleHeight);
-        rowInfoHeights[row] = Math.max(rowInfoHeights[row], rowTitleHeights[row] + priceHeight + (window.innerWidth < 900 ? 24 : 26));
         visibleGridCards.push({
           card: card,
           product: product,
@@ -4309,6 +4637,10 @@
           inner: card.querySelector('.galaxy-card__inner'),
         });
       });
+
+      loadGalaxyImages(visibleGridCards.map(function(entry) {
+        return entry.card.querySelector('img[data-src]');
+      }), window.innerWidth < 760 ? 3 : 5);
 
       var boardContentHeight = 0;
       var rowCursor = firstY;
@@ -4328,7 +4660,7 @@
         boardPose[entry.product.slug] = {
           x: gx,
           y: gy,
-          width: entry.inner ? entry.inner.offsetWidth : cardWidth,
+          width: cardWidth,
           height: cardWidth + rowInfoHeights[entry.row],
         };
         entry.card.style.transform = 'translate3d(' + gx.toFixed(0) + 'px,' + gy.toFixed(0) + 'px,0px) rotateY(0deg) rotateX(0deg) rotateZ(0deg)';
@@ -4352,10 +4684,17 @@
         ? clamp(previousBoardScrollTarget, boardScrollMin, boardScrollMax)
         : 0;
       boardScrollCurrent = boardScrollTarget;
+      syncBoardScrollSpacer(boardSpace);
+      syncBoardScrollTop();
 
       boardGridPose = boardPose;
+      lastBoardTransformY = null;
+      lastCanRevealTop = null;
+      lastCanRevealBottom = null;
       applyBoardScrollFrame(true);
-      if (!wasGridMode && animateOrbitToBoard(firstRects, visibleGridCards, rankBySlug)) {
+      if (wasGridMode) {
+        cancelGridCardAnimations();
+      } else if (animateOrbitToBoard(firstRects, visibleGridCards, rankBySlug)) {
         visibleGridCards.forEach(function(entry) {
           entry.card.classList.add('is-grid-entering');
         });
@@ -4363,13 +4702,14 @@
         animateGridExits(firstRects, rankBySlug, wasGridMode);
         animateGridEntrances(firstRects, visibleGridCards, wasGridMode);
       }
-      finishGridMotion(items, boardPose, (wasGridMode ? GRID_REFLOW_DURATION : GRID_MORPH_DURATION) + 240);
+      finishGridMotion(items, boardPose, wasGridMode ? 80 : GRID_MORPH_DURATION + 120);
 
       if (filterMeta) {
         filterMeta.textContent = locale === 'vi'
           ? (items.length + ' sản phẩm phù hợp. Card đang xếp thành lưới theo bộ lọc.')
           : (items.length + ' products matched. Cards are snapped into a filtered grid.');
       }
+      requestGalaxyFrame();
     }
 
     function formatModalTaxonomy(product, group) {
@@ -4514,6 +4854,7 @@
 
     // Qty + cart/buy delegation on sphere
     sphere.addEventListener('click', function(e) {
+      if (productDetailNavigationPending) return;
       var inner = e.target.closest('.galaxy-card__inner');
       if (!inner) return;
       e.preventDefault(); e.stopPropagation();
@@ -4818,7 +5159,9 @@
           boardTouchMoved = true;
         }
         boardScrollTarget = clamp(boardTouchStartScroll + ((e.clientY - boardTouchStartY) * 1.08), boardScrollMin, boardScrollMax);
-        syncBoardScrollHints();
+        syncBoardScrollTop();
+        markBoardScrollActive();
+        applyBoardScrollFrame(true);
         e.preventDefault();
         return;
       }
@@ -4853,6 +5196,7 @@
         var tapCard = tapTarget && tapTarget.closest ? tapTarget.closest('.galaxy-card') : null;
         var tapProduct = getProductByCard(tapCard);
         goToProductDetail(tapProduct);
+        if (productDetailNavigationPending) return;
       }
       boardTouchActive = false;
       boardTouchMoved = false;
@@ -4893,13 +5237,12 @@
     sceneEl.addEventListener('pointermove', handlePointerMove);
     sceneEl.addEventListener('pointerup', handlePointerEnd);
     sceneEl.addEventListener('pointercancel', handlePointerEnd);
+    sceneEl.addEventListener('scroll', handleBoardNativeScroll, { passive: true });
 
     // Scroll to zoom
     sceneEl.addEventListener('wheel', function(e) {
       if (layoutMode === 'grid') {
-        if (nudgeBoardScroll(e.deltaY * 0.82)) {
-          e.preventDefault();
-        }
+        markBoardScrollActive();
         return;
       }
       e.preventDefault();
@@ -4984,7 +5327,23 @@
     sceneEl.style.cursor = 'grab';
 
     // --- Animation loop ---
+    var galaxyRafId = 0;
+
+    function shouldContinueGalaxyLoop() {
+      if (layoutMode === 'sphere') return true;
+      if (layoutMode !== 'grid') return false;
+      return sceneEl.classList.contains('is-grid-reflowing')
+        || sceneEl.classList.contains('is-morphing-to-grid')
+        || sceneEl.classList.contains('is-morphing-to-sphere')
+        || Math.abs(boardScrollTarget - boardScrollCurrent) > 0.12;
+    }
+
+    function requestGalaxyFrame() {
+      if (!galaxyRafId) galaxyRafId = requestAnimationFrame(animGalaxy);
+    }
+
     function animGalaxy() {
+      galaxyRafId = 0;
       if (layoutMode === 'grid') {
         applyBoardScrollFrame(false);
       } else if (layoutMode === 'sphere') {
@@ -5022,9 +5381,9 @@
         applyRot();
         syncHoverPreviewPosition();
       }
-      requestAnimationFrame(animGalaxy);
+      if (shouldContinueGalaxyLoop()) requestGalaxyFrame();
     }
-    animGalaxy();
+    requestGalaxyFrame();
 
     // --- Search & Filter ---
     var activeFilter = 'all';
@@ -5056,9 +5415,9 @@
         resultsPanel.innerHTML = items.map(function(item) {
           var cardTitle = escapeHtmlText(locale === "vi" ? item.titleVi : item.titleEn);
           var cardPrice = escapeHtmlText(locale === "vi" ? item.priceVi : item.priceEn);
-          var coverAlt = escapeHtmlText(locale === "vi" ? (item.coverAltVi || item.coverAlt || item.titleVi) : (item.coverAltEn || item.coverAlt || item.titleEn));
+          var coverAlt = locale === "vi" ? (item.coverAltVi || item.coverAlt || item.titleVi) : (item.coverAltEn || item.coverAlt || item.titleEn);
           return '<a class="galaxy-search-card" href="' + getLocalePath("product-detail", item.slug) + '" data-transition aria-label="' + cardTitle + '">' +
-            '<div class="galaxy-search-card__media">' + renderMedia(item.cover, coverAlt, { tier: "deferred", loading: "lazy" }) + '</div>' +
+            '<div class="galaxy-search-card__media">' + renderMedia(getCatalogueThumbMedia(item.cover), "", { tier: "deferred", loading: "lazy", alt: coverAlt }) + '</div>' +
             '<div class="galaxy-search-card__body">' +
               '<span class="galaxy-search-card__name">' + cardTitle + '</span>' +
               '<span class="galaxy-search-card__price">' + cardPrice + '</span>' +
@@ -5082,6 +5441,7 @@
     };
 
     renderResults = function() {
+      if (productDetailNavigationPending) return;
       clearTimeout(renderResultsTimer);
       renderResultsTimer = null;
       var q = searchInput.value || '';
@@ -5100,12 +5460,15 @@
     };
 
     function scheduleRenderResults(delayMs) {
+      if (productDetailNavigationPending) return;
       clearTimeout(renderResultsTimer);
       var delay = reducedMotion ? 0 : (typeof delayMs === 'number' ? delayMs : 90);
-      if (!reducedMotion && gridMorphHoldUntil && sceneEl.classList.contains('is-morphing-to-grid')) {
+      if (layoutMode === 'grid') delay = Math.min(delay, 40);
+      if (layoutMode !== 'grid' && !reducedMotion && gridMorphHoldUntil && sceneEl.classList.contains('is-morphing-to-grid')) {
         delay = Math.max(delay, Math.max(0, gridMorphHoldUntil - Date.now()));
       }
       renderResultsTimer = setTimeout(function() {
+        if (productDetailNavigationPending) return;
         renderResultsTimer = null;
         renderResults();
       }, delay);
@@ -5275,12 +5638,12 @@
 
     searchInput.addEventListener('input', function() {
       searchBrowseMode = true;
-      scheduleRenderResults(120);
+      scheduleRenderResults(40);
     });
     searchInput.addEventListener('focus', openSearchResults);
     searchInput.addEventListener('click', openSearchResults);
-    if (categorySelect) categorySelect.addEventListener('change', function() { scheduleRenderResults(90); });
-    if (sortSelect) sortSelect.addEventListener('change', function() { scheduleRenderResults(90); });
+    if (categorySelect) categorySelect.addEventListener('change', function() { scheduleRenderResults(40); });
+    if (sortSelect) sortSelect.addEventListener('change', function() { scheduleRenderResults(40); });
     bindFilterDropdown(categoryDropdownUi);
     bindFilterDropdown(sortDropdownUi);
 
@@ -5306,6 +5669,7 @@
 
     // Close results when clicking outside
     document.addEventListener('click', function(e) {
+      if (productDetailNavigationPending) return;
       if (!e.target.closest('.galaxy-filter-panel')) {
         setPriceDropdownOpen(false);
         setFilterMenuOpen(categoryDropdownUi, false);
@@ -5364,7 +5728,7 @@
     }
     renderInitialProductResults();
 
-    setTimeout(function() { initHero3DCanvas(root); }, 100);
+    scheduleHero3DCanvas(root, 320);
   }
 
   function renderProductDetailPageV2() {
@@ -5563,7 +5927,7 @@
       name: title,
       description: summary,
       image: ogImageUrl ? [ogImageUrl] : undefined,
-      brand: { "@type": "Brand", name: "STEMORA" },
+      brand: { "@type": "Brand", name: "SMARTSTEAM" },
       offers: productPrice > 0 ? {
         "@type": "Offer",
         priceCurrency: "VND",
@@ -5572,7 +5936,7 @@
         url: buildCanonicalUrl(),
       } : undefined,
     };
-    updateMeta(`${title} | STEMORA`, summary, {
+    updateMeta(`${title} | SMARTSTEAM`, summary, {
       ogType: "product",
       image: ogImageUrl,
       jsonLd: productJsonLd,
@@ -5843,7 +6207,7 @@
     if (!root) return;
     const item = data.products.find((entry) => entry.slug === slugFromPath());
     if (!item) return renderMissing(root, getLocalePath("products"));
-    updateMeta(`${getText(item, "titleVi", "titleEn")} | STEMORA`, getText(item, "summaryVi", "summaryEn"));
+    updateMeta(`${getText(item, "titleVi", "titleEn")} | SMARTSTEAM`, getText(item, "summaryVi", "summaryEn"));
 
     const related = getRelatedProducts(item).slice(0, 4);
     const detailGallery = [...(Array.isArray(item.gallery) ? item.gallery : []), item.hero, item.cover].filter(Boolean);
@@ -6230,7 +6594,7 @@
     const summary = getText(item, "summaryVi", "summaryEn");
     const related = items.filter((entry) => entry.slug !== item.slug).slice(0, 3);
 
-    updateMeta(`${title} | STEMORA`, summary);
+    updateMeta(`${title} | SMARTSTEAM`, summary);
     root.innerHTML = `
       <section class="editorial-article-page js-detail-stage">
         <div class="container editorial-article-shell">
@@ -6680,7 +7044,7 @@
 
     let storedView = "grid";
     try {
-      storedView = localStorage.getItem("stemora:tutorial-view") === "editorial" ? "editorial" : "grid";
+      storedView = localStorage.getItem("smartsteam:tutorial-view") === "editorial" ? "editorial" : "grid";
     } catch (error) {}
 
     const state = {
@@ -6756,7 +7120,7 @@
       if (!button || !button.dataset.view || button.dataset.view === state.view) return;
       state.view = button.dataset.view;
       try {
-        localStorage.setItem("stemora:tutorial-view", state.view);
+        localStorage.setItem("smartsteam:tutorial-view", state.view);
       } catch (error) {}
       updateView();
     };
@@ -7411,7 +7775,7 @@
     if (!root) return;
     const items = sortedProjects();
     updateMeta(
-      locale === "vi" ? "STEMORA | Dự án" : "STEMORA | Projects",
+      locale === "vi" ? "SMARTSTEAM | Dự án" : "SMARTSTEAM | Projects",
       locale === "vi"
         ? "Archive dự án được kể theo nhịp biên tập: tiêu đề lớn, ảnh cover rõ, và từng case story mở sang trang đọc riêng."
         : "An editorial project archive with title-led entries, clean cover presentation, and direct long-form story pages."
@@ -7747,7 +8111,7 @@
     const audienceLabel = getText(item, "audienceVi", "audienceEn") || (locale === "vi" ? "Linh hoạt" : "Flexible");
     const dateLabel = getProjectDateLabel(item);
 
-    updateMeta(`${title} | STEMORA`, summary || intro);
+    updateMeta(`${title} | SMARTSTEAM`, summary || intro);
     root.innerHTML = renderKnowledgeDetailLayout({
       variant: "project",
       archiveKey: "projects",
@@ -7822,7 +8186,7 @@
       ? `${Number(item.views || 0).toLocaleString("vi-VN")} lượt xem`
       : `${Number(item.views || 0).toLocaleString("en-US")} views`;
 
-    updateMeta(`${title} | STEMORA`, summary);
+    updateMeta(`${title} | SMARTSTEAM`, summary);
     root.innerHTML = renderKnowledgeDetailLayout({
       variant: "tutorial",
       archiveKey: "tutorials",
@@ -7869,7 +8233,7 @@
     });
     return;
 
-    updateMeta(`${title} | STEMORA`, summary);
+    updateMeta(`${title} | SMARTSTEAM`, summary);
     root.innerHTML = `
       <section class="tutorial-chapter">
         <div class="detail-reading-progress tutorial-chapter__progress">
@@ -7976,7 +8340,7 @@
     const tutorialPicks = sortedTutorials().slice(0, 3);
     const readingLabel = locale === "vi" ? `${contentModel.readingMinutes} phút đọc` : `${contentModel.readingMinutes} min read`;
 
-    updateMeta(`${title} | STEMORA`, summary);
+    updateMeta(`${title} | SMARTSTEAM`, summary);
     root.innerHTML = renderKnowledgeDetailLayout({
       variant: "news",
       archiveKey: "news",
@@ -8022,7 +8386,7 @@
     });
     return;
 
-    updateMeta(`${title} | STEMORA`, summary);
+    updateMeta(`${title} | SMARTSTEAM`, summary);
     root.innerHTML = `
       <section class="news-dossier">
         <div class="detail-reading-progress news-dossier__progress">
@@ -8250,7 +8614,7 @@
     const slug = slugFromPath();
     const item = data.policies.find((entry) => entry.slug === slug) || data.policies[0];
     updateMeta(
-      item ? `${locale === "vi" ? item.titleVi : item.titleEn} | STEMORA` : strings.pageMeta.policy.title,
+      item ? `${locale === "vi" ? item.titleVi : item.titleEn} | SMARTSTEAM` : strings.pageMeta.policy.title,
       item ? (locale === "vi" ? item.summaryVi : item.summaryEn) : strings.pageMeta.policy.description
     );
 
@@ -8388,9 +8752,9 @@
     form.addEventListener("submit", (event) => {
       event.preventDefault();
       const contactData = data.siteMeta.contact || {};
-      const recipient = normalizeText(contactData.email || "hello@stemora.vn");
+      const recipient = normalizeText(contactData.email || "");
       const formData = new FormData(form);
-      const subject = locale === "vi" ? "Yêu cầu tư vấn STEMORA" : "STEMORA consultation request";
+      const subject = locale === "vi" ? "Yêu cầu tư vấn SMARTSTEAM" : "SMARTSTEAM consultation request";
       const lines = [
         `${strings.form.name}: ${normalizeText(formData.get("name") || "")}`,
         `${strings.form.email}: ${normalizeText(formData.get("email") || "")}`,
@@ -8400,7 +8764,8 @@
         `${strings.form.message}:`,
         normalizeText(formData.get("message") || ""),
       ];
-      const mailtoUrl = `mailto:${encodeURIComponent(recipient)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}`;
+      const emailHref = normalizeEmailHref(recipient);
+      const mailtoUrl = emailHref ? `${emailHref}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join("\n"))}` : "";
       submitButton.disabled = true;
       submitButton.textContent = strings.form.sending;
       form.setAttribute("aria-busy", "true");
@@ -8410,10 +8775,14 @@
         form.removeAttribute("aria-busy");
         submitButton.disabled = false;
         submitButton.textContent = strings.form.submit;
-        feedback.textContent = locale === "vi"
-          ? "Đã mở ứng dụng email với nội dung bạn nhập. Gửi email để hoàn tất liên hệ."
-          : "Your email app opened with the brief filled in. Send the email to complete the enquiry.";
-        window.location.href = mailtoUrl;
+        feedback.textContent = mailtoUrl
+          ? (locale === "vi"
+            ? "Đã mở ứng dụng email với nội dung bạn nhập. Gửi email để hoàn tất liên hệ."
+            : "Your email app opened with the brief filled in. Send the email to complete the enquiry.")
+          : (locale === "vi"
+            ? "Đã ghi nhận nội dung bạn nhập. Vui lòng dùng số điện thoại hoặc Zalo bên cạnh để gửi yêu cầu."
+            : "Your brief is ready. Use the phone or Zalo channel beside this form to send the request.");
+        if (mailtoUrl) window.location.href = mailtoUrl;
       }, 250);
     });
   }
@@ -8421,7 +8790,7 @@
   function addProductToLocalCart(product, quantity) {
     if (!product || !product.slug) return;
     const qty = Math.max(1, Number(quantity || 1));
-    const storageKey = "stemora:cart";
+    const storageKey = "smartsteam:cart";
     let cart = [];
     try {
       cart = JSON.parse(localStorage.getItem(storageKey) || "[]");
@@ -8540,13 +8909,14 @@
       if (!root.isConnected || !canvas.isConnected || canvas.dataset.fallback2d === "true") return;
 
       const isProductCanvas = body.dataset.page === "products";
-      const allowBackgroundMotion = BACKGROUND_3D_PAGES.has(page) || !reducedMotion;
+      const supportsBackgroundMotion = pageSupportsBackgroundMotion();
       const lowPowerDevice = (navigator.hardwareConcurrency || 8) <= 4 || window.innerWidth < 760;
+      let productSceneEl = null;
       const renderer = new THREE.WebGLRenderer({
         canvas,
         alpha: true,
         antialias: !lowPowerDevice,
-        preserveDrawingBuffer: true,
+        preserveDrawingBuffer: false,
         powerPreference: lowPowerDevice ? "default" : "high-performance",
       });
       renderer.setClearColor(0x000000, 0);
@@ -8558,7 +8928,9 @@
       const stage = new THREE.Group();
       scene.add(stage);
 
-      const particleCount = !allowBackgroundMotion ? 260 : (lowPowerDevice ? 520 : (isProductCanvas ? 1150 : 920));
+      const particleCount = !supportsBackgroundMotion
+        ? 180
+        : (reducedMotion ? (isProductCanvas ? 300 : 240) : (lowPowerDevice ? 320 : (isProductCanvas ? 720 : 560)));
       const particleSpreadX = isProductCanvas ? 42 : 36;
       const particleSpreadY = isProductCanvas ? 24 : 21;
       const particleDepth = isProductCanvas ? 68 : 58;
@@ -8641,10 +9013,19 @@
       const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
       let rafId = 0;
       let lastTime = 0;
+      let lastRenderTime = 0;
       let elapsed = 0;
       let isDisposed = false;
       let isVisible = !document.hidden;
       let paletteKey = "";
+
+      function getProductSceneEl() {
+        if (!isProductCanvas) return null;
+        if (!productSceneEl || !productSceneEl.isConnected) {
+          productSceneEl = $(".galaxy-scene", root) || $(".galaxy-scene");
+        }
+        return productSceneEl;
+      }
 
       function eachMaterial(material, callback) {
         if (Array.isArray(material)) material.forEach(callback);
@@ -8719,7 +9100,7 @@
       function resize() {
         const width = Math.max(1, window.innerWidth);
         const height = Math.max(1, window.innerHeight);
-        const pixelRatio = Math.min(window.devicePixelRatio || 1, lowPowerDevice ? 1.25 : 1.7);
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, lowPowerDevice ? 1.15 : 1.35);
         renderer.setPixelRatio(pixelRatio);
         renderer.setSize(width, height, false);
         camera.aspect = width / height;
@@ -8737,7 +9118,7 @@
         if (!isVisible && rafId) {
           window.cancelAnimationFrame(rafId);
           rafId = 0;
-        } else if (isVisible && !rafId && allowBackgroundMotion) {
+        } else if (isVisible && !rafId && supportsBackgroundMotion) {
           rafId = window.requestAnimationFrame(renderFrame);
         }
       }
@@ -8748,23 +9129,40 @@
           return;
         }
 
-        applyPalette();
-        const delta = Math.min(34, timestamp - (lastTime || timestamp || 0) || 16);
-        lastTime = timestamp;
-        elapsed += delta * 0.001;
+        const motionProfile = getBackgroundMotionProfile(isProductCanvas, getProductSceneEl(), lowPowerDevice);
+        if (!motionProfile.active) {
+          applyPalette();
+          renderer.render(scene, camera);
+          return;
+        }
 
-        if (allowBackgroundMotion) {
-          pointer.x += (pointer.targetX - pointer.x) * 0.055;
-          pointer.y += (pointer.targetY - pointer.y) * 0.055;
+        if (lastRenderTime && timestamp - lastRenderTime < motionProfile.interval) {
+          rafId = window.requestAnimationFrame(renderFrame);
+          return;
+        }
+
+        lastRenderTime = timestamp;
+        applyPalette();
+        const delta = Math.min(50, timestamp - (lastTime || timestamp || 0) || motionProfile.interval);
+        const motionDelta = delta * motionProfile.speed;
+        lastTime = timestamp;
+        elapsed += motionDelta * 0.001;
+
+        if (motionProfile.active) {
+          const targetX = motionProfile.pointer ? pointer.targetX : 0;
+          const targetY = motionProfile.pointer ? pointer.targetY : 0;
+          const pointerEase = motionProfile.pointer ? 0.055 : 0.035;
+          pointer.x += (targetX - pointer.x) * pointerEase;
+          pointer.y += (targetY - pointer.y) * pointerEase;
           camera.position.x = pointer.x * 1.18;
           camera.position.y = pointer.y * -0.82;
           camera.lookAt(pointer.x * 1.8, pointer.y * -1.1, -18);
 
           for (let i = 0; i < particleCount; i++) {
             const offset = i * 3;
-            positions[offset] += Math.sin(elapsed * 1.35 + i * 0.17) * 0.0038 * lanes[i] * delta;
-            positions[offset + 1] += Math.cos(elapsed * 1.05 + i * 0.11) * 0.0024 * lanes[i] * delta;
-            positions[offset + 2] += speeds[i] * delta * 2.2;
+            positions[offset] += Math.sin(elapsed * 1.35 + i * 0.17) * 0.0038 * lanes[i] * motionDelta;
+            positions[offset + 1] += Math.cos(elapsed * 1.05 + i * 0.11) * 0.0024 * lanes[i] * motionDelta;
+            positions[offset + 2] += speeds[i] * motionDelta * 2.2;
             if (positions[offset + 2] > 12) resetParticle(i, false);
           }
           particleGeometry.attributes.position.needsUpdate = true;
@@ -8773,16 +9171,16 @@
           stage.rotation.x = pointer.y * -0.07 + Math.cos(elapsed * 0.36) * 0.018;
           particles.rotation.z = elapsed * 0.048;
           grid.position.z = -18 + ((elapsed * 8.5) % 6);
-          core.rotation.x += 0.0012 * delta;
-          core.rotation.y += 0.0016 * delta;
+          core.rotation.x += 0.0012 * motionDelta;
+          core.rotation.y += 0.0016 * motionDelta;
           orbits.forEach((orbit, index) => {
-            orbit.rotation.z += (index === 1 ? -1 : 1) * (0.00072 + index * 0.00018) * delta;
-            orbit.rotation.y += (index === 1 ? 0.00042 : -0.00034) * delta;
+            orbit.rotation.z += (index === 1 ? -1 : 1) * (0.00072 + index * 0.00018) * motionDelta;
+            orbit.rotation.y += (index === 1 ? 0.00042 : -0.00034) * motionDelta;
           });
         }
 
         renderer.render(scene, camera);
-        rafId = allowBackgroundMotion ? window.requestAnimationFrame(renderFrame) : 0;
+        rafId = supportsBackgroundMotion ? window.requestAnimationFrame(renderFrame) : 0;
       }
 
       function disposeObject(object) {
@@ -8796,7 +9194,7 @@
       resize();
       applyPalette();
       renderer.render(scene, camera);
-      if (allowBackgroundMotion) rafId = window.requestAnimationFrame(renderFrame);
+      if (supportsBackgroundMotion) rafId = window.requestAnimationFrame(renderFrame);
 
       registerPageCleanup(root, () => {
         isDisposed = true;
@@ -8832,12 +9230,24 @@
     let time = 0;
 
     const isProductCanvas = body.dataset.page === "products";
-    const allowBackgroundMotion = BACKGROUND_3D_PAGES.has(page) || !reducedMotion;
+    const supportsBackgroundMotion = pageSupportsBackgroundMotion();
     const lowPowerDevice = (navigator.hardwareConcurrency || 8) <= 4 || window.innerWidth < 760;
-    const maxNodes = !allowBackgroundMotion ? 42 : (lowPowerDevice ? 82 : (isProductCanvas ? 152 : 128));
+    const maxNodes = !supportsBackgroundMotion
+      ? 32
+      : (reducedMotion ? (isProductCanvas ? 52 : 44) : (lowPowerDevice ? 56 : (isProductCanvas ? 96 : 78)));
     const connectionRadius = isProductCanvas ? 265 : 228;
     const fov = isProductCanvas ? 880 : 820;
     const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
+    let productSceneEl = null;
+    let lastRenderTime = 0;
+
+    function getProductSceneEl() {
+      if (!isProductCanvas) return null;
+      if (!productSceneEl || !productSceneEl.isConnected) {
+        productSceneEl = $(".galaxy-scene", root) || $(".galaxy-scene");
+      }
+      return productSceneEl;
+    }
 
     function resetNode(node, initial) {
       node.x = Math.random() * 2600 - 1300;
@@ -8850,7 +9260,7 @@
     }
 
     function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, lowPowerDevice ? 1.25 : 1.7);
+      dpr = Math.min(window.devicePixelRatio || 1, lowPowerDevice ? 1.15 : 1.35);
       w = window.innerWidth;
       h = window.innerHeight;
       canvas.width = Math.max(1, Math.round(w * dpr));
@@ -8871,7 +9281,7 @@
       if (!isVisible && rafId) {
         window.cancelAnimationFrame(rafId);
         rafId = 0;
-      } else if (isVisible && !rafId && allowBackgroundMotion) {
+      } else if (isVisible && !rafId && supportsBackgroundMotion) {
         rafId = window.requestAnimationFrame(loop);
       }
     }
@@ -9022,10 +9432,15 @@
       canvas.dataset.theme = palette.theme;
       canvas.style.opacity = palette.opacity;
 
-      if (advance && allowBackgroundMotion) {
-        time += 0.012;
-        pointer.x += (pointer.targetX - pointer.x) * 0.055;
-        pointer.y += (pointer.targetY - pointer.y) * 0.055;
+      const motionProfile = getBackgroundMotionProfile(isProductCanvas, getProductSceneEl(), lowPowerDevice);
+
+      if (advance && motionProfile.active) {
+        time += 0.012 * motionProfile.speed;
+        const targetX = motionProfile.pointer ? pointer.targetX : 0;
+        const targetY = motionProfile.pointer ? pointer.targetY : 0;
+        const pointerEase = motionProfile.pointer ? 0.055 : 0.035;
+        pointer.x += (targetX - pointer.x) * pointerEase;
+        pointer.y += (targetY - pointer.y) * pointerEase;
       }
 
       drawAtmosphere(palette);
@@ -9034,10 +9449,10 @@
 
       for (let i = 0; i < nodes.length; i++) {
         const node = nodes[i];
-        if (advance && allowBackgroundMotion) {
-          node.z += node.vz;
-          node.x += Math.sin(time + node.phase) * 0.12 * (node.lane ? 1 : 0.42);
-          node.y += Math.cos(time * 0.8 + node.phase) * 0.08 * (node.lane ? 1 : 0.35);
+        if (advance && motionProfile.active) {
+          node.z += node.vz * motionProfile.speed;
+          node.x += Math.sin(time + node.phase) * 0.12 * motionProfile.speed * (node.lane ? 1 : 0.42);
+          node.y += Math.cos(time * 0.8 + node.phase) * 0.08 * motionProfile.speed * (node.lane ? 1 : 0.35);
         }
 
         if (node.z < 10) {
@@ -9077,7 +9492,7 @@
               ctx.lineTo(p2.x, p2.y);
               ctx.stroke();
 
-              if (allowBackgroundMotion && (i + j) % 19 === 0) {
+              if (motionProfile.active && (i + j) % 19 === 0) {
                 const packet = (Math.sin(time * 2.6 + i * 0.41 + j * 0.13) + 1) / 2;
                 ctx.fillStyle = `rgba(${palette.linkRgb}, ${Math.min(linkAlpha + 0.22, 0.95)})`;
                 ctx.beginPath();
@@ -9096,8 +9511,15 @@
         return;
       }
 
+      const motionProfile = getBackgroundMotionProfile(isProductCanvas, getProductSceneEl(), lowPowerDevice);
+      const now = performance.now();
+      if (lastRenderTime && now - lastRenderTime < motionProfile.interval) {
+        rafId = window.requestAnimationFrame(loop);
+        return;
+      }
+      lastRenderTime = now;
       drawFrame(true);
-      rafId = window.requestAnimationFrame(loop);
+      rafId = supportsBackgroundMotion ? window.requestAnimationFrame(loop) : 0;
     }
 
     registerPageCleanup(root, () => {
@@ -9109,7 +9531,7 @@
     });
 
     drawFrame(false);
-    if (allowBackgroundMotion) rafId = window.requestAnimationFrame(loop);
+    if (supportsBackgroundMotion) rafId = window.requestAnimationFrame(loop);
   }
 
   function initCopyLink(root, successMessage) {

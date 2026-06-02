@@ -4,7 +4,7 @@
 
   let theme = "dark";
   try {
-    const stored = window.localStorage.getItem("stemora:theme") || window.localStorage.getItem("stemora:welcome-theme");
+    const stored = window.localStorage.getItem("smartsteam:theme") || window.localStorage.getItem("smartsteam:welcome-theme");
     theme = stored === "light" ? "light" : "dark";
   } catch (error) {
     theme = "dark";
