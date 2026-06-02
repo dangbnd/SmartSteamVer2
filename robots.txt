@@ -1,0 +1,30 @@
+# STEMORA - robots.txt
+# Quy ước truy cập cho công cụ tìm kiếm.
+
+User-agent: *
+
+# Cho phép nội dung chính
+Allow: /vi/
+Allow: /en/
+Allow: /assets/
+
+# Chặn các đường dẫn nội bộ và dữ liệu nguồn
+Disallow: /admin/
+Disallow: /admin
+Disallow: /assets/js/admin.js
+Disallow: /assets/js/product-details.js
+Disallow: /assets/css/admin.css
+Disallow: /assets/vendor/tinymce/
+Disallow: /migration-full-input/
+Disallow: /migration-full.zip
+Disallow: /tools/
+Disallow: /404.html
+Disallow: /madi-demo.html
+Disallow: /transformed-products.js
+Disallow: /out.txt
+Disallow: /parse-migration.js
+Disallow: /splice-data.js
+Disallow: /transform-products.js
+
+# Sitemap
+Sitemap: https://stemora.vn/sitemap.xml

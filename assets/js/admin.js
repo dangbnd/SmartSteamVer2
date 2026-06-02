@@ -42,8 +42,6 @@
     tutorialCategories: "/migration-full-input/tutorial_categories.json",
     news: "/migration-full-input/news.json",
     newsCategories: "/migration-full-input/news_categories.json",
-    orders: "/migration-full-input/orders.json",
-    users: "/migration-full-input/users.json",
     seoPages: "/migration-full-input/seo_pages.json",
     seoKeywords: "/migration-full-input/seo_keywords.json",
     seoBacklinks: "/migration-full-input/seo_backlinks.json",
@@ -58,6 +56,8 @@
   const DEFAULT_IMAGE = "/assets/img/product-science.svg";
   const TINYMCE_CDN = "/assets/vendor/tinymce/tinymce.min.js";
   const LOCALE = "vi";
+  const GOOGLE_AUTH_ENABLED = false;
+  const PASSWORD_HASH_ITERATIONS = 120000;
   let tinyMceLoader = null;
 
   const NAV_ITEMS = [
@@ -247,7 +247,7 @@
               <span class="brand-mark" aria-hidden="true"></span>
               <div>
                 <strong>${mode === "login" ? "Đăng nhập admin" : "Đăng ký tài khoản admin"}</strong>
-                <span>${hasUsers ? "Dùng email + password hoặc Google." : "User đầu tiên sẽ là Owner."}</span>
+                <span>${hasUsers ? "Dùng email + password." : "User đầu tiên sẽ là Owner."}</span>
               </div>
             </div>
             <p>Admin đang chạy trên static site nên tài khoản được lưu cục bộ trong trình duyệt. Khi public thật, cần backend auth để xác thực password và Google token an toàn.</p>
@@ -288,27 +288,34 @@
                 ${ICONS.arrow}<span>${mode === "login" ? "Đăng nhập" : "Tạo tài khoản"}</span>
               </button>
             </form>
-            <div class="auth-divider"><span>hoặc</span></div>
-            <div class="google-auth">
-              <div id="google-auth-button"></div>
-              ${
-                googleClientId
-                  ? `<p class="hint">Google Sign-In đã cấu hình Client ID.</p>`
-                  : `<button class="button google-fallback" type="button" data-action="google-config-needed">
-                      ${ICONS.users}<span>Đăng nhập / đăng ký bằng Google</span>
-                    </button>
-                    <div class="google-config">
-                      <label class="field">
-                        <span>Google OAuth Client ID</span>
-                        <input name="googleClientId" value="${escapeAttr(localStorage.getItem(STORAGE.googleClient) || "")}" placeholder="xxxxx.apps.googleusercontent.com" data-google-client-input>
-                      </label>
-                      <button class="button" type="button" data-action="save-google-client">Lưu Client ID</button>
-                    </div>`
-              }
-            </div>
+            ${
+              GOOGLE_AUTH_ENABLED
+                ? `<div class="auth-divider"><span>hoặc</span></div>
+                  <div class="google-auth">
+                    <div id="google-auth-button"></div>
+                    ${
+                      googleClientId
+                        ? `<p class="hint">Google Sign-In đã cấu hình Client ID.</p>`
+                        : `<button class="button google-fallback" type="button" data-action="google-config-needed">
+                            ${ICONS.users}<span>Đăng nhập / đăng ký bằng Google</span>
+                          </button>
+                          <div class="google-config">
+                            <label class="field">
+                              <span>Google OAuth Client ID</span>
+                              <input name="googleClientId" value="${escapeAttr(localStorage.getItem(STORAGE.googleClient) || "")}" placeholder="xxxxx.apps.googleusercontent.com" data-google-client-input>
+                            </label>
+                            <button class="button" type="button" data-action="save-google-client">Lưu Client ID</button>
+                          </div>`
+                    }
+                  </div>`
+                : `<div class="alert alert--warn">
+                    ${ICONS.system}
+                    <span>Google login đã tắt trên static admin vì credential không được verify server-side.</span>
+                  </div>`
+            }
             <div class="alert alert--warn">
               ${ICONS.system}
-              <span>Không còn “mã quản trị”. Hệ thống dùng user/password. Google login cần Google OAuth Client ID; nếu chưa có backend, token chỉ dùng để nhận diện local.</span>
+              <span>Không còn “mã quản trị”. Hệ thống dùng user/password cục bộ. Khi public thật vẫn cần backend auth để bảo vệ admin.</span>
             </div>
           </div>
         </article>
@@ -316,51 +323,6 @@
       ${renderToasts()}
     `;
     initGoogleAuth();
-  }
-
-  function renderAuth() {
-    const hasPassHash = Boolean(localStorage.getItem(STORAGE.passHash));
-    root.innerHTML = `
-      <section class="auth-screen">
-        <article class="auth-card">
-          <div class="auth-media">
-            <h1>STEMORA Admin</h1>
-          </div>
-          <div class="auth-body">
-            <div class="brand-row">
-              <span class="brand-mark" aria-hidden="true"></span>
-              <div>
-                <strong>${hasPassHash ? "Đăng nhập quản trị" : "Thiết lập mã quản trị"}</strong>
-                <span>${hasPassHash ? "Phiên làm việc được giữ trong tab hiện tại." : "Lần đầu mở admin trên trình duyệt này."}</span>
-              </div>
-            </div>
-            <p>Admin chạy trên static site nên mã quản trị chỉ bảo vệ cục bộ trong trình duyệt. Khi cần bảo mật thật, cần thêm backend auth trước khi public.</p>
-            <form class="auth-form" data-auth-form>
-              <label class="field">
-                <span>Mã quản trị</span>
-                <input name="passcode" type="password" autocomplete="current-password" minlength="6" required>
-              </label>
-              ${
-                hasPassHash
-                  ? ""
-                  : `<label class="field">
-                      <span>Nhập lại mã</span>
-                      <input name="confirm" type="password" autocomplete="new-password" minlength="6" required>
-                    </label>`
-              }
-              <button class="button button--primary" type="submit">
-                ${ICONS.arrow}<span>${hasPassHash ? "Vào admin" : "Tạo mã và vào admin"}</span>
-              </button>
-            </form>
-            <div class="alert alert--warn">
-              ${ICONS.system}
-              <span>Dữ liệu chỉnh sửa được lưu thành nháp local và có thể xuất JSON/patch. Static site không thể tự ghi ngược vào file trên server.</span>
-            </div>
-          </div>
-        </article>
-      </section>
-      ${renderToasts()}
-    `;
   }
 
   function renderSidebar() {
@@ -480,7 +442,7 @@
       <section class="metric-grid">
         ${renderMetric("Sản phẩm", formatNumber(products.length), `${lowStock} mục cần kiểm tra tồn kho`, "package")}
         ${renderMetric("Bài học & tin", formatNumber(articles), `${countLocalChanges()} thay đổi local`, "content")}
-        ${renderMetric("Đơn hàng", state.data.counts ? formatNumber(state.data.counts.orders || 0) : "...", state.data.orders ? `${formatMoney(sumOrders(state.data.orders))} doanh thu` : "Có thể tải chi tiết khi cần", "orders")}
+        ${renderMetric("Đơn hàng", state.data.counts ? formatNumber(state.data.counts.orders || 0) : "...", "Chi tiết PII đã tắt", "orders")}
         ${renderMetric("Health score", `${health}%`, getHealthLabel(health), "spark")}
       </section>
       <section class="dashboard-grid">
@@ -819,126 +781,39 @@
   }
 
   function renderOrdersView() {
-    if (!state.data.orders && !state.loading.orders) {
-      ensureOrders();
-    }
-    const orders = state.data.orders || [];
-    const revenue = sumOrders(orders);
-    return `
-      <section class="page-heading">
-        <div>
-          <h1>Đơn hàng</h1>
-          <p>Theo dõi đơn migration đã export, tổng doanh thu và trạng thái xử lý. Ảnh base64 trong file gốc không được render để admin nhẹ hơn.</p>
-        </div>
-        <div class="heading-actions">
-          <button class="button" type="button" data-action="load-orders">${ICONS.orders}<span>Tải lại đơn</span></button>
-          <button class="button" type="button" data-action="export-orders">${ICONS.export}<span>Xuất đơn</span></button>
-        </div>
-      </section>
-      <section class="metric-grid">
-        ${renderMetric("Tổng đơn", state.loading.orders ? "..." : formatNumber(orders.length || (state.data.counts && state.data.counts.orders) || 0), "Từ migration-full-input/orders.json", "orders")}
-        ${renderMetric("Doanh thu", state.loading.orders ? "..." : formatMoney(revenue), "Tính từ total hoặc items", "dashboard")}
-        ${renderMetric("Khách có email", state.loading.orders ? "..." : formatNumber(orders.filter((order) => order.email).length), "Dùng cho follow-up", "users")}
-        ${renderMetric("AOV", state.loading.orders ? "..." : formatMoney(orders.length ? revenue / orders.length : 0), "Giá trị đơn trung bình", "spark")}
-      </section>
-      <section class="panel">
-        <div class="panel__header">
-          <div>
-            <h2>Danh sách đơn</h2>
-            <p>${renderLoadingLabel(["orders"])}</p>
-          </div>
-        </div>
-        ${state.loading.orders ? renderTableLoading("Đang tải đơn hàng...") : renderOrdersTable(orders)}
-      </section>
-    `;
-  }
-
-  function renderOrdersTable(orders) {
-    if (!orders.length) {
-      return `<div class="empty-state">${ICONS.orders}<strong>Chưa tải được đơn hàng</strong><span>Kiểm tra file migration hoặc chạy qua static server.</span></div>`;
-    }
-    return `
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>Mã đơn</th><th>Khách</th><th>Sản phẩm</th><th>Tổng</th><th>Ngày</th><th>Trạng thái</th></tr></thead>
-          <tbody>
-            ${orders.map(
-              (order) => `
-                <tr>
-                  <td><strong>${escapeHtml(order.code || order.id)}</strong></td>
-                  <td>${escapeHtml(order.customer || "Khách lẻ")}<br><span class="hint">${escapeHtml(maskEmail(order.email || ""))}</span></td>
-                  <td>${formatNumber(order.itemCount || 0)} item</td>
-                  <td>${formatMoney(order.total || 0)}</td>
-                  <td>${formatDate(order.createdAt)}</td>
-                  <td><span class="status-pill" data-tone="${order.status === "cancelled" ? "off" : "live"}">${escapeHtml(order.status || "pending")}</span></td>
-                </tr>
-              `,
-            ).join("")}
-          </tbody>
-        </table>
-      </div>
-    `;
+    return renderSensitiveDataDisabledView(
+      "Đơn hàng",
+      "Nguồn orders.json đã bị tắt trong static admin vì chứa PII. Dữ liệu đơn hàng phải đi qua backend xác thực hoặc file đã scrub.",
+      "orders",
+    );
   }
 
   function renderCustomersView() {
-    if (!state.data.users && !state.loading.users) {
-      ensureUsers();
-    }
-    const users = state.data.users || [];
-    const verified = users.filter((user) => user.isEmailVerified).length;
+    return renderSensitiveDataDisabledView(
+      "Khách hàng",
+      "Nguồn users.json/customers.json đã bị tắt trong static admin vì chứa email, Google ID, hash và thông tin cá nhân.",
+      "users",
+    );
+  }
+
+  function renderSensitiveDataDisabledView(title, body, icon) {
     return `
       <section class="page-heading">
         <div>
-          <h1>Khách hàng</h1>
-          <p>Xem nhanh tài khoản migration. Mật khẩu/hash tuyệt đối không render trong admin.</p>
+          <h1>${escapeHtml(title)}</h1>
+          <p>${escapeHtml(body)}</p>
         </div>
         <div class="heading-actions">
-          <button class="button" type="button" data-action="load-users">${ICONS.users}<span>Tải lại khách</span></button>
-          <button class="button" type="button" data-action="export-users">${ICONS.export}<span>Xuất khách</span></button>
+          <span class="status-pill" data-tone="off">PII source disabled</span>
         </div>
-      </section>
-      <section class="metric-grid">
-        ${renderMetric("Tài khoản", state.loading.users ? "..." : formatNumber(users.length || (state.data.counts && state.data.counts.users) || 0), "Từ users.json", "users")}
-        ${renderMetric("Email verified", state.loading.users ? "..." : formatNumber(verified), `${percent(verified, users.length)}% đã xác thực`, "eye")}
-        ${renderMetric("Google login", state.loading.users ? "..." : formatNumber(users.filter((user) => user.googleId).length), "Có googleId", "spark")}
-        ${renderMetric("Newsletter", state.loading.users ? "..." : formatNumber(users.filter((user) => user.newsletter).length), "Có thể chăm sóc lại", "content")}
       </section>
       <section class="panel">
-        <div class="panel__header">
-          <div>
-            <h2>Danh sách khách hàng</h2>
-            <p>${renderLoadingLabel(["users"])}</p>
-          </div>
+        <div class="empty-state">
+          ${ICONS[icon] || ICONS.system}
+          <strong>Không tải dữ liệu nhạy cảm từ static file</strong>
+          <span>Giữ chức năng này cho backend có auth, audit log và kiểm soát quyền truy cập.</span>
         </div>
-        ${state.loading.users ? renderTableLoading("Đang tải khách hàng...") : renderUsersTable(users)}
       </section>
-    `;
-  }
-
-  function renderUsersTable(users) {
-    if (!users.length) {
-      return `<div class="empty-state">${ICONS.users}<strong>Chưa tải được khách hàng</strong><span>Kiểm tra file migration hoặc chạy qua static server.</span></div>`;
-    }
-    return `
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead><tr><th>Khách</th><th>Email</th><th>Role</th><th>Trạng thái</th><th>Đăng nhập cuối</th><th>Preferences</th></tr></thead>
-          <tbody>
-            ${users.map(
-              (user) => `
-                <tr>
-                  <td><strong>${escapeHtml(user.name || "No name")}</strong><br><span class="hint">${escapeHtml(user.id)}</span></td>
-                  <td>${escapeHtml(maskEmail(user.email || ""))}</td>
-                  <td><span class="tag-pill" data-tone="blue">${escapeHtml(user.role || "user")}</span></td>
-                  <td><span class="status-pill" data-tone="${user.isActive ? "live" : "off"}">${user.isActive ? "active" : "inactive"}</span></td>
-                  <td>${formatDate(user.lastLoginAt || user.lastLogin)}</td>
-                  <td>${escapeHtml(user.language || "vi")} · ${escapeHtml(user.theme || "light")}</td>
-                </tr>
-              `,
-            ).join("")}
-          </tbody>
-        </table>
-      </div>
     `;
   }
 
@@ -1720,50 +1595,6 @@
   function renderRichTextEditor(name, value, label) {
     const html = richEditorHtml(value);
     const plainTextLength = stripHtml(html).length;
-    return `
-      <div class="rich-editor field--wide" data-rich-field="${escapeAttr(name)}">
-        <div class="rich-editor__label">
-          <span>${escapeHtml(label)}</span>
-          <small>${formatNumber(plainTextLength)} ký tự</small>
-        </div>
-        <div class="rich-editor__toolbar" aria-label="${escapeAttr(label)} toolbar">
-          <button type="button" data-rich-command="bold" title="Bôi đậm"><strong>B</strong></button>
-          <button type="button" data-rich-command="italic" title="In nghiêng"><em>I</em></button>
-          <button type="button" data-rich-command="underline" title="Gạch chân"><u>U</u></button>
-          <span class="rich-editor__divider" aria-hidden="true"></span>
-          <select data-rich-block aria-label="Kiểu đoạn">
-            <option value="">Đoạn</option>
-            <option value="p">Paragraph</option>
-            <option value="h2">Heading 2</option>
-            <option value="h3">Heading 3</option>
-            <option value="blockquote">Quote</option>
-          </select>
-          <select data-rich-font-size aria-label="Cỡ chữ">
-            <option value="">Cỡ chữ</option>
-            <option value="2">Nhỏ</option>
-            <option value="3">Thường</option>
-            <option value="4">Lớn</option>
-            <option value="5">Rất lớn</option>
-          </select>
-          <span class="rich-editor__divider" aria-hidden="true"></span>
-          <button type="button" data-rich-command="insertUnorderedList" title="Danh sách bullet">• List</button>
-          <button type="button" data-rich-command="insertOrderedList" title="Danh sách số">1. List</button>
-          <button type="button" data-rich-command="removeFormat" title="Xóa định dạng">Clear</button>
-          <span class="rich-editor__divider" aria-hidden="true"></span>
-          <button type="button" data-rich-action="link" title="Chèn link">Link</button>
-          <button type="button" data-rich-action="image-url" title="Chèn ảnh bằng URL">Ảnh URL</button>
-          <button type="button" data-rich-action="image-file" title="Chèn ảnh từ máy">Chọn ảnh</button>
-          <input type="file" accept="image/*" data-rich-image-file hidden>
-        </div>
-        <div class="rich-editor__surface" contenteditable="true" data-rich-editor="${escapeAttr(name)}" role="textbox" aria-multiline="true">${html}</div>
-        <textarea name="${escapeAttr(name)}" data-rich-hidden hidden>${escapeHtml(html)}</textarea>
-      </div>
-    `;
-  }
-
-  function renderRichTextEditor(name, value, label) {
-    const html = richEditorHtml(value);
-    const plainTextLength = stripHtml(html).length;
     const editorId = buildRichEditorId(name);
     return `
       <div class="rich-editor field--wide" data-rich-field="${escapeAttr(name)}">
@@ -1978,9 +1809,9 @@
     } else if (action === "export-all") {
       downloadJson("stemora-admin-snapshot.json", buildExportSnapshot());
     } else if (action === "export-orders") {
-      downloadJson("stemora-orders-export.json", state.data.orders || []);
+      toast("Nguồn đơn hàng đã tắt", "Không export orders từ static admin vì dữ liệu này chứa PII.");
     } else if (action === "export-users") {
-      downloadJson("stemora-users-export.json", state.data.users || []);
+      toast("Nguồn khách hàng đã tắt", "Không export users/customers từ static admin vì dữ liệu này chứa PII.");
     } else if (action === "export-seo") {
       downloadJson("stemora-seo-export.json", {
         pages: state.data.seoPages || [],
@@ -2138,50 +1969,12 @@
       render();
       return;
     }
-    const passwordHash = await hashPassword(password, user.salt);
-    if (passwordHash !== user.passwordHash) {
+    if (!(await verifyPassword(user, password))) {
       toast("Sai password", "Kiểm tra lại password admin.");
       render();
       return;
     }
     signInUser({ ...user, lastLoginAt: new Date().toISOString() }, "Đã đăng nhập", "Admin đã sẵn sàng.");
-  }
-
-  async function handleAuth(form) {
-    const passcode = String(new FormData(form).get("passcode") || "");
-    const confirm = String(new FormData(form).get("confirm") || "");
-    if (passcode.length < 6) {
-      toast("Mã quá ngắn", "Dùng tối thiểu 6 ký tự.");
-      render();
-      return;
-    }
-    const currentHash = localStorage.getItem(STORAGE.passHash);
-    if (!currentHash && passcode !== confirm) {
-      toast("Mã chưa khớp", "Nhập lại mã quản trị giống nhau.");
-      render();
-      return;
-    }
-
-    const nextHash = await sha256(passcode);
-    if (!currentHash) {
-      localStorage.setItem(STORAGE.passHash, nextHash);
-      sessionStorage.setItem(STORAGE.session, "1");
-      state.authenticated = true;
-      toast("Đã tạo mã", "Bạn đang ở phiên admin local.");
-      render();
-      return;
-    }
-
-    if (nextHash !== currentHash) {
-      toast("Sai mã quản trị", "Kiểm tra lại mã đã thiết lập trên trình duyệt này.");
-      render();
-      return;
-    }
-
-    sessionStorage.setItem(STORAGE.session, "1");
-    state.authenticated = true;
-    toast("Đã đăng nhập", "Admin đã sẵn sàng.");
-    render();
   }
 
   function switchView(view) {
@@ -2190,8 +1983,6 @@
     if (location.hash.replace("#", "") !== state.view) {
       history.replaceState(null, "", `#${state.view}`);
     }
-    if (state.view === "orders") ensureOrders();
-    if (state.view === "customers") ensureUsers();
     if (state.view === "seo") ensureSeo();
     render();
   }
@@ -2579,15 +2370,6 @@
     const container = scope && scope.querySelectorAll ? scope : root;
     if (window.tinymce) window.tinymce.triggerSave();
     container.querySelectorAll(".rich-editor").forEach(syncRichEditor);
-  }
-
-  function syncRichEditor(surface) {
-    const editor = surface && surface.closest ? surface.closest(".rich-editor") : null;
-    const hidden = editor ? editor.querySelector("[data-rich-hidden]") : null;
-    const counter = editor ? editor.querySelector(".rich-editor__label small") : null;
-    const html = sanitizeRichHtml(surface.innerHTML).trim();
-    if (hidden) hidden.value = html;
-    if (counter) counter.textContent = `${formatNumber(stripHtml(html).length)} ký tự`;
   }
 
   function syncRichEditor(target) {
@@ -3291,22 +3073,18 @@
   }
 
   async function ensureOrders(force) {
-    if (state.data.orders && !force) return;
-    state.loading.orders = true;
-    renderIfAuthenticated();
-    const orders = await fetchJson(ENDPOINTS.orders, "orders");
-    state.data.orders = Array.isArray(orders) ? orders.map(projectOrder) : [];
+    state.data.orders = [];
     state.loading.orders = false;
+    state.errors.orders = "PII source disabled";
+    if (force) toast("Nguồn đơn hàng đã tắt", "Không tải orders.json từ static admin vì chứa PII.");
     renderIfAuthenticated();
   }
 
   async function ensureUsers(force) {
-    if (state.data.users && !force) return;
-    state.loading.users = true;
-    renderIfAuthenticated();
-    const users = await fetchJson(ENDPOINTS.users, "users");
-    state.data.users = Array.isArray(users) ? users.map(projectUser) : [];
+    state.data.users = [];
     state.loading.users = false;
+    state.errors.users = "PII source disabled";
+    if (force) toast("Nguồn khách hàng đã tắt", "Không tải users.json/customers.json từ static admin vì chứa PII.");
     renderIfAuthenticated();
   }
 
@@ -3337,38 +3115,6 @@
       state.errors[key] = error && error.message ? error.message : "Không tải được";
       return null;
     }
-  }
-
-  function projectOrder(order) {
-    const items = Array.isArray(order.items) ? order.items : [];
-    const itemTotal = items.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || item.qty || 1), 0);
-    return {
-      id: order._id || order.id || order.code,
-      code: order.code || order.orderCode || order._id || "",
-      customer: text((order.user && order.user.name) || order.customerName || order.name || ""),
-      email: text((order.user && order.user.email) || order.email || ""),
-      itemCount: items.reduce((sum, item) => sum + Number(item.quantity || item.qty || 1), 0),
-      total: Number(order.total || order.totalAmount || order.amount || itemTotal || 0),
-      status: text(order.status || order.paymentStatus || "pending"),
-      createdAt: order.createdAt || order.updatedAt || "",
-    };
-  }
-
-  function projectUser(user) {
-    return {
-      id: user._id || user.id || user.email || "",
-      name: text([user.firstName, user.lastName].filter(Boolean).join(" ") || user.name || ""),
-      email: text(user.email || ""),
-      role: text(user.role || "user"),
-      isActive: user.isActive !== false,
-      isEmailVerified: Boolean(user.isEmailVerified),
-      googleId: user.googleId || "",
-      newsletter: Boolean(user.newsletter),
-      lastLogin: user.lastLogin || "",
-      lastLoginAt: user.lastLoginAt || "",
-      language: user.preferences && user.preferences.language,
-      theme: user.preferences && user.preferences.theme,
-    };
   }
 
   function mergeProductsWithMigration(baseProducts, migratedProducts) {
@@ -3643,13 +3389,40 @@
     template.innerHTML = source
       .replace(/<script[\s\S]*?<\/script>/gi, "")
       .replace(/<style[\s\S]*?<\/style>/gi, "");
+    const allowedAttrs = new Set([
+      "href",
+      "src",
+      "alt",
+      "title",
+      "target",
+      "rel",
+      "colspan",
+      "rowspan",
+      "width",
+      "height",
+      "loading",
+      "decoding",
+    ]);
     template.content.querySelectorAll("*").forEach((node) => {
       Array.from(node.attributes).forEach((attribute) => {
         const name = attribute.name.toLowerCase();
-        const attributeValue = String(attribute.value || "");
-        if (name.startsWith("on")) node.removeAttribute(attribute.name);
-        if ((name === "href" || name === "src") && /^javascript:/i.test(attributeValue)) {
+        const attributeValue = String(attribute.value || "").trim();
+        const isAllowedDataAttr = /^data-[a-z0-9_-]+$/i.test(name);
+        if (name.startsWith("on") || name === "style" || name === "id" || name === "class" || name === "srcdoc") {
           node.removeAttribute(attribute.name);
+          return;
+        }
+        if (!allowedAttrs.has(name) && !isAllowedDataAttr) {
+          node.removeAttribute(attribute.name);
+          return;
+        }
+        if (name === "href" && !/^(https?:|mailto:|tel:|\/|#)/i.test(attributeValue)) {
+          node.removeAttribute(attribute.name);
+          return;
+        }
+        if (name === "src" && !/^(https?:|data:image\/|\/)/i.test(attributeValue)) {
+          node.removeAttribute(attribute.name);
+          return;
         }
       });
       if (node.tagName === "A" && node.getAttribute("href")) {
@@ -3720,10 +3493,6 @@
       return map;
     }, new Map());
     return Array.from(groups.values()).filter((count) => count > 1).length;
-  }
-
-  function sumOrders(orders) {
-    return (orders || []).reduce((sum, order) => sum + Number(order.total || 0), 0);
   }
 
   function normalizeStatus(item) {
@@ -3901,6 +3670,7 @@
       providers: ["password"],
       salt,
       passwordHash: await hashPassword(password, salt),
+      passwordAlgo: "pbkdf2-sha256",
       createdAt: now,
       lastLoginAt: now,
     };
@@ -3955,8 +3725,57 @@
     render();
   }
 
-  async function hashPassword(password, salt) {
-    return sha256(`${salt}:${password}`);
+  async function hashPassword(password, salt, iterations) {
+    const rounds = Number(iterations) || PASSWORD_HASH_ITERATIONS;
+    if (window.crypto && window.crypto.subtle && window.TextEncoder) {
+      const encoder = new TextEncoder();
+      const key = await window.crypto.subtle.importKey(
+        "raw",
+        encoder.encode(password),
+        "PBKDF2",
+        false,
+        ["deriveBits"],
+      );
+      const bits = await window.crypto.subtle.deriveBits(
+        {
+          name: "PBKDF2",
+          salt: encoder.encode(salt),
+          iterations: rounds,
+          hash: "SHA-256",
+        },
+        key,
+        256,
+      );
+      return `pbkdf2:${rounds}:${arrayBufferToBase64(bits)}`;
+    }
+    return `sha256:${await sha256(`${salt}:${password}`)}`;
+  }
+
+  async function verifyPassword(user, password) {
+    const storedHash = String(user.passwordHash || "");
+    if (!storedHash || !user.salt) return false;
+    if (storedHash.startsWith("pbkdf2:")) {
+      const [, iterations] = storedHash.split(":");
+      return (await hashPassword(password, user.salt, Number(iterations))) === storedHash;
+    }
+
+    const legacyHash = await sha256(`${user.salt}:${password}`);
+    if (storedHash === legacyHash || storedHash === `sha256:${legacyHash}`) {
+      const upgradedUser = { ...user, passwordHash: await hashPassword(password, user.salt), passwordAlgo: "pbkdf2-sha256" };
+      state.users = state.users.map((entry) => (entry.id === user.id ? upgradedUser : entry));
+      persistUsers();
+      return true;
+    }
+    return false;
+  }
+
+  function arrayBufferToBase64(buffer) {
+    const bytes = new Uint8Array(buffer);
+    let binary = "";
+    bytes.forEach((byte) => {
+      binary += String.fromCharCode(byte);
+    });
+    return btoa(binary);
   }
 
   function createId(prefix) {
@@ -3974,6 +3793,7 @@
   }
 
   function initGoogleAuth() {
+    if (!GOOGLE_AUTH_ENABLED) return;
     const clientId = getGoogleClientId();
     const container = document.getElementById("google-auth-button");
     if (!clientId || !container) return;
@@ -4028,6 +3848,11 @@
   }
 
   function handleGoogleCredential(response) {
+    if (!GOOGLE_AUTH_ENABLED) {
+      toast("Google login đã tắt", "Static admin không verify được Google credential an toàn.");
+      render();
+      return;
+    }
     try {
       const profile = decodeJwtPayload(response && response.credential);
       const user = upsertGoogleUser(profile);
@@ -4120,13 +3945,6 @@
     const date = new Date(value);
     if (Number.isNaN(date.getTime())) return "Chưa rõ";
     return new Intl.DateTimeFormat("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
-  }
-
-  function maskEmail(email) {
-    const value = String(email || "");
-    const [name, domain] = value.split("@");
-    if (!name || !domain) return value;
-    return `${name.slice(0, 2)}***@${domain}`;
   }
 
   function uniqueByKey(row, index, rows) {

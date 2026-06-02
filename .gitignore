@@ -1,0 +1,44 @@
+# --- Dữ liệu cá nhân (PII) – KHÔNG BAO GIỜ commit ---
+migration-full-input/users.json
+migration-full-input/customers.json
+migration-full-input/orders.json
+migration-full.zip
+
+# --- Output / cache của script migration ---
+transformed-products.js
+out.txt
+
+# --- Local dev ---
+.DS_Store
+Thumbs.db
+*.log
+*.swp
+*.tmp
+*.bak
+.env
+.env.local
+
+# --- Editor / IDE ---
+.vscode/
+.idea/
+*.code-workspace
+
+# --- Node (nếu sau này thêm tooling) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+
+# --- Build artifacts (dự phòng) ---
+dist/
+build/
+.cache/
+
+# --- Python ---
+__pycache__/
+*.pyc
+
+# --- Backup file của fix-mojibake script ---
+*.pre-mojibake-fix.bak

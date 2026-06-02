@@ -1,5 +1,16 @@
 # STEMORA Editorial Runtime
 
+> ⚠️ **CẢNH BÁO BẢO MẬT** — commit `60cb868` đã chứa `migration-full-input/users.json`,
+> `orders.json`, `customers.json` với PII thật (bcrypt hash, email, SĐT, Google ID).
+> Các file này đã được gỡ khỏi HEAD và `.gitignore`, nhưng **vẫn còn trong git history**.
+> Trước khi public repo / push lên GitHub public, **bắt buộc** chạy
+> `tools/scrub-git-history.sh` để xoá khỏi toàn bộ lịch sử rồi force-push, sau đó
+> reset password + revoke OAuth cho các user bị lộ và thông báo data breach theo
+> Nghị định 13/2023/NĐ-CP.
+>
+> Admin panel hiện chỉ là client-side (lưu state trong localStorage). Không deploy
+> production khi chưa có backend xác thực thật.
+
 ## Mục tiêu lần refactor này
 
 Lần cập nhật này không chỉ đổi giao diện. Trọng tâm là làm trải nghiệm tải trang, vào trang, hiện media và chuyển động trở nên mượt hơn, có nhịp hơn và bớt cảm giác template.

@@ -119,8 +119,15 @@ function getStockStatus(stock) {
   return { vi: 'Sẵn hàng', en: 'Available' };
 }
 
-// The images are served from the production API server
-const IMAGE_BASE = 'https://api.smartsteam.store';
+function normalizeImageSource(src) {
+  if (!src) return '';
+  const source = String(src).trim()
+    .replace(/^https?:\/\/api\.smartsteam\.store\/(images|uploads)\//i, '/$1/')
+    .replace(/^https?:\/\/(?:www\.)?smartsteam\.vn\/(images|uploads)\//i, '/$1/')
+    .replace(/^https?:\/\/ssteam\.onrender\.com\/(images|uploads)\//i, '/$1/');
+  if (/^(images|uploads)\//i.test(source)) return '/' + source;
+  return source;
+}
 
 // Filter active products
 const activeProducts = products.filter(p => p.isActive !== false);
@@ -141,8 +148,7 @@ activeProducts.forEach((p, idx) => {
   const shortDesc = desc.length > 200 ? desc.substring(0, 200) + '...' : desc;
   const summaryText = shortDesc || catName;
 
-  // Images - prepend API base URL
-  const images = (p.images || []).map(img => IMAGE_BASE + img);
+  const images = (p.images || []).map(normalizeImageSource).filter(Boolean);
   const coverImg = images[0] || '/assets/img/product-science.svg';
   const heroImg = images[0] || '/assets/img/product-science.svg';
   const galleryImages = images.slice(0, 5);
@@ -272,4 +278,4 @@ console.log('  Name:', decodeHtmlEntities(sample.name));
 console.log('  Slug:', sample.slug);
 console.log('  Price:', formatPrice(sample.price));
 console.log('  Images:', (sample.images || []).length);
-console.log('  Cover URL:', IMAGE_BASE + (sample.images?.[0] || ''));
+console.log('  Cover URL:', sample.images?.[0] || '');
