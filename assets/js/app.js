@@ -137,6 +137,8 @@
     textNormalizeRaf: 0,
     normalizingText: false,
     welcomeThemeInitialized: false,
+    mediaLoadPromises: new Map(),
+    mediaLoadedSources: new Set(),
   };
   const GROUPS = ["age", "theme", "format", "occasion", "difficulty"];
   const APP_THEME_STORAGE_KEY = "smartsteam:theme";
@@ -176,6 +178,48 @@
       interval,
       speed: Math.max(0.16, reducedScale * gridScale),
       pointer: !reducedMotion && !busyGrid,
+    };
+  }
+
+  function createBackgroundFramePacer(lowPowerDevice) {
+    const maxLevel = lowPowerDevice ? 3 : 2;
+    const step = lowPowerDevice ? 16 : 12;
+    let level = 0;
+    let slowFrames = 0;
+    let stableFrames = 0;
+
+    return {
+      get intervalBoost() {
+        return level * step;
+      },
+      observe(frameDelta, targetInterval) {
+        if (!Number.isFinite(frameDelta) || !Number.isFinite(targetInterval) || targetInterval <= 0) return;
+        const slowThreshold = Math.max(42, targetInterval * 1.8);
+        const stableThreshold = Math.max(24, targetInterval * 1.34);
+
+        if (frameDelta > slowThreshold) {
+          slowFrames += 1;
+          stableFrames = 0;
+          if (slowFrames >= 3) {
+            level = Math.min(maxLevel, level + 1);
+            slowFrames = 0;
+          }
+          return;
+        }
+
+        if (frameDelta < stableThreshold) {
+          stableFrames += 1;
+          slowFrames = 0;
+          if (stableFrames >= 90 && level > 0) {
+            level -= 1;
+            stableFrames = 0;
+          }
+          return;
+        }
+
+        slowFrames = 0;
+        stableFrames = 0;
+      },
     };
   }
 
@@ -979,7 +1023,7 @@
       focalY: baseMedia.focalY ?? 50,
       preserveTextSafeArea: Boolean(baseMedia.preserveTextSafeArea),
       role: fallbackRole,
-      loadingTier: baseMedia.loadingTier || config.tier || "deferred",
+      loadingTier: baseMedia.loadingTier || config.tier || (config.priority ? "critical" : "deferred"),
       alt: baseMedia.alt || { vi: "", en: "" },
     };
   }
@@ -1009,7 +1053,7 @@
   function renderMedia(media, className, options) {
     const config = options || {};
     const normalizedMedia = normalizeMediaObject(media, config);
-    const tier = safeMediaToken(config.tier || normalizedMedia.loadingTier || (config.priority ? "critical" : "deferred"), "deferred");
+    const tier = safeMediaToken(config.tier || (config.priority ? "critical" : "") || normalizedMedia.loadingTier || "deferred", "deferred");
     const inlineSource = tier === "critical";
     const loading = inlineSource ? config.loading || "eager" : "lazy";
     const fetchPriority = tier === "critical" ? ' fetchpriority="high"' : "";
@@ -1452,41 +1496,32 @@
     return true;
   }
 
-  function bindStableMedia(root) {
-    $$("img", root || document).forEach((image) => {
-      if (!image.closest(".media-frame") && !image.dataset.fallbackSrc) return;
-      if (image.dataset.mediaBound === "true") return;
-      if (image.dataset.src && image.getAttribute("src") !== image.dataset.src) return;
-      image.dataset.mediaBound = "true";
-      const finalize = () => markMediaFrameLoaded(image);
-      const recover = () => {
-        if (applyImageFallback(image)) {
-          if (image.complete && image.naturalWidth) finalize();
-          return;
-        }
-        finalize();
-      };
-      if (image.complete) {
-        if (image.naturalWidth) finalize();
-        else recover();
-        return;
-      }
-      image.addEventListener("load", finalize, { once: true });
-      image.addEventListener("error", recover);
-    });
+  function getMediaSourceKey(src) {
+    const source = String(src || "").trim();
+    if (!source) return "";
+    try {
+      return new URL(source, window.location.href).href;
+    } catch (error) {
+      return source;
+    }
   }
 
-  function ensureImageReady(image) {
+  function getImageTargetSource(image) {
+    if (!image) return "";
+    return image.dataset.src || image.currentSrc || image.getAttribute("src") || "";
+  }
+
+  function findRenderedImageForSource(src) {
+    const sourceKey = getMediaSourceKey(src);
+    if (!sourceKey) return null;
+    return $$("img", document).find((image) => getMediaSourceKey(getImageTargetSource(image)) === sourceKey) || null;
+  }
+
+  function waitForImageElement(image) {
     return new Promise((resolve) => {
       if (!image) {
         resolve(null);
         return;
-      }
-
-      const pendingSource = image.dataset.src;
-      if (pendingSource && image.getAttribute("src") !== pendingSource) {
-        image.setAttribute("src", pendingSource);
-        image.removeAttribute("data-src");
       }
 
       const finish = () => {
@@ -1513,39 +1548,117 @@
       }
 
       image.addEventListener("load", finish, { once: true });
+      image.addEventListener("error", recover, { once: true });
+    });
+  }
+
+  function bindStableMedia(root) {
+    $$("img", root || document).forEach((image) => {
+      if (!image.closest(".media-frame") && !image.dataset.fallbackSrc) return;
+      if (image.dataset.mediaBound === "true") return;
+      if (image.dataset.src && image.getAttribute("src") !== image.dataset.src) return;
+      image.dataset.mediaBound = "true";
+      const finalize = () => markMediaFrameLoaded(image);
+      const recover = () => {
+        if (applyImageFallback(image)) {
+          if (image.complete && image.naturalWidth) finalize();
+          return;
+        }
+        finalize();
+      };
+      if (image.complete) {
+        if (image.naturalWidth) finalize();
+        else recover();
+        return;
+      }
+      image.addEventListener("load", finalize, { once: true });
       image.addEventListener("error", recover);
     });
   }
 
-  function hydrateDynamicMedia(root) {
+  function ensureImageReady(image) {
+    if (!image) return Promise.resolve(null);
+
+    const pendingSource = image.dataset.src;
+    const pendingKey = getMediaSourceKey(pendingSource);
+    if (pendingSource && image.getAttribute("src") !== pendingSource) {
+      const activeRequest = pendingKey && state.mediaLoadPromises.get(pendingKey);
+      if (activeRequest && !state.mediaLoadedSources.has(pendingKey)) {
+        return activeRequest.finally(() => {
+          image.setAttribute("src", pendingSource);
+          image.removeAttribute("data-src");
+          return waitForImageElement(image);
+        });
+      }
+      image.setAttribute("src", pendingSource);
+      image.removeAttribute("data-src");
+    }
+
+    const sourceKey = getMediaSourceKey(getImageTargetSource(image));
+    if (!sourceKey) return waitForImageElement(image);
+    if (image.complete && image.naturalWidth) {
+      state.mediaLoadedSources.add(sourceKey);
+      return waitForImageElement(image);
+    }
+
+    const existingRequest = state.mediaLoadPromises.get(sourceKey);
+    if (existingRequest && !state.mediaLoadedSources.has(sourceKey)) {
+      return existingRequest.finally(() => waitForImageElement(image));
+    }
+
+    const request = waitForImageElement(image).then((loadedImage) => {
+      if (image.naturalWidth) state.mediaLoadedSources.add(sourceKey);
+      return loadedImage;
+    }).finally(() => {
+      state.mediaLoadPromises.delete(sourceKey);
+    });
+    state.mediaLoadPromises.set(sourceKey, request);
+    return request;
+  }
+
+  function hydrateDynamicMedia(root, options) {
     const scope = root || document;
-    $$("img[data-src]", scope).forEach((image) => {
+    const config = options || {};
+    if (config.loadAll) $$("img[data-src]", scope).forEach((image) => {
       ensureImageReady(image);
     });
     bindStableMedia(scope);
   }
 
   function preloadImageSource(src) {
-    return new Promise((resolve) => {
-      if (!src) {
-        resolve();
-        return;
-      }
+    const sourceKey = getMediaSourceKey(src);
+    if (!sourceKey) return Promise.resolve();
 
-      const image = new Image();
+    const renderedImage = findRenderedImageForSource(src);
+    if (renderedImage) return ensureImageReady(renderedImage).then(() => null);
+    if (state.mediaLoadedSources.has(sourceKey)) return Promise.resolve();
+
+    const existingRequest = state.mediaLoadPromises.get(sourceKey);
+    if (existingRequest) return existingRequest.then(() => null);
+
+    const image = new Image();
+    const request = new Promise((resolve) => {
       let settled = false;
-      const finish = () => {
+      const finish = (loaded) => {
         if (settled) return;
         settled = true;
-        const decoded = typeof image.decode === "function" ? image.decode().catch(() => null) : Promise.resolve();
-        decoded.finally(resolve);
+        const decoded = loaded && typeof image.decode === "function" ? image.decode().catch(() => null) : Promise.resolve();
+        decoded.finally(() => {
+          if (loaded) state.mediaLoadedSources.add(sourceKey);
+          resolve();
+        });
       };
 
-      image.onload = finish;
-      image.onerror = finish;
+      image.onload = () => finish(true);
+      image.onerror = () => finish(false);
       image.src = src;
-      if (image.complete) finish();
+      if (image.complete) finish(Boolean(image.naturalWidth));
+    }).finally(() => {
+      state.mediaLoadPromises.delete(sourceKey);
     });
+
+    state.mediaLoadPromises.set(sourceKey, request);
+    return request;
   }
 
   async function loadMediaBatch(images, batchSize) {
@@ -1990,53 +2103,49 @@
   function getCriticalAssetsForPage() {
     const logo = data.siteMeta.logo.src;
     const sources = [logo];
+    const pushMediaSource = (media) => {
+      const source = typeof media === "string" ? media : media && media.src;
+      if (source) sources.push(source);
+    };
     if (page === "welcome") {
       const scenes = data.welcomeScenes[locale];
-      const collage = data.welcomeCollage[locale];
-      [scenes[0], scenes[1], scenes[2]].forEach((scene) => {
-        if (scene && scene.media) sources.push(scene.media.src);
-      });
-      if (collage[0]) sources.push(collage[0].media.src);
+      if (scenes[0] && scenes[0].media) pushMediaSource(scenes[0].media);
     } else if (page === "products") {
-      sources.push(data.siteMeta.pageAssets.products.src);
-      sortedProducts().slice(0, 3).forEach((item) => sources.push(item.cover.src));
+      // Product sphere loads visible catalogue thumbnails itself; full-size covers here only add unused network work.
     } else if (page === "product-detail") {
       const item = data.products.find((entry) => entry.slug === slugFromPath());
       if (item) {
-        sources.push(item.hero.src);
-        if (item.gallery[0]) sources.push(item.gallery[0].src);
+        pushMediaSource((item.gallery && item.gallery[0]) || item.hero || item.cover);
       }
     } else if (page === "projects") {
-      sources.push(data.siteMeta.pageAssets.projects.src);
-      sortedProjects().slice(0, 2).forEach((item) => sources.push(item.cover.src));
+      const firstProject = sortedProjects()[0];
+      if (firstProject) pushMediaSource(firstProject.cover || firstProject.hero);
     } else if (page === "project-detail") {
       const item = data.projects.find((entry) => entry.slug === slugFromPath() || entry.sourceSlug === slugFromPath());
       if (item) {
-        if (item.hero && item.hero.src) sources.push(item.hero.src);
-        if (item.gallery && item.gallery[0] && item.gallery[0].src) sources.push(item.gallery[0].src);
+        pushMediaSource(item.hero || item.cover);
       }
     } else if (page === "tutorials") {
-      sources.push((data.siteMeta.pageAssets.tutorials || data.siteMeta.pageAssets.products).src);
-      sortedTutorials().slice(0, 2).forEach((item) => {
-        if (item.cover && item.cover.src) sources.push(item.cover.src);
-      });
+      const firstTutorial = sortedTutorials()[0];
+      if (firstTutorial) pushMediaSource(firstTutorial.cover);
     } else if (page === "tutorial-detail") {
       const item = sortedTutorials().find((entry) => entry.slug === slugFromPath() || entry.sourceSlug === slugFromPath());
-      if (item && item.cover && item.cover.src) sources.push(item.cover.src);
+      if (item) pushMediaSource(item.cover);
     } else if (page === "news") {
-      sources.push(data.siteMeta.pageAssets.projects.src);
-      sortedNews().slice(0, 2).forEach((item) => {
-        if (item.cover && item.cover.src) sources.push(item.cover.src);
-      });
+      const firstNews = sortedNews()[0];
+      if (firstNews) pushMediaSource(firstNews.cover);
     } else if (page === "news-detail") {
       const item = sortedNews().find((entry) => entry.slug === slugFromPath() || entry.sourceSlug === slugFromPath());
-      if (item && item.cover && item.cover.src) sources.push(item.cover.src);
+      if (item) pushMediaSource(item.cover);
     } else if (page === "contact") {
-      sources.push(data.siteMeta.pageAssets.contact.src);
+      pushMediaSource(data.siteMeta.pageAssets.contact);
     } else if (page === "policy" || page === "policy-detail") {
-      sources.push(data.siteMeta.pageAssets.policy.src);
+      pushMediaSource(data.siteMeta.pageAssets.policy);
     }
-    return unique(sources);
+    return unique(sources.map((source, index) => {
+      if (!source) return "";
+      return index === 0 ? normalizeMediaSource(source) : resolveAssetSource(source);
+    }).filter(Boolean));
   }
 
   function initPageExperience() {
@@ -2598,8 +2707,17 @@
     const root = $(".js-page-root");
     if (!root) return;
     var footer = document.querySelector('.site-footer');
+    var previousFooterDisplay = footer ? footer.style.display : '';
     if (footer) footer.style.display = 'none';
     updateMeta(strings.pageMeta.products.title, strings.pageMeta.products.description);
+    var productCleanups = [];
+    function bindProductEvent(target, type, handler, options) {
+      if (!target || !type || typeof handler !== 'function') return;
+      target.addEventListener(type, handler, options);
+      productCleanups.push(function() {
+        target.removeEventListener(type, handler, options);
+      });
+    }
 
     // Use real products from STEM_DATA
     const baseProducts = sortedProducts();
@@ -2672,61 +2790,6 @@
     });
     var searchBarEl = document.createElement('div');
     searchBarEl.className = 'galaxy-filter-panel js-galaxy-search-bar';
-    searchBarEl.innerHTML =
-      '<div class="galaxy-search-bar__inner">' +
-        '<div class="galaxy-search-bar__input-wrap">' +
-          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>' +
-          '<input class="galaxy-search-bar__input js-galaxy-search" type="text" placeholder="' + (locale === 'vi' ? 'Tìm kiếm sản phẩm...' : 'Search products...') + '">' +
-        '</div>' +
-        '<div class="galaxy-filter-chips js-galaxy-chips">' +
-          '<button class="galaxy-chip is-active" data-filter="all">' + (locale === 'vi' ? 'Tất cả' : 'All') + '</button>' +
-          '<button class="galaxy-chip" data-filter="high">' + (locale === 'vi' ? 'Trên 500K' : '500K+ VND') + '</button>' +
-          '<button class="galaxy-chip" data-filter="mid">' + (locale === 'vi' ? '100K–500K' : '100K–500K VND') + '</button>' +
-          '<button class="galaxy-chip" data-filter="low">' + (locale === 'vi' ? 'Dưới 100K' : 'Under 100K VND') + '</button>' +
-        '</div>' +
-      '</div>' +
-      '<div class="galaxy-results-panel js-galaxy-results" style="display:none;"></div>';
-    searchBarEl.innerHTML =
-      '<div class="galaxy-filter-panel__inner">' +
-        '<p class="galaxy-filter-panel__eyebrow">' + (locale === 'vi' ? 'Lọc catalogue' : 'Catalogue filter') + '</p>' +
-        '<h2 class="galaxy-filter-panel__title">' + (locale === 'vi' ? 'Sắp xếp nhanh sản phẩm thật' : 'Arrange the product set') + '</h2>' +
-        '<label class="galaxy-filter-field">' +
-          '<span>' + (locale === 'vi' ? 'Tìm kiếm' : 'Search') + '</span>' +
-          '<div class="galaxy-search-bar__input-wrap">' +
-            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>' +
-            '<input class="galaxy-search-bar__input js-galaxy-search" type="text" placeholder="' + (locale === 'vi' ? 'Tìm theo tên sản phẩm...' : 'Search by product name...') + '">' +
-          '</div>' +
-        '</label>' +
-        '<label class="galaxy-filter-field">' +
-          '<span>' + (locale === 'vi' ? 'Danh mục' : 'Category') + '</span>' +
-          '<select class="galaxy-filter-select js-galaxy-category">' +
-            '<option value="all">' + (locale === 'vi' ? 'Tất cả danh mục' : 'All categories') + '</option>' +
-            categoryOptions.map(function(optionName) {
-              return '<option value="' + optionName + '">' + optionName + '</option>';
-            }).join('') +
-          '</select>' +
-        '</label>' +
-        '<label class="galaxy-filter-field">' +
-          '<span>' + (locale === 'vi' ? 'Sắp xếp theo' : 'Sort by') + '</span>' +
-          '<select class="galaxy-filter-select js-galaxy-sort">' +
-            '<option value="default">' + (locale === 'vi' ? 'Mặc định' : 'Default') + '</option>' +
-            '<option value="price-asc">' + (locale === 'vi' ? 'Giá tăng dần' : 'Price ascending') + '</option>' +
-            '<option value="price-desc">' + (locale === 'vi' ? 'Giá giảm dần' : 'Price descending') + '</option>' +
-          '</select>' +
-        '</label>' +
-        '<div class="galaxy-filter-field">' +
-          '<span>' + (locale === 'vi' ? 'Lọc theo khoảng tiền' : 'Price range') + '</span>' +
-          '<div class="galaxy-filter-chips js-galaxy-chips">' +
-            '<button class="galaxy-chip is-active" data-filter="all" type="button">' + (locale === 'vi' ? 'Tất cả' : 'All') + '</button>' +
-            '<button class="galaxy-chip" data-filter="under-1m" type="button">' + (locale === 'vi' ? 'Dưới 1 triệu' : 'Under 1M') + '</button>' +
-            '<button class="galaxy-chip" data-filter="1m-2m" type="button">' + (locale === 'vi' ? '1 đến 2 triệu' : '1M-2M') + '</button>' +
-            '<button class="galaxy-chip" data-filter="2m-3m" type="button">' + (locale === 'vi' ? '2 đến 3 triệu' : '2M-3M') + '</button>' +
-            '<button class="galaxy-chip" data-filter="3m-5m" type="button">' + (locale === 'vi' ? '3 đến 5 triệu' : '3M-5M') + '</button>' +
-          '</div>' +
-        '</div>' +
-        '<p class="galaxy-filter-panel__meta js-galaxy-filter-meta"></p>' +
-      '</div>' +
-      '<div class="galaxy-results-panel js-galaxy-results" style="display:none;"></div>';
     searchBarEl.innerHTML =
       '<div class="galaxy-filter-panel__inner galaxy-filter-panel__inner--bar">' +
         '<label class="galaxy-filter-field galaxy-filter-field--search">' +
@@ -3463,7 +3526,7 @@
       });
     }
 
-    sceneEl.addEventListener('pointerleave', function() {
+    bindProductEvent(sceneEl, 'pointerleave', function() {
       if (layoutMode !== 'sphere' || focusLockedCard || isDragging || sphereFrozen) return;
       scheduleSphereHoverRelease(true);
     });
@@ -3672,13 +3735,13 @@
       requestAnimationFrame(syncHoverPreviewPosition);
     }
 
-    hoverPreviewEl.addEventListener('mousedown', function(e) {
+    bindProductEvent(hoverPreviewEl, 'mousedown', function(e) {
       if (!activePreviewCard) return;
       e.preventDefault();
       e.stopPropagation();
     });
 
-    hoverPreviewEl.addEventListener('click', function(e) {
+    bindProductEvent(hoverPreviewEl, 'click', function(e) {
       if (!activePreviewCard) return;
       e.preventDefault();
       e.stopPropagation();
@@ -3687,7 +3750,7 @@
       openModal(product);
     });
 
-    hoverPreviewEl.addEventListener('mouseleave', function() {
+    bindProductEvent(hoverPreviewEl, 'mouseleave', function() {
       if (!activePreviewCard || layoutMode !== 'sphere') return;
       if (focusLockedCard) return;
       var card = activePreviewCard;
@@ -4721,29 +4784,6 @@
       return locale === 'vi' ? 'Đang cập nhật' : 'Updating';
     }
 
-    function buildModalFacts(product, stockLabel, categoryFact) {
-      return [
-        [locale === 'vi' ? 'Tồn kho' : 'Stock', stockLabel],
-        [getGroupLabel('age'), formatModalTaxonomy(product, 'age')],
-        [getGroupLabel('format'), formatModalTaxonomy(product, 'format')],
-        [getGroupLabel('difficulty'), formatModalTaxonomy(product, 'difficulty')],
-        [getGroupLabel('theme'), formatModalTaxonomy(product, 'theme')],
-        [locale === 'vi' ? 'Danh mục' : 'Category', categoryFact],
-      ]
-        .map(function(row) {
-          return '<div><dt>' + row[0] + '</dt><dd>' + row[1] + '</dd></div>';
-        })
-        .join('');
-    }
-
-    function buildPriceBlock(p, cls) {
-      var orig = Math.round(p._priceNum * 1.28);
-      var pct  = Math.round((1 - p._priceNum / orig) * 100);
-      return '<span class="' + cls + '__price">$' + p._priceNum + '</span>' +
-             '<span class="' + cls + '__orig">$' + orig + '</span>' +
-             '<span class="' + cls + '__badge">−' + pct + '%</span>';
-    }
-
     // ─── EXPAND CARD IN-PLACE (hold) — the card ITSELF grows, no overlay ───
     function parseModalPriceNumber(value) {
       var numeric = String(value || '').replace(/[^\d]/g, '');
@@ -4900,7 +4940,7 @@
     }, true);
 
     // Click backdrop (outside sphere) → collapse expanded card
-    document.addEventListener('click', function(e) {
+    bindProductEvent(document, 'click', function(e) {
       if (expandedCard && !e.target.closest('.galaxy-card') && !e.target.closest('.galaxy-modal') && !e.target.closest('.galaxy-filter-panel') && !e.target.closest('.galaxy-control-dock')) {
         collapseCard();
       }
@@ -4933,9 +4973,6 @@
       var modalSummary = locale === 'vi'
         ? (product.taglineVi || product.summaryVi || '')
         : (product.taglineEn || product.summaryEn || '');
-      var stockLabel = locale === 'vi'
-        ? (stock > 0 ? ((product.availabilityVi || 'Còn hàng') + ' · ' + stock) : (product.availabilityVi || 'Liên hệ'))
-        : (stock > 0 ? ((product.availabilityEn || 'In stock') + ' · ' + stock) : (product.availabilityEn || 'Contact us'));
       var categoryFact = product.facts && product.facts[0]
         ? (locale === 'vi' ? product.facts[0].valueVi : product.facts[0].valueEn)
         : (locale === 'vi' ? 'Sản phẩm STEM' : 'STEM product');
@@ -4958,60 +4995,11 @@
             thumbsHTML +
           '</div>' +
           '<div class="galaxy-modal__info">' +
-            '<h2 class="galaxy-modal__name">' + modalTitle + '</h2>' +
-            '<div class="galaxy-modal__price-row">' + buildPriceBlock(product, 'galaxy-modal') + '</div>' +
-            '<p class="galaxy-modal__summary">' + modalSummary + '</p>' +
-            '<dl class="galaxy-modal__facts">' +
-              '<div><dt>Stock</dt><dd>' + stock + ' units</dd></div>' +
-              '<div><dt>Age Group</dt><dd>Ages 6–14</dd></div>' +
-              '<div><dt>Format</dt><dd>Kit + Digital Guide</dd></div>' +
-              '<div><dt>Difficulty</dt><dd>Beginner</dd></div>' +
-              '<div><dt>Learning Theme</dt><dd>STEM Exploration</dd></div>' +
-              '<div><dt>Duration</dt><dd>2–3 hours</dd></div>' +
-            '</dl>' +
-            '<div class="galaxy-modal__qty-row">' +
-              '<span>Qty</span>' +
-              '<div class="galaxy-preview__qty">' +
-                '<button class="galaxy-qty-btn js-modal-minus">−</button>' +
-                '<span class="js-modal-qty">1</span>' +
-                '<button class="galaxy-qty-btn js-modal-plus">+</button>' +
-              '</div>' +
-            '</div>' +
-            '<div class="galaxy-modal__actions">' +
-              '<button class="galaxy-btn-cart">Add to Cart</button>' +
-              '<button class="galaxy-btn-buy">Buy Now</button>' +
-            '</div>' +
-            '<a class="galaxy-modal__fulllink" href="' + getLocalePath('product-detail', product.slug) + '" data-transition>See full product page →</a>' +
+            buildModalInfoMarkup(product, modalTitle, modalSummary, stock, productIndex, categoryFact) +
           '</div>' +
         '</div>';
 
-      var infoPanel = modalEl.querySelector('.galaxy-modal__info');
-      if (infoPanel) {
-        infoPanel.innerHTML = buildModalInfoMarkup(product, modalTitle, modalSummary, stock, productIndex, categoryFact);
-      }
-
       modalEl.classList.add('is-open');
-      var modalFactsList = modalEl.querySelector('.galaxy-modal__facts');
-      if (modalFactsList) {
-        modalFactsList.innerHTML = buildModalFacts(product, stockLabel, categoryFact);
-      }
-      var modalFactRows = $$('.galaxy-modal__facts > div', modalEl);
-      var modalFactPayload = [
-        [locale === 'vi' ? 'Tồn kho' : 'Stock', stockLabel],
-        [getGroupLabel('age'), formatModalTaxonomy(product, 'age')],
-        [getGroupLabel('format'), formatModalTaxonomy(product, 'format')],
-        [getGroupLabel('difficulty'), formatModalTaxonomy(product, 'difficulty')],
-        [getGroupLabel('theme'), formatModalTaxonomy(product, 'theme')],
-        [locale === 'vi' ? 'Danh mục' : 'Category', categoryFact],
-      ];
-      modalFactRows.forEach(function(row, rowIndex) {
-        var labelNode = row.querySelector('dt');
-        var valueNode = row.querySelector('dd');
-        if (labelNode) labelNode.textContent = modalFactPayload[rowIndex][0];
-        if (valueNode) valueNode.textContent = modalFactPayload[rowIndex][1];
-      });
-      var fullLink = modalEl.querySelector('.galaxy-modal__fulllink');
-      if (fullLink) fullLink.textContent = locale === 'vi' ? 'Xem trang chi tiết ->' : 'See full product page ->';
       hydrateDynamicMedia(modalEl);
 
       // Qty controls
@@ -5019,11 +5007,11 @@
       modalEl.querySelector('.js-modal-minus').onclick = function() { var v=+qtyEl.textContent; if(v>1) qtyEl.textContent=v-1; };
       modalEl.querySelector('.js-modal-plus').onclick  = function() { var v=+qtyEl.textContent; if(v<stock) qtyEl.textContent=v+1; };
       modalEl.querySelector('.js-modal-close').onclick = closeModal;
-      modalEl.addEventListener('click', function(e) { if(e.target===modalEl) closeModal(); });
+      modalEl.onclick = function(e) { if(e.target===modalEl) closeModal(); };
 
       // Thumbnail switching
       var mainImg = modalEl.querySelector('.js-modal-mainimg');
-      modalEl.querySelector('#js-modal-thumbs').addEventListener('click', function(e) {
+      modalEl.querySelector('#js-modal-thumbs').onclick = function(e) {
         var btn = e.target.closest('.galaxy-modal__thumb');
         if (!btn) return;
         var idx = +btn.dataset.idx;
@@ -5033,7 +5021,7 @@
         // Update active class
         modalEl.querySelectorAll('.galaxy-modal__thumb').forEach(function(t) { t.classList.remove('is-active'); });
         btn.classList.add('is-active');
-      });
+      };
     }
 
     function closeModal() {
@@ -5233,14 +5221,14 @@
       pointerStartedOnLockedCard = false;
     }
 
-    sceneEl.addEventListener('pointerdown', handlePointerDown);
-    sceneEl.addEventListener('pointermove', handlePointerMove);
-    sceneEl.addEventListener('pointerup', handlePointerEnd);
-    sceneEl.addEventListener('pointercancel', handlePointerEnd);
-    sceneEl.addEventListener('scroll', handleBoardNativeScroll, { passive: true });
+    bindProductEvent(sceneEl, 'pointerdown', handlePointerDown);
+    bindProductEvent(sceneEl, 'pointermove', handlePointerMove);
+    bindProductEvent(sceneEl, 'pointerup', handlePointerEnd);
+    bindProductEvent(sceneEl, 'pointercancel', handlePointerEnd);
+    bindProductEvent(sceneEl, 'scroll', handleBoardNativeScroll, { passive: true });
 
     // Scroll to zoom
-    sceneEl.addEventListener('wheel', function(e) {
+    bindProductEvent(sceneEl, 'wheel', function(e) {
       if (layoutMode === 'grid') {
         markBoardScrollActive();
         return;
@@ -5275,7 +5263,7 @@
     }
 
     // Close overlays on Escape
-    document.addEventListener('keydown', function(e) {
+    bindProductEvent(document, 'keydown', function(e) {
       var targetTag = e.target && e.target.tagName ? e.target.tagName.toLowerCase() : '';
       var isTyping = targetTag === 'input' || targetTag === 'textarea' || targetTag === 'select' || (e.target && e.target.isContentEditable);
       if (e.key === 'Escape') {
@@ -5390,46 +5378,7 @@
     var searchBrowseMode = false;
     var productCopy = getProductDetailCopy();
 
-    function filterProducts(query, priceFilter) {
-      var q = query.toLowerCase().trim();
-      return demoProducts.filter(function(p) {
-        var nameMatch = !q || p.titleEn.toLowerCase().indexOf(q) !== -1;
-        var priceMatch = true;
-        if (priceFilter === 'high') priceMatch = p._priceNum >= 200;
-        else if (priceFilter === 'mid') priceMatch = p._priceNum >= 100 && p._priceNum < 200;
-        else if (priceFilter === 'low') priceMatch = p._priceNum < 100;
-        return nameMatch && priceMatch;
-      });
-    }
-
-    function renderSearchResultsPanel() {
-      if (resultsPanel) resultsPanel.style.display = 'none';
-      return;
-      var q = arguments.length && typeof arguments[0] === 'string' ? arguments[0] : searchInput.value;
-      var categoryFilter = categorySelect ? categorySelect.value : 'all';
-      var sortMode = sortSelect ? sortSelect.value : 'default';
-      var items = filterProducts(q, activeFilter, categoryFilter, sortMode);
-      if (items.length === 0) {
-        resultsPanel.innerHTML = '<div class="galaxy-results-empty">' + (locale === 'vi' ? 'Không tìm thấy sản phẩm' : 'No products found') + '</div>';
-      } else {
-        resultsPanel.innerHTML = items.map(function(item) {
-          var cardTitle = escapeHtmlText(locale === "vi" ? item.titleVi : item.titleEn);
-          var cardPrice = escapeHtmlText(locale === "vi" ? item.priceVi : item.priceEn);
-          var coverAlt = locale === "vi" ? (item.coverAltVi || item.coverAlt || item.titleVi) : (item.coverAltEn || item.coverAlt || item.titleEn);
-          return '<a class="galaxy-search-card" href="' + getLocalePath("product-detail", item.slug) + '" data-transition aria-label="' + cardTitle + '">' +
-            '<div class="galaxy-search-card__media">' + renderMedia(getCatalogueThumbMedia(item.cover), "", { tier: "deferred", loading: "lazy", alt: coverAlt }) + '</div>' +
-            '<div class="galaxy-search-card__body">' +
-              '<span class="galaxy-search-card__name">' + cardTitle + '</span>' +
-              '<span class="galaxy-search-card__price">' + cardPrice + '</span>' +
-            '</div>' +
-          '</a>';
-        }).join('');
-      }
-      resultsPanel.style.display = 'grid';
-      hydrateDynamicMedia(resultsPanel);
-    }
-
-    filterProducts = function(query, priceFilter, categoryFilter, sortMode) {
+    function filterProducts(query, priceFilter, categoryFilter, sortMode) {
       var q = String(query || '').toLowerCase().trim();
       return sortProductList(demoProducts.filter(function(p) {
         var titleVi = String(p.titleVi || '').toLowerCase();
@@ -5438,7 +5387,7 @@
         var categoryMatch = categoryFilter === 'all' || getProductCategory(p) === categoryFilter;
         return nameMatch && categoryMatch && matchesPriceRange(p, priceFilter);
       }), sortMode);
-    };
+    }
 
     renderResults = function() {
       if (productDetailNavigationPending) return;
@@ -5552,17 +5501,6 @@
         optionBtn.classList.toggle('is-active', isCurrent);
         optionBtn.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
       });
-      return;
-      var selectedOption = dropdownUi.select.options[dropdownUi.select.selectedIndex];
-      var selectedText = selectedOption ? selectedOption.textContent : '';
-      dropdownUi.label.textContent = dropdownUi === sortDropdownUi
-        ? (locale === 'vi' ? 'Sắp xếp: ' : 'Sort: ') + selectedText
-        : selectedText;
-      $$('.galaxy-filter-menu__option', dropdownUi.menu).forEach(function(optionBtn) {
-        var isCurrent = optionBtn.dataset.value === dropdownUi.select.value;
-        optionBtn.classList.toggle('is-active', isCurrent);
-        optionBtn.setAttribute('aria-selected', isCurrent ? 'true' : 'false');
-      });
     }
 
     function bindFilterDropdown(dropdownUi) {
@@ -5659,16 +5597,16 @@
     }
 
     var boardResizeTimer = null;
-    window.addEventListener('resize', function() {
+    bindProductEvent(window, 'resize', function() {
       syncProductFilterBarFrame();
       syncSphereCardOrigins();
       clearTimeout(boardResizeTimer);
       boardResizeTimer = setTimeout(renderResults, 120);
     });
-    window.addEventListener('scroll', syncProductFilterBarFrame, { passive: true });
+    bindProductEvent(window, 'scroll', syncProductFilterBarFrame, { passive: true });
 
     // Close results when clicking outside
-    document.addEventListener('click', function(e) {
+    bindProductEvent(document, 'click', function(e) {
       if (productDetailNavigationPending) return;
       if (!e.target.closest('.galaxy-filter-panel')) {
         setPriceDropdownOpen(false);
@@ -5726,6 +5664,34 @@
         if (!priceField.contains(e.relatedTarget)) setPriceDropdownOpen(false);
       });
     }
+    registerPageCleanup(root, function() {
+      productCleanups.forEach(function(cleanup) { cleanup(); });
+      productCleanups = [];
+      clearTimeout(idleTimer);
+      clearTimeout(holdTimer);
+      clearTimeout(hoverReleaseTimer);
+      clearTimeout(hoverCandidateTimer);
+      clearTimeout(renderResultsTimer);
+      clearTimeout(gridMorphTimer);
+      clearTimeout(boardConnectionTimer);
+      clearTimeout(boardScrollEffectTimer);
+      clearTimeout(gravityOverlayTimer);
+      clearTimeout(priceCloseTimer);
+      clearTimeout(boardResizeTimer);
+      if (categoryDropdownUi && categoryDropdownUi.closeTimer) clearTimeout(categoryDropdownUi.closeTimer);
+      if (sortDropdownUi && sortDropdownUi.closeTimer) clearTimeout(sortDropdownUi.closeTimer);
+      if (hoverPickFrame) cancelAnimationFrame(hoverPickFrame);
+      if (galaxyRafId) cancelAnimationFrame(galaxyRafId);
+      hoverPickFrame = 0;
+      galaxyRafId = 0;
+      clearMorphLayer();
+      clearGravityCollapseFx();
+      clearBoardConnections();
+      [searchBarEl, previewEl, hoverPreviewEl, modalEl].forEach(function(element) {
+        if (element && element.parentNode) element.parentNode.removeChild(element);
+      });
+      if (footer) footer.style.display = previousFooterDisplay;
+    });
     renderInitialProductResults();
 
     scheduleHero3DCanvas(root, 320);
@@ -5956,14 +5922,14 @@
           <div class="product-detail-layout">
             <section class="product-detail-gallery-card js-detail-gallery-card" data-stage="hero">
               <div class="product-detail-main-media js-detail-main-media">
-                ${renderMedia(dedupedGallery[0] || item.hero || item.cover, "", { priority: true, stage: "hero" })}
+                ${renderMedia(dedupedGallery[0] || item.hero || item.cover, "", { priority: true, stage: "hero", fit: "contain" })}
               </div>
               <div class="product-detail-thumb-row js-detail-thumb-shell">
                 <button class="product-detail-thumb-nav js-detail-thumb-prev" type="button" aria-label="${locale === "vi" ? "Xem thumbnail trước" : "Previous thumbnails"}">‹</button>
                 <div class="product-detail-thumbs js-detail-thumbs">
                   ${dedupedGallery.map((mediaItem, index) => `
                     <button class="product-detail-thumb${index === 0 ? " is-active" : ""}" type="button" data-idx="${index}">
-                      ${renderMedia(mediaItem, "", { tier: index < 2 ? "near" : "deferred", fit: "contain" })}
+                      ${renderMedia(getCatalogueThumbMedia(mediaItem), "", { tier: index < 2 ? "near" : "deferred", fit: "contain" })}
                     </button>
                   `).join("")}
                 </div>
@@ -6071,6 +6037,7 @@
     const prevButton = $(".js-detail-thumb-prev", root);
     const nextButton = $(".js-detail-thumb-next", root);
     let activeGalleryIndex = 0;
+    const detailCleanups = [];
 
     const syncGalleryCardHeight = () => {
       if (!galleryCard || !buyCard) return;
@@ -6179,22 +6146,30 @@
       });
     });
 
-    window.addEventListener("resize", () => {
+    const handleDetailResize = () => {
       requestAnimationFrame(() => {
         syncGalleryCardHeight();
         syncThumbRailNav();
       });
-    }, { passive: true });
+    };
+    window.addEventListener("resize", handleDetailResize, { passive: true });
+    detailCleanups.push(() => window.removeEventListener("resize", handleDetailResize));
 
     if (galleryCard && "ResizeObserver" in window) {
       const galleryCardResizeObserver = new ResizeObserver(() => {
         syncGalleryCardHeight();
       });
       galleryCardResizeObserver.observe(galleryCard);
+      detailCleanups.push(() => galleryCardResizeObserver.disconnect());
     }
 
+    registerPageCleanup(root, () => {
+      detailCleanups.forEach((cleanup) => cleanup());
+    });
+
     hydrateDynamicMedia(root);
-    renderActiveGallery(false);
+    scheduleGalleryCardHeightSync();
+    syncThumbRailNav();
     setTimeout(() => {
       syncGalleryCardHeight();
       syncThumbRailNav();
@@ -9018,6 +8993,7 @@
       let isDisposed = false;
       let isVisible = !document.hidden;
       let paletteKey = "";
+      const framePacer = createBackgroundFramePacer(lowPowerDevice);
 
       function getProductSceneEl() {
         if (!isProductCanvas) return null;
@@ -9136,14 +9112,17 @@
           return;
         }
 
-        if (lastRenderTime && timestamp - lastRenderTime < motionProfile.interval) {
+        const targetInterval = motionProfile.interval + framePacer.intervalBoost;
+        if (lastRenderTime && timestamp - lastRenderTime < targetInterval) {
           rafId = window.requestAnimationFrame(renderFrame);
           return;
         }
 
+        const frameDelta = lastRenderTime ? timestamp - lastRenderTime : targetInterval;
         lastRenderTime = timestamp;
+        framePacer.observe(frameDelta, targetInterval);
         applyPalette();
-        const delta = Math.min(50, timestamp - (lastTime || timestamp || 0) || motionProfile.interval);
+        const delta = Math.min(64, timestamp - (lastTime || timestamp || 0) || targetInterval);
         const motionDelta = delta * motionProfile.speed;
         lastTime = timestamp;
         elapsed += motionDelta * 0.001;
@@ -9240,6 +9219,7 @@
     const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
     let productSceneEl = null;
     let lastRenderTime = 0;
+    const framePacer = createBackgroundFramePacer(lowPowerDevice);
 
     function getProductSceneEl() {
       if (!isProductCanvas) return null;
@@ -9513,11 +9493,14 @@
 
       const motionProfile = getBackgroundMotionProfile(isProductCanvas, getProductSceneEl(), lowPowerDevice);
       const now = performance.now();
-      if (lastRenderTime && now - lastRenderTime < motionProfile.interval) {
+      const targetInterval = motionProfile.interval + framePacer.intervalBoost;
+      if (lastRenderTime && now - lastRenderTime < targetInterval) {
         rafId = window.requestAnimationFrame(loop);
         return;
       }
+      const frameDelta = lastRenderTime ? now - lastRenderTime : targetInterval;
       lastRenderTime = now;
+      framePacer.observe(frameDelta, targetInterval);
       drawFrame(true);
       rafId = supportsBackgroundMotion ? window.requestAnimationFrame(loop) : 0;
     }
