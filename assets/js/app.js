@@ -139,14 +139,191 @@
     welcomeThemeInitialized: false,
     mediaLoadPromises: new Map(),
     mediaLoadedSources: new Set(),
+    performanceAutoFloor: "full",
+    performanceMetrics: null,
   };
   const GROUPS = ["age", "theme", "format", "occasion", "difficulty"];
   const APP_THEME_STORAGE_KEY = "smartsteam:theme";
   const WELCOME_THEME_STORAGE_KEY = "smartsteam:welcome-theme";
   const PROJECT_ARCHIVE_SCROLL_KEY = "smartsteam:project-archive-scroll";
+  const PERFORMANCE_MODES = ["auto", "full", "balanced", "safe"];
+  const PERFORMANCE_MODE_RANK = { full: 0, balanced: 1, safe: 2 };
   const BACKGROUND_3D_PAGES = new Set(["welcome", "products", "projects", "tutorials", "news", "contact"]);
   const SHARED_3D_BACKGROUND_PAGES = new Set(["projects", "tutorials", "news", "contact"]);
   let threeModulePromise = null;
+
+  const performanceModeListeners = new Set();
+  const performanceModeState = {
+    preference: "auto",
+    auto: "full",
+    applied: "full",
+    details: null,
+    reason: "boot",
+  };
+
+  function isValidPerformanceMode(mode) {
+    return PERFORMANCE_MODES.indexOf(mode) !== -1;
+  }
+
+  function normalizePerformanceMode(mode) {
+    const normalized = String(mode || "").toLowerCase().trim();
+    return isValidPerformanceMode(normalized) ? normalized : "";
+  }
+
+  function getWorstPerformanceMode(leftMode, rightMode) {
+    const left = PERFORMANCE_MODE_RANK[leftMode] || 0;
+    const right = PERFORMANCE_MODE_RANK[rightMode] || 0;
+    return left >= right ? leftMode : rightMode;
+  }
+
+  function getPerformanceQueryMode() {
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      return normalizePerformanceMode(params.get("perf") || params.get("performance"));
+    } catch (error) {
+      return "";
+    }
+  }
+
+  function getRequestedPerformanceMode() {
+    return getPerformanceQueryMode() || "auto";
+  }
+
+  function detectPerformanceDetails() {
+    const details = {
+      webgl: false,
+      vendor: "",
+      renderer: "",
+      softwareLike: false,
+      weakGpu: false,
+      lowCpu: (navigator.hardwareConcurrency || 8) <= 4,
+      lowMemory: Boolean(navigator.deviceMemory && navigator.deviceMemory <= 4),
+      dpr: window.devicePixelRatio || 1,
+      viewport: Math.max(1, window.innerWidth) + "x" + Math.max(1, window.innerHeight),
+      reducedMotion,
+    };
+
+    details.pixelWork = Math.round(Math.max(1, window.innerWidth) * Math.max(1, window.innerHeight) * details.dpr * details.dpr);
+
+    try {
+      const testCanvas = document.createElement("canvas");
+      const gl = testCanvas.getContext("webgl2", { failIfMajorPerformanceCaveat: false })
+        || testCanvas.getContext("webgl", { failIfMajorPerformanceCaveat: false })
+        || testCanvas.getContext("experimental-webgl", { failIfMajorPerformanceCaveat: false });
+      if (gl) {
+        details.webgl = true;
+        const debugInfo = gl.getExtension("WEBGL_debug_renderer_info");
+        details.vendor = debugInfo ? (gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || "") : (gl.getParameter(gl.VENDOR) || "");
+        details.renderer = debugInfo ? (gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || "") : (gl.getParameter(gl.RENDERER) || "");
+        const loseContext = gl.getExtension("WEBGL_lose_context");
+        if (loseContext && typeof loseContext.loseContext === "function") loseContext.loseContext();
+      }
+    } catch (error) {
+      details.webgl = false;
+    }
+
+    const rendererText = (details.vendor + " " + details.renderer).toLowerCase();
+    details.softwareLike = !details.webgl || /swiftshader|warp|microsoft basic|software|llvmpipe|basic render|mesa offscreen|softpipe|d3d11on12/.test(rendererText);
+    details.weakGpu = !details.softwareLike && /intel\(r\) uhd|intel uhd|intel\(r\) hd|intel hd graphics|iris\(r\)|intel iris|mesa intel|radeon vega|uhd graphics/.test(rendererText);
+    details.integratedGpu = !details.softwareLike && /intel|iris|uhd|hd graphics|radeon vega|apple m/.test(rendererText);
+
+    return details;
+  }
+
+  function chooseAutoPerformanceMode(details) {
+    if (!details || !details.webgl || details.softwareLike) return "safe";
+    if (reducedMotion) return "safe";
+    if (details.weakGpu || details.lowCpu || details.lowMemory) return "balanced";
+    if (details.integratedGpu && details.pixelWork > 2600000) return "balanced";
+    return "full";
+  }
+
+  function applyPerformanceModeState(reason) {
+    const previousApplied = performanceModeState.applied;
+    const previousPreference = performanceModeState.preference;
+    const details = detectPerformanceDetails();
+    const preference = getRequestedPerformanceMode();
+    const detectedAuto = chooseAutoPerformanceMode(details);
+    const autoMode = getWorstPerformanceMode(detectedAuto, state.performanceAutoFloor || "full");
+    const appliedMode = preference === "auto" ? autoMode : preference;
+
+    performanceModeState.preference = preference;
+    performanceModeState.auto = autoMode;
+    performanceModeState.applied = appliedMode;
+    performanceModeState.details = details;
+    performanceModeState.reason = reason || "update";
+
+    body.dataset.performancePreference = preference;
+    body.dataset.performanceAuto = autoMode;
+    body.dataset.performanceMode = appliedMode;
+    body.classList.toggle("performance-full", appliedMode === "full");
+    body.classList.toggle("performance-balanced", appliedMode === "balanced");
+    body.classList.toggle("performance-safe", appliedMode === "safe");
+    window.SMARTSTEAM_PERFORMANCE = {
+      preference,
+      auto: autoMode,
+      mode: appliedMode,
+      reason: performanceModeState.reason,
+      metrics: state.performanceMetrics,
+      details,
+    };
+
+    if (previousApplied !== appliedMode || previousPreference !== preference) {
+      performanceModeListeners.forEach((listener) => {
+        try { listener(window.SMARTSTEAM_PERFORMANCE); } catch (error) {}
+      });
+    }
+
+    return window.SMARTSTEAM_PERFORMANCE;
+  }
+
+  function getCurrentPerformanceMode() {
+    return performanceModeState.applied || body.dataset.performanceMode || "full";
+  }
+
+  function onPerformanceModeChange(listener) {
+    if (typeof listener !== "function") return function() {};
+    performanceModeListeners.add(listener);
+    listener(window.SMARTSTEAM_PERFORMANCE || applyPerformanceModeState("listener"));
+    return function() {
+      performanceModeListeners.delete(listener);
+    };
+  }
+
+  function downgradeAutoPerformanceMode(mode, metrics) {
+    const nextMode = normalizePerformanceMode(mode);
+    if (!nextMode || nextMode === "auto" || performanceModeState.preference !== "auto") return false;
+    const currentFloor = state.performanceAutoFloor || "full";
+    const nextFloor = getWorstPerformanceMode(currentFloor, nextMode);
+    if (nextFloor === currentFloor && performanceModeState.applied === nextFloor) return false;
+    state.performanceAutoFloor = nextFloor;
+    state.performanceMetrics = metrics || null;
+    applyPerformanceModeState("frame-health");
+    return true;
+  }
+
+  function getBackgroundPixelRatioLimit(lowPowerDevice) {
+    const mode = getCurrentPerformanceMode();
+    if (mode === "safe") return 0.85;
+    if (mode === "balanced") return 1;
+    return lowPowerDevice ? 1.15 : 1.35;
+  }
+
+  function getBackgroundParticleLimit(maxCount, isProductCanvas, lowPowerDevice) {
+    const mode = getCurrentPerformanceMode();
+    if (mode === "safe") return Math.min(maxCount, isProductCanvas ? 170 : 130);
+    if (mode === "balanced") return Math.min(maxCount, isProductCanvas ? 360 : 280);
+    if (lowPowerDevice) return Math.min(maxCount, isProductCanvas ? 360 : 320);
+    return maxCount;
+  }
+
+  function getBackgroundNodeLimit(maxCount, isProductCanvas, lowPowerDevice) {
+    const mode = getCurrentPerformanceMode();
+    if (mode === "safe") return Math.min(maxCount, isProductCanvas ? 34 : 28);
+    if (mode === "balanced") return Math.min(maxCount, isProductCanvas ? 58 : 48);
+    if (lowPowerDevice) return Math.min(maxCount, isProductCanvas ? 62 : 56);
+    return maxCount;
+  }
 
   function pageSupportsBackgroundMotion() {
     return BACKGROUND_3D_PAGES.has(page);
@@ -157,6 +334,8 @@
       return { active: false, interval: 1000, speed: 0, pointer: false };
     }
 
+    const performanceMode = getCurrentPerformanceMode();
+    const reduceForMotion = reducedMotion && performanceModeState.preference === "auto";
     const inProductGrid = isProductCanvas && body.classList.contains("is-product-grid-mode");
     const busyGrid = inProductGrid && sceneEl && (
       sceneEl.classList.contains("is-board-scrolling") ||
@@ -164,20 +343,31 @@
       sceneEl.classList.contains("is-grid-refining") ||
       sceneEl.classList.contains("is-morphing-to-grid")
     );
-    const baseInterval = lowPowerDevice ? 33 : 16;
-    const gridInterval = lowPowerDevice ? 66 : 42;
-    const busyInterval = lowPowerDevice ? 100 : 76;
-    const interval = reducedMotion
+
+    if (performanceMode === "safe") {
+      return {
+        active: true,
+        interval: busyGrid ? 140 : (isProductCanvas ? 96 : 82),
+        speed: isProductCanvas ? 0.16 : 0.22,
+        pointer: false,
+      };
+    }
+
+    const baseInterval = performanceMode === "balanced" ? (lowPowerDevice ? 50 : 33) : (lowPowerDevice ? 33 : 16);
+    const gridInterval = performanceMode === "balanced" ? (lowPowerDevice ? 84 : 58) : (lowPowerDevice ? 66 : 42);
+    const busyInterval = performanceMode === "balanced" ? (lowPowerDevice ? 132 : 100) : (lowPowerDevice ? 100 : 76);
+    const interval = reduceForMotion
       ? Math.max(inProductGrid ? gridInterval : baseInterval, 66)
       : (busyGrid ? busyInterval : (inProductGrid ? gridInterval : baseInterval));
-    const reducedScale = reducedMotion ? 0.42 : 1;
+    const reducedScale = reduceForMotion ? 0.42 : 1;
+    const performanceScale = performanceMode === "balanced" ? 0.62 : 1;
     const gridScale = busyGrid ? 0.28 : (inProductGrid ? 0.48 : 1);
 
     return {
       active: true,
       interval,
-      speed: Math.max(0.16, reducedScale * gridScale),
-      pointer: !reducedMotion && !busyGrid,
+      speed: Math.max(0.16, reducedScale * performanceScale * gridScale),
+      pointer: !reduceForMotion && !busyGrid,
     };
   }
 
@@ -219,6 +409,119 @@
 
         slowFrames = 0;
         stableFrames = 0;
+      },
+    };
+  }
+
+  function createBackgroundHealthSampler(rendererName, isProductCanvas) {
+    const enabled = pageSupportsBackgroundMotion() && !isProductCanvas;
+    const warmupMs = 700;
+    const sampleMs = 2600;
+    let active = enabled;
+    let round = 0;
+    let bootTime = 0;
+    let sampleStartTime = 0;
+    let lastSampleTime = 0;
+    let frames = 0;
+    let slowFrames = 0;
+    let severeFrames = 0;
+    let maxDelta = 0;
+    let deltaSum = 0;
+    let targetSum = 0;
+
+    function clearWindow(timestamp) {
+      bootTime = timestamp || 0;
+      sampleStartTime = 0;
+      lastSampleTime = timestamp || 0;
+      frames = 0;
+      slowFrames = 0;
+      severeFrames = 0;
+      maxDelta = 0;
+      deltaSum = 0;
+      targetSum = 0;
+    }
+
+    return {
+      observe(timestamp, targetInterval) {
+        if (!active || !enabled) return;
+        if (performanceModeState.preference !== "auto" || document.hidden) {
+          active = false;
+          return;
+        }
+
+        const currentMode = getCurrentPerformanceMode();
+        if (currentMode === "safe") {
+          active = false;
+          return;
+        }
+
+        if (!Number.isFinite(timestamp) || !Number.isFinite(targetInterval) || targetInterval <= 0) return;
+        if (!bootTime) {
+          clearWindow(timestamp);
+          return;
+        }
+
+        if (timestamp - bootTime < warmupMs) {
+          lastSampleTime = timestamp;
+          return;
+        }
+
+        if (!sampleStartTime) {
+          sampleStartTime = timestamp;
+          lastSampleTime = timestamp;
+          return;
+        }
+
+        const delta = timestamp - lastSampleTime;
+        lastSampleTime = timestamp;
+        if (!Number.isFinite(delta) || delta <= 0) return;
+
+        const slowThreshold = Math.max(currentMode === "balanced" ? 76 : 52, targetInterval * 1.75);
+        const severeThreshold = Math.max(currentMode === "balanced" ? 150 : 110, targetInterval * 3.2);
+        frames += 1;
+        deltaSum += delta;
+        targetSum += targetInterval;
+        maxDelta = Math.max(maxDelta, delta);
+        if (delta > slowThreshold) slowFrames += 1;
+        if (delta > severeThreshold) severeFrames += 1;
+
+        const elapsed = timestamp - sampleStartTime;
+        if (elapsed < sampleMs || frames < 12) return;
+
+        const fps = Math.round((frames / Math.max(1, elapsed)) * 1000);
+        const avgDelta = deltaSum / Math.max(1, frames);
+        const avgTarget = targetSum / Math.max(1, frames);
+        const metrics = {
+          page,
+          renderer: rendererName,
+          mode: currentMode,
+          fps,
+          slowFrames,
+          severeFrames,
+          maxDelta: Math.round(maxDelta),
+          avgDelta: Math.round(avgDelta),
+          targetInterval: Math.round(avgTarget),
+          elapsed: Math.round(elapsed),
+          round,
+        };
+
+        let nextMode = "";
+        if (currentMode === "full") {
+          if (fps < 24 || severeFrames >= 3 || maxDelta > 180 || avgDelta > avgTarget * 2.25) nextMode = "safe";
+          else if (fps < 42 || slowFrames >= 5 || maxDelta > 96 || avgDelta > avgTarget * 1.55) nextMode = "balanced";
+        } else if (currentMode === "balanced") {
+          if (fps < 20 || severeFrames >= 3 || slowFrames >= 9 || maxDelta > 190 || avgDelta > avgTarget * 2.25) nextMode = "safe";
+        }
+
+        if (nextMode && downgradeAutoPerformanceMode(nextMode, metrics)) {
+          if (nextMode === "balanced" && round < 1) {
+            round += 1;
+            clearWindow(timestamp);
+            return;
+          }
+        }
+
+        active = false;
       },
     };
   }
@@ -2365,7 +2668,7 @@
 
     const missionCopy = locale === "vi" ? {
       status: "Trạm điều phối",
-      live: "Cảnh 3D đang chạy",
+      live: "",
       signalLabel: "Tín hiệu",
       signalValue: "SMARTSTEAM",
       sequenceLabel: "Vòng học tập",
@@ -3040,37 +3343,108 @@
       return loadMediaBatch(pendingImages, batchSize || (window.innerWidth < 760 ? 3 : 5));
     }
 
+    var galaxyImagePumpTimer = null;
+    var galaxyInitialImageTimer = null;
+    var galaxyVisibleImageFrame = 0;
+    var lastVisibleImageLoadAt = 0;
+
+    function getVisibleGalaxyImages(limit) {
+      var viewportW = Math.max(1, window.innerWidth || 1);
+      var viewportH = Math.max(1, window.innerHeight || 1);
+      var centerX = viewportW / 2;
+      var centerY = viewportH / 2;
+      return cardNodes
+        .map(function(card) {
+          var image = card.querySelector('img[data-src]');
+          if (!image || image.dataset.mediaLoaded === 'true' || !image.dataset.src) return null;
+          var inner = card.querySelector('.galaxy-card__inner') || card;
+          var rect = inner.getBoundingClientRect();
+          if (!rect.width || !rect.height) return null;
+          if (rect.right < -40 || rect.left > viewportW + 40 || rect.bottom < -40 || rect.top > viewportH + 40) return null;
+          var dx = (rect.left + rect.width / 2) - centerX;
+          var dy = (rect.top + rect.height / 2) - centerY;
+          var distance = Math.sqrt(dx * dx + dy * dy);
+          var area = rect.width * rect.height;
+          return { image: image, score: area - distance * 3 };
+        })
+        .filter(Boolean)
+        .sort(function(left, right) { return right.score - left.score; })
+        .slice(0, limit || 10)
+        .map(function(entry) { return entry.image; });
+    }
+
+    function loadVisibleGalaxyImages(force) {
+      if (layoutMode !== 'sphere') return;
+      var now = performance.now ? performance.now() : Date.now();
+      if (!force && now - lastVisibleImageLoadAt < 260) return;
+      lastVisibleImageLoadAt = now;
+      var limit = window.innerWidth < 760 ? 8 : 12;
+      var batchSize = window.innerWidth < 760 ? 4 : 6;
+      loadGalaxyImages(getVisibleGalaxyImages(limit), batchSize);
+    }
+
+    function getInitialGalaxyImages(limit) {
+      var selected = getVisibleGalaxyImages(limit || 1);
+      var seen = new Set(selected);
+      galaxyImagesByDepth.forEach(function(image) {
+        if (selected.length >= limit) return;
+        if (!image || seen.has(image)) return;
+        selected.push(image);
+        seen.add(image);
+      });
+      return selected;
+    }
+
+    function requestVisibleGalaxyImages(force) {
+      if (galaxyVisibleImageFrame) return;
+      galaxyVisibleImageFrame = requestAnimationFrame(function() {
+        galaxyVisibleImageFrame = 0;
+        loadVisibleGalaxyImages(force);
+      });
+    }
+
     function scheduleGalaxyIdleImages(images, startIndex) {
       var pendingImages = (images || []).slice(startIndex || 0).filter(Boolean);
       if (!pendingImages.length) return;
       var index = 0;
+      var idleBatchSize = window.innerWidth < 760 ? 3 : 6;
+      var maxBatch = window.innerWidth < 760 ? 4 : 9;
+      var queueNext = function(delay) {
+        galaxyImagePumpTimer = window.setTimeout(function() {
+          window.requestAnimationFrame(function() { loadNext(null); });
+        }, delay);
+      };
       var loadNext = function(deadline) {
         if (!pendingImages.length || layoutMode !== 'sphere') return;
-        var timeLeft = deadline && typeof deadline.timeRemaining === 'function' ? deadline.timeRemaining() : 8;
+        requestVisibleGalaxyImages(true);
+        var timeLeft = deadline && typeof deadline.timeRemaining === 'function' ? deadline.timeRemaining() : 14;
         var batch = [];
-        while (index < pendingImages.length && batch.length < 2 && timeLeft > 4) {
-          batch.push(pendingImages[index]);
+        while (index < pendingImages.length && batch.length < maxBatch && timeLeft > 3) {
+          var nextImage = pendingImages[index];
           index += 1;
-          timeLeft -= 3;
+          if (!nextImage || nextImage.dataset.mediaLoaded === 'true' || !nextImage.dataset.src) continue;
+          batch.push(nextImage);
+          timeLeft -= 2;
         }
-        loadGalaxyImages(batch, 1).finally(function() {
+        if (!batch.length) {
+          if (index < pendingImages.length && layoutMode === 'sphere') queueNext(120);
+          return;
+        }
+        loadGalaxyImages(batch, idleBatchSize).finally(function() {
           if (index >= pendingImages.length || layoutMode !== 'sphere') return;
-          window.setTimeout(function() {
-            if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(loadNext, { timeout: 1200 });
-            else window.requestAnimationFrame(function() { loadNext(null); });
-          }, 900);
+          queueNext(140);
         });
       };
-      window.setTimeout(function() {
-        if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(loadNext, { timeout: 1500 });
-        else window.requestAnimationFrame(function() { loadNext(null); });
-      }, 4200);
+      queueNext(520);
     }
 
     if (galaxyImagesByDepth.length) {
-      var firstGalaxyBatch = window.innerWidth < 760 ? 10 : 18;
-      loadGalaxyImages(galaxyImagesByDepth.slice(0, firstGalaxyBatch), window.innerWidth < 760 ? 3 : 5);
-      scheduleGalaxyIdleImages(galaxyImagesByDepth, firstGalaxyBatch);
+      var firstGalaxyBatch = window.innerWidth < 760 ? 18 : 30;
+      requestVisibleGalaxyImages(true);
+      galaxyInitialImageTimer = window.setTimeout(function() {
+        loadGalaxyImages(getInitialGalaxyImages(firstGalaxyBatch), window.innerWidth < 760 ? 5 : 8);
+      }, 90);
+      scheduleGalaxyIdleImages(galaxyImagesByDepth, 0);
     }
     var layoutMode = 'sphere';
     var boardScrollCurrent = 0;
@@ -3184,6 +3558,7 @@
       sceneEl.dataset.orbitState = interactionState;
       if (galaxyStateEl) galaxyStateEl.dataset.orbitState = interactionState;
       if (galaxyStateLabel) galaxyStateLabel.textContent = interactionLabels[interactionState] || interactionState.toUpperCase();
+      requestGalaxyFrame();
     }
 
     function syncMotionToggleButton() {
@@ -3198,12 +3573,18 @@
       motionToggleBtn.setAttribute('title', label);
     }
 
+    function getAutoSpinSpeed() {
+      var mode = getCurrentPerformanceMode();
+      if (mode === 'balanced') return 0.075;
+      return AUTO_SPIN_SPEED;
+    }
+
     function pauseSphereByUser() {
       userMotionPaused = true;
       sphereHoverPaused = false;
       isDragging = false;
       isIdle = false;
-      if (Math.abs(velY) < 0.015 && interactionState === 'idle') velY = AUTO_SPIN_SPEED;
+      if (Math.abs(velY) < 0.015 && interactionState === 'idle') velY = getAutoSpinSpeed();
       clearTimeout(idleTimer);
       if (!focusLockedCard && layoutMode === 'sphere' && !sphereFrozen) setInteractionState('paused');
       syncMotionToggleButton();
@@ -5316,9 +5697,32 @@
 
     // --- Animation loop ---
     var galaxyRafId = 0;
+    var lastGalaxyRenderTime = 0;
+    var productPerfSampleRafId = 0;
+    var productPerfSampleTimer = null;
+
+    function getProductOrbitFrameInterval() {
+      var mode = getCurrentPerformanceMode();
+      var activeInteraction = isDragging || isPinching || hoverFocusActive || !!focusLockedCard || userMotionPaused || interactionState === 'zoom' || interactionState === 'keyboard';
+      if (layoutMode === 'grid') return mode === 'safe' ? 66 : (mode === 'balanced' ? 42 : 16);
+      if (mode === 'safe') return activeInteraction ? 33 : 16;
+      if (mode === 'balanced') return activeInteraction ? 16 : 42;
+      return 16;
+    }
+
+    function hasActiveSphereMotion() {
+      if (layoutMode !== 'sphere') return false;
+      if (isDragging || isPinching || hoverFocusActive || focusLockedCard) return true;
+      if (userMotionPaused) return Math.abs(velY) > MOTION_STOP_EPSILON || Math.abs(velX) > MOTION_STOP_EPSILON;
+      if (sphereFrozen || sphereHoverPaused) return false;
+      if (isIdle) return true;
+      return Math.abs(velY) > MOTION_STOP_EPSILON || Math.abs(velX) > MOTION_STOP_EPSILON;
+    }
 
     function shouldContinueGalaxyLoop() {
-      if (layoutMode === 'sphere') return true;
+      if (layoutMode === 'sphere') {
+        return getCurrentPerformanceMode() === 'safe' ? hasActiveSphereMotion() : true;
+      }
       if (layoutMode !== 'grid') return false;
       return sceneEl.classList.contains('is-grid-reflowing')
         || sceneEl.classList.contains('is-morphing-to-grid')
@@ -5330,8 +5734,16 @@
       if (!galaxyRafId) galaxyRafId = requestAnimationFrame(animGalaxy);
     }
 
-    function animGalaxy() {
+    function animGalaxy(timestamp) {
       galaxyRafId = 0;
+      var now = typeof timestamp === 'number' ? timestamp : (performance.now ? performance.now() : Date.now());
+      var targetInterval = getProductOrbitFrameInterval();
+      if (lastGalaxyRenderTime && now - lastGalaxyRenderTime < targetInterval) {
+        if (shouldContinueGalaxyLoop()) requestGalaxyFrame();
+        return;
+      }
+      lastGalaxyRenderTime = now;
+
       if (layoutMode === 'grid') {
         applyBoardScrollFrame(false);
       } else if (layoutMode === 'sphere') {
@@ -5355,7 +5767,7 @@
           rotY += velY;
           rotX += velX;
           } else if (isIdle) {
-          velY += (AUTO_SPIN_SPEED - velY) * 0.02;
+          velY += (getAutoSpinSpeed() - velY) * 0.02;
           rotY += velY;
           easeSphereTiltHome(0.015, 0.9);
           } else {
@@ -5368,10 +5780,56 @@
         if (rotX < -MAX_TILT_X) { rotX = -MAX_TILT_X; velX = 0; }
         applyRot();
         syncHoverPreviewPosition();
+        requestVisibleGalaxyImages(false);
       }
       if (shouldContinueGalaxyLoop()) requestGalaxyFrame();
     }
+
+    function sampleProductFrameHealth() {
+      if (performanceModeState.preference !== 'auto' || document.hidden) return;
+      var startTime = 0;
+      var lastTime = 0;
+      var frames = 0;
+      var slowFrames = 0;
+      var maxDelta = 0;
+
+      function sample(timestamp) {
+        if (performanceModeState.preference !== 'auto' || document.hidden || layoutMode !== 'sphere') {
+          productPerfSampleRafId = 0;
+          return;
+        }
+        if (!startTime) startTime = timestamp;
+        if (lastTime) {
+          var delta = timestamp - lastTime;
+          maxDelta = Math.max(maxDelta, delta);
+          if (delta > 52) slowFrames += 1;
+        }
+        lastTime = timestamp;
+        frames += 1;
+
+        if (timestamp - startTime < 2600) {
+          productPerfSampleRafId = requestAnimationFrame(sample);
+          return;
+        }
+
+        productPerfSampleRafId = 0;
+        var elapsed = Math.max(1, timestamp - startTime);
+        var fps = Math.round((frames / elapsed) * 1000);
+        var metrics = { page: 'products', fps: fps, slowFrames: slowFrames, maxDelta: Math.round(maxDelta), elapsed: Math.round(elapsed) };
+        if (fps < 24 || slowFrames >= 16 || maxDelta > 180) downgradeAutoPerformanceMode('safe', metrics);
+        else if (fps < 42 || slowFrames >= 7 || maxDelta > 90) downgradeAutoPerformanceMode('balanced', metrics);
+      }
+
+      productPerfSampleRafId = requestAnimationFrame(sample);
+    }
+
+    productCleanups.push(onPerformanceModeChange(function() {
+      lastGalaxyRenderTime = 0;
+      requestGalaxyFrame();
+    }));
+
     requestGalaxyFrame();
+    productPerfSampleTimer = setTimeout(sampleProductFrameHealth, 1600);
 
     // --- Search & Filter ---
     var activeFilter = 'all';
@@ -5678,12 +6136,19 @@
       clearTimeout(gravityOverlayTimer);
       clearTimeout(priceCloseTimer);
       clearTimeout(boardResizeTimer);
+      clearTimeout(productPerfSampleTimer);
+      clearTimeout(galaxyImagePumpTimer);
+      clearTimeout(galaxyInitialImageTimer);
       if (categoryDropdownUi && categoryDropdownUi.closeTimer) clearTimeout(categoryDropdownUi.closeTimer);
       if (sortDropdownUi && sortDropdownUi.closeTimer) clearTimeout(sortDropdownUi.closeTimer);
       if (hoverPickFrame) cancelAnimationFrame(hoverPickFrame);
       if (galaxyRafId) cancelAnimationFrame(galaxyRafId);
+      if (productPerfSampleRafId) cancelAnimationFrame(productPerfSampleRafId);
+      if (galaxyVisibleImageFrame) cancelAnimationFrame(galaxyVisibleImageFrame);
       hoverPickFrame = 0;
       galaxyRafId = 0;
+      productPerfSampleRafId = 0;
+      galaxyVisibleImageFrame = 0;
       clearMorphLayer();
       clearGravityCollapseFx();
       clearBoardConnections();
@@ -8886,13 +9351,14 @@
       const isProductCanvas = body.dataset.page === "products";
       const supportsBackgroundMotion = pageSupportsBackgroundMotion();
       const lowPowerDevice = (navigator.hardwareConcurrency || 8) <= 4 || window.innerWidth < 760;
+      const initialPerformanceMode = getCurrentPerformanceMode();
       let productSceneEl = null;
       const renderer = new THREE.WebGLRenderer({
         canvas,
         alpha: true,
-        antialias: !lowPowerDevice,
+        antialias: !lowPowerDevice && initialPerformanceMode === "full",
         preserveDrawingBuffer: false,
-        powerPreference: lowPowerDevice ? "default" : "high-performance",
+        powerPreference: lowPowerDevice || initialPerformanceMode !== "full" ? "default" : "high-performance",
       });
       renderer.setClearColor(0x000000, 0);
 
@@ -8905,7 +9371,8 @@
 
       const particleCount = !supportsBackgroundMotion
         ? 180
-        : (reducedMotion ? (isProductCanvas ? 300 : 240) : (lowPowerDevice ? 320 : (isProductCanvas ? 720 : 560)));
+        : (lowPowerDevice ? (isProductCanvas ? 360 : 320) : (isProductCanvas ? 720 : 560));
+      let activeParticleCount = particleCount;
       const particleSpreadX = isProductCanvas ? 42 : 36;
       const particleSpreadY = isProductCanvas ? 24 : 21;
       const particleDepth = isProductCanvas ? 68 : 58;
@@ -8928,6 +9395,7 @@
       const particleGeometry = new THREE.BufferGeometry();
       particleGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
       particleGeometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
+      particleGeometry.setDrawRange(0, activeParticleCount);
       const particleMaterial = new THREE.PointsMaterial({
         size: lowPowerDevice ? 0.055 : 0.048,
         sizeAttenuation: true,
@@ -8994,6 +9462,7 @@
       let isVisible = !document.hidden;
       let paletteKey = "";
       const framePacer = createBackgroundFramePacer(lowPowerDevice);
+      const backgroundHealthSampler = createBackgroundHealthSampler("three", isProductCanvas);
 
       function getProductSceneEl() {
         if (!isProductCanvas) return null;
@@ -9076,7 +9545,10 @@
       function resize() {
         const width = Math.max(1, window.innerWidth);
         const height = Math.max(1, window.innerHeight);
-        const pixelRatio = Math.min(window.devicePixelRatio || 1, lowPowerDevice ? 1.15 : 1.35);
+        activeParticleCount = getBackgroundParticleLimit(particleCount, isProductCanvas, lowPowerDevice);
+        particleGeometry.setDrawRange(0, activeParticleCount);
+        canvas.dataset.performanceMode = getCurrentPerformanceMode();
+        const pixelRatio = Math.min(window.devicePixelRatio || 1, getBackgroundPixelRatioLimit(lowPowerDevice));
         renderer.setPixelRatio(pixelRatio);
         renderer.setSize(width, height, false);
         camera.aspect = width / height;
@@ -9084,7 +9556,7 @@
       }
 
       function handlePointer(event) {
-        if (reducedMotion) return;
+        if (reducedMotion && performanceModeState.preference === "auto") return;
         pointer.targetX = clamp((event.clientX / Math.max(window.innerWidth, 1) - 0.5) * 2, -1, 1);
         pointer.targetY = clamp((event.clientY / Math.max(window.innerHeight, 1) - 0.5) * 2, -1, 1);
       }
@@ -9121,6 +9593,7 @@
         const frameDelta = lastRenderTime ? timestamp - lastRenderTime : targetInterval;
         lastRenderTime = timestamp;
         framePacer.observe(frameDelta, targetInterval);
+        backgroundHealthSampler.observe(timestamp, targetInterval);
         applyPalette();
         const delta = Math.min(64, timestamp - (lastTime || timestamp || 0) || targetInterval);
         const motionDelta = delta * motionProfile.speed;
@@ -9137,7 +9610,7 @@
           camera.position.y = pointer.y * -0.82;
           camera.lookAt(pointer.x * 1.8, pointer.y * -1.1, -18);
 
-          for (let i = 0; i < particleCount; i++) {
+          for (let i = 0; i < activeParticleCount; i++) {
             const offset = i * 3;
             positions[offset] += Math.sin(elapsed * 1.35 + i * 0.17) * 0.0038 * lanes[i] * motionDelta;
             positions[offset + 1] += Math.cos(elapsed * 1.05 + i * 0.11) * 0.0024 * lanes[i] * motionDelta;
@@ -9167,6 +9640,10 @@
         eachMaterial(object.material, (material) => material.dispose());
       }
 
+      const unbindPerformanceMode = onPerformanceModeChange(() => {
+        lastRenderTime = 0;
+        resize();
+      });
       window.addEventListener("resize", resize);
       window.addEventListener("pointermove", handlePointer, { passive: true });
       document.addEventListener("visibilitychange", handleVisibility);
@@ -9180,6 +9657,7 @@
         window.removeEventListener("resize", resize);
         window.removeEventListener("pointermove", handlePointer);
         document.removeEventListener("visibilitychange", handleVisibility);
+        unbindPerformanceMode();
         if (rafId) window.cancelAnimationFrame(rafId);
         scene.traverse(disposeObject);
         renderer.dispose();
@@ -9199,6 +9677,8 @@
     }
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
+    canvas.dataset.fallback2d = "true";
+    canvas.dataset.renderer = "canvas";
 
     let rafId = 0;
     let isDisposed = false;
@@ -9213,13 +9693,15 @@
     const lowPowerDevice = (navigator.hardwareConcurrency || 8) <= 4 || window.innerWidth < 760;
     const maxNodes = !supportsBackgroundMotion
       ? 32
-      : (reducedMotion ? (isProductCanvas ? 52 : 44) : (lowPowerDevice ? 56 : (isProductCanvas ? 96 : 78)));
+      : (lowPowerDevice ? (isProductCanvas ? 62 : 56) : (isProductCanvas ? 96 : 78));
+    let activeNodeCount = maxNodes;
     const connectionRadius = isProductCanvas ? 265 : 228;
     const fov = isProductCanvas ? 880 : 820;
     const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
     let productSceneEl = null;
     let lastRenderTime = 0;
     const framePacer = createBackgroundFramePacer(lowPowerDevice);
+    const backgroundHealthSampler = createBackgroundHealthSampler("canvas", isProductCanvas);
 
     function getProductSceneEl() {
       if (!isProductCanvas) return null;
@@ -9240,7 +9722,9 @@
     }
 
     function resize() {
-      dpr = Math.min(window.devicePixelRatio || 1, lowPowerDevice ? 1.15 : 1.35);
+      activeNodeCount = getBackgroundNodeLimit(maxNodes, isProductCanvas, lowPowerDevice);
+      canvas.dataset.performanceMode = getCurrentPerformanceMode();
+      dpr = Math.min(window.devicePixelRatio || 1, getBackgroundPixelRatioLimit(lowPowerDevice));
       w = window.innerWidth;
       h = window.innerHeight;
       canvas.width = Math.max(1, Math.round(w * dpr));
@@ -9251,7 +9735,7 @@
     }
 
     function handlePointer(event) {
-      if (reducedMotion) return;
+      if (reducedMotion && performanceModeState.preference === "auto") return;
       pointer.targetX = clamp((event.clientX / Math.max(w, 1) - 0.5) * 2, -1, 1);
       pointer.targetY = clamp((event.clientY / Math.max(h, 1) - 0.5) * 2, -1, 1);
     }
@@ -9269,6 +9753,10 @@
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", handlePointer, { passive: true });
     document.addEventListener("visibilitychange", handleVisibility);
+    const unbindPerformanceMode = onPerformanceModeChange(() => {
+      lastRenderTime = 0;
+      resize();
+    });
     resize();
 
     const nodes = [];
@@ -9409,6 +9897,7 @@
       if (isDisposed) return;
 
       const palette = getCanvasPalette();
+      activeNodeCount = getBackgroundNodeLimit(maxNodes, isProductCanvas, lowPowerDevice);
       canvas.dataset.theme = palette.theme;
       canvas.style.opacity = palette.opacity;
 
@@ -9427,7 +9916,7 @@
       drawGrid(palette);
       drawOrbitRibbons(palette);
 
-      for (let i = 0; i < nodes.length; i++) {
+      for (let i = 0; i < activeNodeCount; i++) {
         const node = nodes[i];
         if (advance && motionProfile.active) {
           node.z += node.vz * motionProfile.speed;
@@ -9451,8 +9940,8 @@
 
       ctx.lineWidth = 1.5;
       const radiusSq = connectionRadius * connectionRadius;
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
+      for (let i = 0; i < activeNodeCount; i++) {
+        for (let j = i + 1; j < activeNodeCount; j++) {
           const n1 = nodes[i];
           const n2 = nodes[j];
           const dx = n1.x - n2.x;
@@ -9501,6 +9990,7 @@
       const frameDelta = lastRenderTime ? now - lastRenderTime : targetInterval;
       lastRenderTime = now;
       framePacer.observe(frameDelta, targetInterval);
+      backgroundHealthSampler.observe(now, targetInterval);
       drawFrame(true);
       rafId = supportsBackgroundMotion ? window.requestAnimationFrame(loop) : 0;
     }
@@ -9510,6 +10000,7 @@
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", handlePointer);
       document.removeEventListener("visibilitychange", handleVisibility);
+      unbindPerformanceMode();
       if (rafId) window.cancelAnimationFrame(rafId);
     });
 
@@ -9533,6 +10024,7 @@
   }
 
   async function startApp() {
+    applyPerformanceModeState("boot");
     ensureShell();
     initWelcomeTheme();
     initGlobalShell();
