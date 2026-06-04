@@ -2840,6 +2840,7 @@
       await wait(Math.max(0, copyDelay - heroDelay));
       body.classList.add("is-copy-visible");
       warmVisibleProductImages();
+      if (page === "welcome") enhanceWelcomePage(root).catch(() => {});
       revealSecondarySequence().catch(() => {});
       await waitForNextPaints(preloadTuning.primaryReadyPaints || 1);
     };
@@ -3003,17 +3004,17 @@
     ]).catch(() => false);
   }
 
-  function scheduleHero3DCanvas(root, delayMs, idleTimeoutMs) {
+  function scheduleIdleTask(callback, delayMs, idleTimeoutMs) {
     const delay = Number.isFinite(delayMs) ? delayMs : 180;
     const idleTimeout = Number.isFinite(idleTimeoutMs) ? idleTimeoutMs : 900;
     return new Promise((resolve) => {
       window.setTimeout(() => {
         const start = () => {
-          if (!root || !root.isConnected) {
+          if (typeof callback !== "function") {
             resolve(false);
             return;
           }
-          Promise.resolve(initHero3DCanvas(root)).then(resolve, () => resolve(false));
+          Promise.resolve(callback()).then(resolve, () => resolve(false));
         };
         if (typeof window.requestIdleCallback === "function") {
           window.requestIdleCallback(start, { timeout: idleTimeout });
@@ -3022,6 +3023,38 @@
         }
       }, reducedMotion ? 0 : delay);
     });
+  }
+
+  function scheduleHero3DCanvas(root, delayMs, idleTimeoutMs) {
+    return scheduleIdleTask(() => {
+      if (!root || !root.isConnected) return false;
+      return initHero3DCanvas(root);
+    }, delayMs, idleTimeoutMs);
+  }
+
+  function enhanceWelcomePage(root) {
+    if (page !== "welcome" || !root || !root.isConnected) return Promise.resolve(false);
+    if (root.__welcomeEnhancementPromise) return root.__welcomeEnhancementPromise;
+
+    root.__welcomeEnhancementPromise = waitForNextPaints(2)
+      .then(() => scheduleIdleTask(() => {
+        if (page !== "welcome" || !root.isConnected || !$(".js-mission-experience", root)) return false;
+
+        if (typeof root.__mountWelcomeDeferredScenes__ === "function") {
+          root.__mountWelcomeDeferredScenes__();
+        }
+
+        initMissionExperience(root);
+        if (body.classList.contains("is-secondary-visible")) {
+          initMediaPriorityLoading(root);
+          initScrollMotion();
+          initParallaxScenes();
+        }
+        scheduleHero3DCanvas(root, reducedMotion ? 0 : 160, 1200);
+        return true;
+      }, reducedMotion ? 0 : 80, 1200));
+
+    return root.__welcomeEnhancementPromise;
   }
 
   function mountShared3DBackground(root) {
@@ -3192,6 +3225,127 @@
       </div>
     `;
 
+    const renderWelcomeDeferredScenes = () => `
+      <section class="scene scene--discovery tone-paper">
+        <div class="container discovery-layout">
+          <div class="discovery-layout__media">
+            ${renderMedia(scenes[1].media, "discovery-photo", { tier: "near" })}
+          </div>
+          <div class="discovery-layout__copy">
+            <p class="scene-kicker">${scenes[1].eyebrow}</p>
+            <h2 class="editorial-title">${scenes[1].headline}</h2>
+            <p class="scene-body">${scenes[1].body}</p>
+            <div class="discovery-features">
+              <div class="discovery-feature">
+                <div class="discovery-feature__icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                </div>
+                <span>${locale === "vi" ? "Học tập\ntương tác" : "Interactive\nlearning"}</span>
+              </div>
+              <div class="discovery-feature">
+                <div class="discovery-feature__icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </div>
+                <span>${locale === "vi" ? "Chuyên gia\nđồng hành" : "Expert\nmentors"}</span>
+              </div>
+              <div class="discovery-feature">
+                <div class="discovery-feature__icon">
+                  <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+                </div>
+                <span>${locale === "vi" ? "Công cụ\nsáng tạo" : "Creative\ntools"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="scene scene--process tone-${scenes[2].tone}">
+        <div class="container process-scene">
+          <div class="process-scene__copy" data-motion="text-stagger">
+            <p class="scene-kicker">${scenes[2].eyebrow}</p>
+            <h2 class="editorial-title">${scenes[2].headline}</h2>
+            <p class="scene-body">${scenes[2].body}</p>
+          </div>
+          <div class="process-orbit" data-motion="hero-enter">
+            <div class="process-orbit__core">
+              <span>STEM</span>
+              <strong>Curiosity in motion</strong>
+            </div>
+            ${scenes[2].steps
+      .map(
+        (step, index) => `
+                  <article class="process-step process-step--${index + 1}" data-motion="fade-up">
+                    <span>${step.title}</span>
+                    <p>${step.body}</p>
+                  </article>
+                `
+      )
+      .join("")}
+            ${renderDecor(scenes[2])}
+          </div>
+        </div>
+      </section>
+
+      <section class="scene scene--cluster tone-${scenes[3].tone}">
+        <div class="container cluster-layout" data-motion="scene-enter">
+          <div class="cluster-layout__copy" data-motion="text-stagger">
+            <p class="scene-kicker">${scenes[3].eyebrow}</p>
+            <h2 class="editorial-title">${scenes[3].headline}</h2>
+            <p class="scene-body">${scenes[3].body}</p>
+          </div>
+          <div class="cluster-layout__grid" data-motion="stagger-group">
+            ${scenes[3].points
+      .map(
+        (point) => `
+                  <article class="cluster-card cluster-card--${point.size}">
+                    <strong>${point.title}</strong>
+                    <p>${point.body}</p>
+                  </article>
+                `
+      )
+      .join("")}
+          </div>
+        </div>
+      </section>
+
+      ${renderValuesScene(scenes[4])}
+
+      <section class="scene scene--collage tone-${scenes[5].tone}">
+        <div class="container">
+          <div class="scene-header" data-motion="text-stagger">
+            <p class="scene-kicker">${scenes[5].eyebrow}</p>
+            <h2 class="editorial-title">${scenes[5].headline}</h2>
+            <p class="scene-body">${scenes[5].body}</p>
+          </div>
+          <div class="proof-collage">
+            ${renderProofTile(collage[0], 0, "proof-collage__lead")}
+            ${renderProofTile(collage[1], 1, "proof-collage__support-panel")}
+            ${renderProofTile(collage[2], 2, "proof-collage__fragment-panel")}
+            ${renderProofTile(collage[3], 3, "proof-collage__process-panel")}
+            ${renderProofTile(collage[4], 4, "proof-collage__banner-panel")}
+          </div>
+        </div>
+      </section>
+
+      <section class="scene scene--closing tone-${scenes[6].tone}">
+        <div class="container closing-panel" data-motion="scene-enter">
+          <div class="closing-panel__copy" data-motion="text-stagger">
+            <p class="scene-kicker">${scenes[6].eyebrow}</p>
+            <h2 class="editorial-title">${scenes[6].headline}</h2>
+            <p class="scene-body">${scenes[6].body}</p>
+            <div class="scene-actions" data-motion="cta-soft">
+              <a class="button button--primary" href="${scenes[6].cta.primary.href}" data-transition>${scenes[6].cta.primary.label}</a>
+              <a class="button button--ghost-light" href="${scenes[6].cta.secondary.href}" data-transition>${scenes[6].cta.secondary.label}</a>
+            </div>
+          </div>
+          <div class="closing-panel__media" data-motion="media-reveal">
+            ${renderMedia(scenes[6].media, "", { tier: "deferred" })}
+            ${renderDecor(scenes[6])}
+          </div>
+        </div>
+      </section>
+    `;
+
     root.innerHTML = `
       <section class="welcome-flow js-mission-experience">
         ${renderMissionRail()}
@@ -3274,128 +3428,22 @@
           </div>
         </section>
 
-        <section class="scene scene--discovery tone-paper">
-          <div class="container discovery-layout">
-            <div class="discovery-layout__media">
-              ${renderMedia(scenes[1].media, "discovery-photo", { tier: "critical" })}
-            </div>
-            <div class="discovery-layout__copy">
-              <p class="scene-kicker">${scenes[1].eyebrow}</p>
-              <h2 class="editorial-title">${scenes[1].headline}</h2>
-              <p class="scene-body">${scenes[1].body}</p>
-              <div class="discovery-features">
-                <div class="discovery-feature">
-                  <div class="discovery-feature__icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                  </div>
-                  <span>${locale === "vi" ? "Học tập\ntương tác" : "Interactive\nlearning"}</span>
-                </div>
-                <div class="discovery-feature">
-                  <div class="discovery-feature__icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-                  </div>
-                  <span>${locale === "vi" ? "Chuyên gia\nđồng hành" : "Expert\nmentors"}</span>
-                </div>
-                <div class="discovery-feature">
-                  <div class="discovery-feature__icon">
-                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
-                  </div>
-                  <span>${locale === "vi" ? "Công cụ\nsáng tạo" : "Creative\ntools"}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="scene scene--process tone-${scenes[2].tone}">
-          <div class="container process-scene">
-            <div class="process-scene__copy" data-motion="text-stagger">
-              <p class="scene-kicker">${scenes[2].eyebrow}</p>
-              <h2 class="editorial-title">${scenes[2].headline}</h2>
-              <p class="scene-body">${scenes[2].body}</p>
-            </div>
-            <div class="process-orbit" data-motion="hero-enter">
-              <div class="process-orbit__core">
-                <span>STEM</span>
-                <strong>Curiosity in motion</strong>
-              </div>
-              ${scenes[2].steps
-        .map(
-          (step, index) => `
-                    <article class="process-step process-step--${index + 1}" data-motion="fade-up">
-                      <span>${step.title}</span>
-                      <p>${step.body}</p>
-                    </article>
-                  `
-        )
-        .join("")}
-              ${renderDecor(scenes[2])}
-            </div>
-          </div>
-        </section>
-
-        <section class="scene scene--cluster tone-${scenes[3].tone}">
-          <div class="container cluster-layout" data-motion="scene-enter">
-            <div class="cluster-layout__copy" data-motion="text-stagger">
-              <p class="scene-kicker">${scenes[3].eyebrow}</p>
-              <h2 class="editorial-title">${scenes[3].headline}</h2>
-              <p class="scene-body">${scenes[3].body}</p>
-            </div>
-            <div class="cluster-layout__grid" data-motion="stagger-group">
-              ${scenes[3].points
-        .map(
-          (point) => `
-                    <article class="cluster-card cluster-card--${point.size}">
-                      <strong>${point.title}</strong>
-                      <p>${point.body}</p>
-                    </article>
-                  `
-        )
-        .join("")}
-            </div>
-          </div>
-        </section>
-
-        ${renderValuesScene(scenes[4])}
-
-        <section class="scene scene--collage tone-${scenes[5].tone}">
-          <div class="container">
-            <div class="scene-header" data-motion="text-stagger">
-              <p class="scene-kicker">${scenes[5].eyebrow}</p>
-              <h2 class="editorial-title">${scenes[5].headline}</h2>
-              <p class="scene-body">${scenes[5].body}</p>
-            </div>
-            <div class="proof-collage">
-              ${renderProofTile(collage[0], 0, "proof-collage__lead")}
-              ${renderProofTile(collage[1], 1, "proof-collage__support-panel")}
-              ${renderProofTile(collage[2], 2, "proof-collage__fragment-panel")}
-              ${renderProofTile(collage[3], 3, "proof-collage__process-panel")}
-              ${renderProofTile(collage[4], 4, "proof-collage__banner-panel")}
-            </div>
-          </div>
-        </section>
-
-        <section class="scene scene--closing tone-${scenes[6].tone}">
-          <div class="container closing-panel" data-motion="scene-enter">
-            <div class="closing-panel__copy" data-motion="text-stagger">
-              <p class="scene-kicker">${scenes[6].eyebrow}</p>
-              <h2 class="editorial-title">${scenes[6].headline}</h2>
-              <p class="scene-body">${scenes[6].body}</p>
-              <div class="scene-actions" data-motion="cta-soft">
-                <a class="button button--primary" href="${scenes[6].cta.primary.href}" data-transition>${scenes[6].cta.primary.label}</a>
-                <a class="button button--ghost-light" href="${scenes[6].cta.secondary.href}" data-transition>${scenes[6].cta.secondary.label}</a>
-              </div>
-            </div>
-            <div class="closing-panel__media" data-motion="media-reveal">
-              ${renderMedia(scenes[6].media, "", { tier: "deferred" })}
-              ${renderDecor(scenes[6])}
-            </div>
-          </div>
-        </section>
+        <div class="welcome-deferred-anchor js-welcome-deferred-scenes" data-stage="deferred" aria-hidden="true"></div>
       </section>
     `;
-    scheduleHero3DCanvas(root, 360);
-    initMissionExperience(root);
+    root.__welcomeEnhancementPromise = null;
+    root.__mountWelcomeDeferredScenes__ = () => {
+      const placeholder = $(".js-welcome-deferred-scenes", root);
+      if (!placeholder || !placeholder.isConnected) return false;
+      placeholder.insertAdjacentHTML("beforebegin", renderWelcomeDeferredScenes());
+      placeholder.remove();
+      root.__mountWelcomeDeferredScenes__ = null;
+      return true;
+    };
+    registerPageCleanup(root, () => {
+      root.__welcomeEnhancementPromise = null;
+      root.__mountWelcomeDeferredScenes__ = null;
+    });
   }
 
   function renderProductsPage() {
