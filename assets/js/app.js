@@ -4003,6 +4003,7 @@
     var DRAG_SENS_V = 0.15;        // vertical drag sensitivity (gentler to avoid over-tilt)
     var FRICTION = 0.96;            // momentum decay (higher = longer glide)
     var AUTO_SPIN_SPEED = 0.12;     // idle auto-rotation speed
+    var FULL_AUTO_SPIN_MULTIPLIER = 2;
     var IDLE_DELAY = 3000;          // ms before auto-spin resumes
     var MAX_TILT_X = 62;
     var MIN_ZOOM = window.innerWidth < 900 ? 0.44 : 0.56;
@@ -4069,6 +4070,7 @@
     function getAutoSpinSpeed() {
       var mode = getCurrentPerformanceMode();
       if (mode === 'balanced') return 0.075;
+      if (mode === 'full') return AUTO_SPIN_SPEED * FULL_AUTO_SPIN_MULTIPLIER;
       return AUTO_SPIN_SPEED;
     }
 
