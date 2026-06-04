@@ -340,7 +340,7 @@
       contact: media("contactHero"),
     },
     runtimeTuning: {
-      assetVersion: "20260604-smartsteam-opt-r23",
+      assetVersion: "20260604-smartsteam-opt-r25",
       publicDataTimeoutMs: 9000,
       preloader: {
         firstVisitFallback: 900,

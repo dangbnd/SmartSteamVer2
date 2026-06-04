@@ -3993,8 +3993,11 @@
     // DRAG-TO-ROTATE 360° (like Google Earth)
     // ═══════════════════════════════════════════
     var DEFAULT_ROT_X = -5;
+    var AUTO_SPIN_SPEED = 0.12;     // idle auto-rotation speed
+    var PRODUCT_SPHERE_FRAME_INTERVAL = 16;
+    var PRODUCT_IDLE_SPIN_MAX_DELTA = 1000;
     var rotX = DEFAULT_ROT_X, rotY = 0;        // current rotation angles
-    var velX = 0, velY = 0.15;      // velocity (momentum) — start with gentle auto-spin
+    var velX = 0, velY = AUTO_SPIN_SPEED;      // velocity (momentum) — start with steady auto-spin
     var isDragging = false;
     var lastX = 0, lastY = 0;
     var idleTimer = null;
@@ -4002,8 +4005,6 @@
     var DRAG_SENS_H = 0.3;         // horizontal drag sensitivity
     var DRAG_SENS_V = 0.15;        // vertical drag sensitivity (gentler to avoid over-tilt)
     var FRICTION = 0.96;            // momentum decay (higher = longer glide)
-    var AUTO_SPIN_SPEED = 0.12;     // idle auto-rotation speed
-    var FULL_AUTO_SPIN_MULTIPLIER = 2;
     var IDLE_DELAY = 3000;          // ms before auto-spin resumes
     var MAX_TILT_X = 62;
     var MIN_ZOOM = window.innerWidth < 900 ? 0.44 : 0.56;
@@ -4068,9 +4069,6 @@
     }
 
     function getAutoSpinSpeed() {
-      var mode = getCurrentPerformanceMode();
-      if (mode === 'balanced') return 0.075;
-      if (mode === 'full') return AUTO_SPIN_SPEED * FULL_AUTO_SPIN_MULTIPLIER;
       return AUTO_SPIN_SPEED;
     }
 
@@ -6195,6 +6193,7 @@
     var galaxyRafId = 0;
     var lastGalaxyRenderTime = 0;
     var lastGalaxyMotionTime = 0;
+    var lastGalaxyFrameDelta = PRODUCT_SPHERE_FRAME_INTERVAL;
     var productPerfSampleRafId = 0;
     var productPerfSampleTimer = null;
     var galaxyRuntimeStarted = false;
@@ -6216,17 +6215,30 @@
       var referenceInterval = Math.max(8, Number(targetInterval) || 16);
       var frameDelta = lastGalaxyMotionTime ? now - lastGalaxyMotionTime : referenceInterval;
       lastGalaxyMotionTime = now;
-      if (!Number.isFinite(frameDelta) || frameDelta <= 0) return 1;
+      if (!Number.isFinite(frameDelta) || frameDelta <= 0) {
+        lastGalaxyFrameDelta = referenceInterval;
+        return 1;
+      }
+      lastGalaxyFrameDelta = frameDelta;
       return Math.max(0.25, Math.min(PRODUCT_ORBIT_DELTA_CLAMP, frameDelta / referenceInterval));
+    }
+
+    function getIdleSpinScale() {
+      var frameDelta = Number(lastGalaxyFrameDelta) || PRODUCT_SPHERE_FRAME_INTERVAL;
+      if (!Number.isFinite(frameDelta) || frameDelta <= 0) return 1;
+      return Math.max(0.25, Math.min(PRODUCT_IDLE_SPIN_MAX_DELTA, frameDelta) / PRODUCT_SPHERE_FRAME_INTERVAL);
+    }
+
+    function resetGalaxyFrameClock() {
+      lastGalaxyRenderTime = 0;
+      lastGalaxyMotionTime = 0;
+      lastGalaxyFrameDelta = PRODUCT_SPHERE_FRAME_INTERVAL;
     }
 
     function getProductOrbitFrameInterval() {
       var mode = getCurrentPerformanceMode();
-      var activeInteraction = isDragging || isPinching || hoverFocusActive || !!focusLockedCard || userMotionPaused || interactionState === 'zoom' || interactionState === 'keyboard';
       if (layoutMode === 'grid') return mode === 'safe' ? 66 : (mode === 'balanced' ? 42 : 16);
-      if (mode === 'safe') return activeInteraction ? 33 : 16;
-      if (mode === 'balanced') return activeInteraction ? 16 : 42;
-      return 16;
+      return PRODUCT_SPHERE_FRAME_INTERVAL;
     }
 
     function hasActiveSphereMotion() {
@@ -6290,7 +6302,7 @@
           rotX += velX;
           } else if (isIdle) {
           velY += (getAutoSpinSpeed() - velY) * scaleMotionEase(0.02, motionScale);
-          rotY += velY * motionScale;
+          rotY += velY * getIdleSpinScale();
           easeSphereTiltHome(0.015, 0.9, motionScale);
           } else {
           velY *= scaleMotionFriction(FRICTION, motionScale);
@@ -6376,8 +6388,16 @@
       productPerfSampleRafId = requestAnimationFrame(sample);
     }
 
+    function handleGalaxyVisibilityChange() {
+      if (document.hidden) return;
+      resetGalaxyFrameClock();
+      if (galaxyRuntimeStarted) requestGalaxyFrame();
+    }
+
+    bindProductEvent(document, 'visibilitychange', handleGalaxyVisibilityChange);
+
     productCleanups.push(onPerformanceModeChange(function() {
-      lastGalaxyRenderTime = 0;
+      resetGalaxyFrameClock();
       if (galaxyRuntimeStarted) requestGalaxyFrame();
     }));
 
