@@ -31,7 +31,7 @@
   const utf8Decoder = typeof TextDecoder !== "undefined" ? new TextDecoder("utf-8", { fatal: false }) : null;
   const SUSPICIOUS_TEXT_PATTERN = /[\u00C2-\u00C6\u00D0\u00E1\u0080-\u009F]/;
   const KNOWN_VIETNAMESE_PLAIN_PHRASES = [
-    ["Tat ca khoang gia", "Tất cả khoảng giá"],
+    ["Tat ca khoang gia", "TẤT CẢ KHOẢNG GIÁ"],
     ["Tat ca danh muc", "Tất cả danh mục"],
     ["Tat ca san pham", "Tất cả sản phẩm"],
     ["San pham goi y", "Sản phẩm gợi ý"],
@@ -2269,6 +2269,7 @@
         "afterbegin",
         `
           <div class="preloader js-preloader" aria-hidden="false">
+            <span class="preloader__radar" aria-hidden="true"></span>
             <div class="preloader__inner">
               <div class="preloader__symbol" aria-hidden="true">
                 <img class="preloader__logo" src="${data.siteMeta.logo.src}" alt="" width="${data.siteMeta.logo.width}" height="${data.siteMeta.logo.height}">
@@ -2288,6 +2289,7 @@
         "beforeend",
         `
           <div class="transition-layer js-transition-layer" aria-hidden="true">
+            <span class="preloader__radar" aria-hidden="true"></span>
             <div class="preloader__inner transition-layer__inner">
               <div class="preloader__symbol" aria-hidden="true">
                 <img class="preloader__logo" src="${data.siteMeta.logo.src}" alt="" width="${data.siteMeta.logo.width}" height="${data.siteMeta.logo.height}">
@@ -3511,9 +3513,6 @@
           (locale === 'vi' ? 'Kéo lên để xem thêm sản phẩm phía dưới' : 'Scroll up to reveal more products below') +
         '</div>' +
       '</div>' +
-      '<div class="galaxy-overlay">' +
-        '<p class="galaxy-overlay__hint">' + (locale === 'vi' ? 'Kéo để khám phá · Cuộn để phóng to' : 'Drag to explore · Scroll to zoom') + '</p>' +
-      '</div>' +
       '<div class="galaxy-control-dock js-galaxy-controls" aria-label="' + (locale === 'vi' ? 'Điều khiển hình cầu sản phẩm' : 'Product sphere controls') + '">' +
         '<button class="galaxy-control-btn js-galaxy-zoom-in" type="button" aria-label="' + (locale === 'vi' ? 'Phóng to' : 'Zoom in') + '" title="' + (locale === 'vi' ? 'Phóng to' : 'Zoom in') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>' +
         '<button class="galaxy-control-btn js-galaxy-zoom-out" type="button" aria-label="' + (locale === 'vi' ? 'Thu nhỏ' : 'Zoom out') + '" title="' + (locale === 'vi' ? 'Thu nhỏ' : 'Zoom out') + '"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>' +
@@ -3578,7 +3577,7 @@
     var filterChevron = '<svg class="galaxy-select-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M4 6.25 8 10.25 12 6.25" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     var priceLabels = locale === 'vi'
       ? {
-        all: 'Tất cả khoảng giá',
+        all: 'TẤT CẢ KHOẢNG GIÁ',
         'under-500k': 'Dưới 500.000 đ',
         '500k-1m': 'Từ 500.000 đ đến 1.000.000 đ',
         '1m-2m': 'Từ 1.000.000 đ đến 2.000.000 đ',
@@ -3593,7 +3592,7 @@
       };
     if (locale === 'vi') {
       priceLabels = {
-        all: 'Tất cả khoảng giá',
+        all: 'TẤT CẢ KHOẢNG GIÁ',
         'under-500k': 'Dưới 500.000 đ',
         '500k-1m': 'Từ 500.000 đ đến 1.000.000 đ',
         '1m-2m': 'Từ 1.000.000 đ đến 2.000.000 đ',
@@ -6101,7 +6100,7 @@
     bindProductEvent(sceneEl, 'pointercancel', handlePointerEnd);
     bindProductEvent(sceneEl, 'scroll', handleBoardNativeScroll, { passive: true });
 
-    // Scroll to zoom
+    // Wheel zoom
     bindProductEvent(sceneEl, 'wheel', function(e) {
       if (layoutMode === 'grid') {
         markBoardScrollActive();

@@ -340,7 +340,7 @@
       contact: media("contactHero"),
     },
     runtimeTuning: {
-      assetVersion: "20260604-smartsteam-opt-r16",
+      assetVersion: "20260604-smartsteam-opt-r20",
       publicDataTimeoutMs: 9000,
       preloader: {
         firstVisitFallback: 900,
@@ -349,8 +349,8 @@
         backgroundReadyFallback: 700,
         fullBackgroundReadyFallback: 1400,
         primaryReadyPaints: 1,
-        finishDelay: 30,
-        fadeDuration: 220,
+        finishDelay: 90,
+        fadeDuration: 420,
       },
       staging: {
         shellDelay: 40,

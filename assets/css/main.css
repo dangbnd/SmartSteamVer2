@@ -32,6 +32,10 @@
   --transition: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 .visually-hidden {
   position: absolute !important;
   width: 1px !important;
@@ -897,21 +901,19 @@ body.is-transitioning {
 
 .preloader {
   z-index: 110;
-  transition: opacity 0.22s var(--transition), visibility 0.22s var(--transition);
+  transition: opacity 0.42s var(--transition), visibility 0.42s var(--transition);
 }
 
 .preloader::before,
 .preloader::after,
 .transition-layer::before,
 .transition-layer::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
+  display: none;
 }
 
-.preloader::before,
-.transition-layer::before {
-  z-index: -2;
+.preloader__radar {
+  position: absolute;
+  z-index: 0;
   width: min(48rem, 120vw);
   aspect-ratio: 1;
   border-radius: 50%;
@@ -919,12 +921,13 @@ body.is-transitioning {
     conic-gradient(from 0deg, transparent 0 28%, rgba(45, 205, 235, 0.32), transparent 52% 100%),
     radial-gradient(circle, transparent 0 54%, rgba(255, 255, 255, 0.1) 55%, transparent 56% 100%);
   filter: blur(0.2px);
-  animation: smartsteamPreloaderOrbit 1.6s linear infinite;
-}
-
-.preloader::after,
-.transition-layer::after {
-  display: none;
+  pointer-events: none;
+  transform: translateZ(0) rotate(0deg);
+  transform-origin: center;
+  will-change: transform;
+  backface-visibility: hidden;
+  contain: layout paint style;
+  animation: smartsteamPreloaderOrbit 0.7s linear infinite;
 }
 
 .preloader.is-hidden {
@@ -933,12 +936,21 @@ body.is-transitioning {
 }
 
 .preloader__inner {
+  position: relative;
+  z-index: 1;
   display: grid;
   justify-items: center;
   gap: 0.78rem;
   width: min(30rem, calc(100% - 2rem));
   text-align: center;
   perspective: 900px;
+  transition: opacity 0.34s var(--transition), transform 0.42s var(--transition);
+  will-change: opacity, transform;
+}
+
+.preloader.is-hidden .preloader__inner {
+  opacity: 0;
+  transform: translate3d(0, -0.35rem, 0) scale(0.985);
 }
 
 .preloader__symbol {
@@ -1041,7 +1053,8 @@ body.is-transitioning {
 }
 
 @keyframes smartsteamPreloaderOrbit {
-  to { transform: rotate(360deg); }
+  from { transform: translateZ(0) rotate(0deg); }
+  to { transform: translateZ(0) rotate(360deg); }
 }
 
 @keyframes smartsteamPreloaderScan {
@@ -4469,6 +4482,22 @@ body[data-page="contact"] .page-intro--contact .page-intro__visual .media-frame 
     scroll-behavior: auto !important;
   }
 
+  .preloader__radar {
+    animation: smartsteamPreloaderOrbit 0.9s linear infinite !important;
+  }
+
+  .preloader {
+    transition: opacity 0.42s var(--transition), visibility 0.42s var(--transition) !important;
+  }
+
+  .preloader__inner {
+    transition: opacity 0.34s var(--transition) !important;
+  }
+
+  .preloader.is-hidden .preloader__inner {
+    transform: none;
+  }
+
   [data-motion],
   [data-motion="stagger"]>*,
   [data-motion="stagger-group"]>*,
@@ -6611,9 +6640,12 @@ body.is-ready .galaxy-filter-panel {
 
 .galaxy-price-select__button .js-galaxy-price-label {
   min-width: 0;
+  padding-block: 0.1em;
+  line-height: 1.35;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
+  text-transform: none;
 }
 
 .galaxy-filter-field.is-open .galaxy-select-arrow {
@@ -14069,7 +14101,7 @@ body[data-page="welcome"] .mission-card--telemetry .hero-card__stat-list {
 }
 
 body[data-page="welcome"] .mission-hero::after {
-  content: "Kéo để khám phá";
+  display: none;
 }
 
 body[data-page="welcome"] .mission-hud__panel--signal {
@@ -15970,8 +16002,7 @@ body[data-theme="light"] .transition-layer {
   color: #092941 !important;
 }
 
-body[data-theme="light"] .preloader::before,
-body[data-theme="light"] .transition-layer::before {
+body[data-theme="light"] .preloader__radar {
   background:
     conic-gradient(from 0deg, transparent 0 28%, rgba(0, 118, 200, 0.3), rgba(75, 200, 255, 0.36), transparent 54% 100%),
     radial-gradient(circle, transparent 0 54%, rgba(0, 118, 200, 0.12) 55%, transparent 56% 100%) !important;
