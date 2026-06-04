@@ -144,7 +144,7 @@ function main() {
     let html = fs.readFileSync(htmlPath, "utf8");
     const before = html;
 
-    html = html.replace(/20260603-smartsteam-opt-r\d+/g, version);
+    html = html.replace(/20\d{6}-smartsteam-opt-r\d+/g, version);
     html = html.replace(/^\s*<link rel="preload" as="image" href="[^"]+" data-smartsteam-preload="hero">\n/mg, "");
     html = html.replace(/^\s*<link rel="preload" as="fetch" href="\/assets\/data\/[^"]+" crossorigin data-smartsteam-preload="data">\n/mg, "");
 

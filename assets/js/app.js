@@ -5260,7 +5260,7 @@
       if (boardLinksSvg) boardLinksSvg.style.transform = '';
       sceneEl.classList.remove('is-grid-mode');
       sceneEl.style.cursor = 'grab';
-      sphere.style.transform = '';
+      applyRot();
       cardNodes.forEach(function(card, idx) {
         card.classList.remove('galaxy-card--grid');
         card.classList.remove('galaxy-card--focused');
@@ -6322,11 +6322,16 @@
       var categoryFilter = categorySelect ? categorySelect.value : 'all';
       var sortMode = sortSelect ? sortSelect.value : 'default';
       var items = filterProducts(q, activeFilter, categoryFilter, sortMode);
+      var useGridLayout = shouldUseGridLayout(q, categoryFilter, activeFilter, sortMode);
 
       if (resultsPanel) resultsPanel.style.display = 'none';
       collapseCard();
 
-      if (shouldUseGridLayout(q, categoryFilter, activeFilter, sortMode)) {
+      if (!useGridLayout && layoutMode === 'sphere') {
+        return;
+      }
+
+      if (useGridLayout) {
         applyGridLayout(items);
       } else {
         applySphereLayout();
