@@ -442,7 +442,8 @@
       };
     }
 
-    const baseInterval = performanceMode === "balanced" ? (lowPowerDevice ? 50 : 33) : (lowPowerDevice ? 33 : 16);
+    const fullBaseInterval = isProductCanvas ? 33 : 16;
+    const baseInterval = performanceMode === "balanced" ? (lowPowerDevice ? 50 : 33) : (lowPowerDevice ? 33 : fullBaseInterval);
     const gridInterval = performanceMode === "balanced" ? (lowPowerDevice ? 84 : 58) : (lowPowerDevice ? 66 : 42);
     const busyInterval = performanceMode === "balanced" ? (lowPowerDevice ? 132 : 100) : (lowPowerDevice ? 100 : 76);
     let interval = reduceForMotion
@@ -4666,9 +4667,10 @@
       }, typeof delayMs === 'number' ? delayMs : IDLE_DELAY);
     }
 
-    function easeSphereTiltHome(strength, damping) {
-      velX = (velX + (DEFAULT_ROT_X - rotX) * strength) * damping;
-      rotX += velX;
+    function easeSphereTiltHome(strength, damping, motionScale) {
+      var scale = Number.isFinite(motionScale) && motionScale > 0 ? motionScale : 1;
+      velX = (velX + (DEFAULT_ROT_X - rotX) * scaleMotionEase(strength, scale)) * scaleMotionFriction(damping, scale);
+      rotX += velX * scale;
       if (Math.abs(DEFAULT_ROT_X - rotX) < 0.04 && Math.abs(velX) < 0.04) {
         rotX = DEFAULT_ROT_X;
         velX = 0;
@@ -6190,9 +6192,31 @@
     // --- Animation loop ---
     var galaxyRafId = 0;
     var lastGalaxyRenderTime = 0;
+    var lastGalaxyMotionTime = 0;
     var productPerfSampleRafId = 0;
     var productPerfSampleTimer = null;
     var galaxyRuntimeStarted = false;
+    var PRODUCT_ORBIT_DELTA_CLAMP = 3.5;
+
+    function scaleMotionEase(ease, scale) {
+      var safeEase = Math.max(0, Math.min(1, Number(ease) || 0));
+      var safeScale = Math.max(0, Number(scale) || 1);
+      return 1 - Math.pow(1 - safeEase, safeScale);
+    }
+
+    function scaleMotionFriction(friction, scale) {
+      var safeFriction = Math.max(0, Math.min(1, Number(friction) || 0));
+      var safeScale = Math.max(0, Number(scale) || 1);
+      return Math.pow(safeFriction, safeScale);
+    }
+
+    function getGalaxyMotionScale(now, targetInterval) {
+      var referenceInterval = Math.max(8, Number(targetInterval) || 16);
+      var frameDelta = lastGalaxyMotionTime ? now - lastGalaxyMotionTime : referenceInterval;
+      lastGalaxyMotionTime = now;
+      if (!Number.isFinite(frameDelta) || frameDelta <= 0) return 1;
+      return Math.max(0.25, Math.min(PRODUCT_ORBIT_DELTA_CLAMP, frameDelta / referenceInterval));
+    }
 
     function getProductOrbitFrameInterval() {
       var mode = getCurrentPerformanceMode();
@@ -6238,19 +6262,22 @@
       lastGalaxyRenderTime = now;
 
       if (layoutMode === 'grid') {
+        lastGalaxyMotionTime = now;
         applyBoardScrollFrame(false);
       } else if (layoutMode === 'sphere') {
+        var motionScale = getGalaxyMotionScale(now, targetInterval);
         if (hoverFocusActive && !sphereFrozen && !isDragging) {
-          rotY += shortestAngleDelta(rotY, hoverTargetRotY) * HOVER_FOCUS_EASE;
-          rotX += (hoverTargetRotX - rotX) * HOVER_FOCUS_EASE;
+          var hoverEase = scaleMotionEase(HOVER_FOCUS_EASE, motionScale);
+          rotY += shortestAngleDelta(rotY, hoverTargetRotY) * hoverEase;
+          rotX += (hoverTargetRotX - rotX) * hoverEase;
           velX = 0;
           velY = 0;
           if (Math.abs(shortestAngleDelta(rotY, hoverTargetRotY)) < HOVER_SNAP_EPSILON) rotY = hoverTargetRotY;
           if (Math.abs(hoverTargetRotX - rotX) < HOVER_SNAP_EPSILON) rotX = hoverTargetRotX;
         } else if (userMotionPaused && !sphereFrozen && !isDragging) {
-          velY += (0 - velY) * MOTION_DECEL_EASE;
-          rotY += velY;
-          easeSphereTiltHome(0.012, 0.9);
+          velY += (0 - velY) * scaleMotionEase(MOTION_DECEL_EASE, motionScale);
+          rotY += velY * motionScale;
+          easeSphereTiltHome(0.012, 0.9, motionScale);
           if (Math.abs(velY) < MOTION_STOP_EPSILON) velY = 0;
         } else if (sphereHoverPaused && !sphereFrozen && !isDragging) {
           velX = 0;
@@ -6260,13 +6287,13 @@
           rotY += velY;
           rotX += velX;
           } else if (isIdle) {
-          velY += (getAutoSpinSpeed() - velY) * 0.02;
-          rotY += velY;
-          easeSphereTiltHome(0.015, 0.9);
+          velY += (getAutoSpinSpeed() - velY) * scaleMotionEase(0.02, motionScale);
+          rotY += velY * motionScale;
+          easeSphereTiltHome(0.015, 0.9, motionScale);
           } else {
-          velY *= FRICTION;
-          rotY += velY;
-          easeSphereTiltHome(0.01, FRICTION);
+          velY *= scaleMotionFriction(FRICTION, motionScale);
+          rotY += velY * motionScale;
+          easeSphereTiltHome(0.01, FRICTION, motionScale);
           }
         }
         if (rotX > MAX_TILT_X) { rotX = MAX_TILT_X; velX = 0; }
