@@ -14768,3 +14768,1477 @@ body[data-page="contact"] .page-intro--contact .page-intro__visual .media-frame:
     contain-intrinsic-size: auto 320px;
   }
 }
+
+/* light blue theme refinements */
+body[data-theme="light"] {
+  --text: #123246;
+  --muted: #557386;
+  --line: rgba(58, 132, 180, 0.16);
+  --line-strong: rgba(43, 119, 169, 0.26);
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-strong: rgba(247, 252, 255, 0.94);
+  --accent: #29a8eb;
+  --accent-soft: #8bd8ff;
+  --accent-blue: #54bff4;
+  --accent-cream: #dff4ff;
+  --white: #f8fdff;
+}
+
+body[data-theme="light"] ::selection {
+  background: rgba(53, 169, 232, 0.22);
+}
+
+body[data-theme="light"] :focus-visible {
+  outline-color: rgba(41, 151, 216, 0.62);
+}
+
+body[data-theme="light"] .media-frame,
+body[data-theme="light"] .product-detail-main-media,
+body[data-theme="light"] .galaxy-card__img .media-frame,
+body[data-theme="light"] .galaxy-result-item__img .media-frame,
+body[data-theme="light"] .galaxy-search-card__media .media-frame,
+body[data-theme="light"] .galaxy-preview__img .media-frame,
+body[data-theme="light"] .galaxy-modal__img .media-frame,
+body[data-theme="light"] .galaxy-modal__thumb .media-frame {
+  border-color: rgba(117, 190, 232, 0.22) !important;
+  background:
+    radial-gradient(circle at 74% 20%, rgba(114, 201, 255, 0.18), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(224, 244, 255, 0.82)) !important;
+  box-shadow: 0 22px 52px rgba(47, 124, 174, 0.1) !important;
+}
+
+body[data-theme="light"] .media-frame::before {
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.5), rgba(199, 234, 255, 0.24)),
+    linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0)) !important;
+}
+
+body[data-theme="light"] .media-frame::after {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(36, 126, 184, 0.06)) !important;
+}
+
+body[data-theme="light"] .button--primary,
+body[data-theme="light"] .product-detail-cart-btn,
+body[data-theme="light"] .galaxy-btn-buy,
+body[data-theme="light"] .footer-shell__talk {
+  border-color: rgba(33, 142, 207, 0.58) !important;
+  background: linear-gradient(135deg, #23a7ea, #74cbff) !important;
+  color: #f8fdff !important;
+  box-shadow: 0 16px 34px rgba(35, 136, 203, 0.24) !important;
+}
+
+body[data-theme="light"] .button--primary:hover,
+body[data-theme="light"] .product-detail-cart-btn:hover,
+body[data-theme="light"] .galaxy-btn-buy:hover,
+body[data-theme="light"] .footer-shell__talk:hover {
+  background: linear-gradient(135deg, #168fd4, #5fc2fb) !important;
+  box-shadow: 0 18px 38px rgba(35, 136, 203, 0.3) !important;
+}
+
+body[data-theme="light"] .button--ghost,
+body[data-theme="light"] .button--ghost-light,
+body[data-theme="light"] .product-detail-copy-btn,
+body[data-theme="light"] .galaxy-btn-cart {
+  border-color: rgba(58, 132, 180, 0.18) !important;
+  background: rgba(255, 255, 255, 0.66) !important;
+  color: #123246 !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) {
+  --site-light-text: #123246;
+  --site-light-muted: rgba(75, 107, 128, 0.82);
+  --site-light-line: rgba(58, 132, 180, 0.16);
+  --site-light-line-strong: rgba(43, 119, 169, 0.28);
+  --site-light-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(224, 244, 255, 0.9));
+  --site-light-surface-strong: rgba(248, 253, 255, 0.94);
+  --site-light-shadow: 0 24px 62px rgba(47, 124, 174, 0.12);
+  background:
+    radial-gradient(circle at 50% -16%, rgba(92, 190, 250, 0.34), transparent 34%),
+    radial-gradient(circle at 12% 10%, rgba(171, 224, 255, 0.34), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(207, 239, 255, 0.56), transparent 30%),
+    linear-gradient(180deg, #f7fcff 0%, #e9f8ff 46%, #dff3ff 100%) !important;
+  color: var(--site-light-text) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .header-shell__inner,
+body[data-page="welcome"][data-welcome-theme="light"] .header-shell__inner {
+  border-bottom-color: rgba(58, 132, 180, 0.16) !important;
+  background: rgba(247, 252, 255, 0.84) !important;
+  box-shadow: 0 14px 34px rgba(47, 124, 174, 0.1) !important;
+  backdrop-filter: blur(18px) saturate(1.16) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .header-lang-inline a.is-current,
+body[data-page="welcome"][data-welcome-theme="light"] .header-lang-inline a.is-current,
+body[data-page="welcome"][data-welcome-theme="light"] .header-lang-inline .is-current {
+  background: #1f8dd1 !important;
+  color: #f8fdff !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .primary-nav__link,
+body[data-theme="light"]:not([data-page="welcome"]) .header-lang-inline a,
+body[data-theme="light"]:not([data-page="welcome"]) .header-lang-inline__sep,
+body[data-page="welcome"][data-welcome-theme="light"] .primary-nav__link,
+body[data-page="welcome"][data-welcome-theme="light"] .header-lang-inline a,
+body[data-page="welcome"][data-welcome-theme="light"] .header-lang-inline__sep {
+  color: rgba(75, 107, 128, 0.82) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .primary-nav__link:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .primary-nav__link.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .brandmark__copy strong,
+body[data-theme="light"]:not([data-page="welcome"]) .brandmark__copy em,
+body[data-page="welcome"][data-welcome-theme="light"] .primary-nav__link:hover,
+body[data-page="welcome"][data-welcome-theme="light"] .primary-nav__link.is-active,
+body[data-page="welcome"][data-welcome-theme="light"] .brandmark__copy strong,
+body[data-page="welcome"][data-welcome-theme="light"] .brandmark__copy em {
+  color: #123246 !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] {
+  --welcome-bg: #eef9ff;
+  --welcome-surface: rgba(255, 255, 255, 0.78);
+  --welcome-surface-strong: rgba(248, 253, 255, 0.94);
+  --welcome-text: #123246;
+  --welcome-muted: rgba(75, 107, 128, 0.82);
+  --welcome-line: rgba(58, 132, 180, 0.16);
+  --welcome-line-strong: rgba(43, 119, 169, 0.3);
+  --welcome-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(224, 244, 255, 0.9));
+  --welcome-card-border: rgba(117, 190, 232, 0.22);
+  --welcome-shadow: 0 24px 62px rgba(47, 124, 174, 0.12);
+  --welcome-page-gradient:
+    radial-gradient(circle at 50% -12%, rgba(90, 188, 250, 0.36), transparent 32%),
+    radial-gradient(circle at 14% 14%, rgba(194, 235, 255, 0.48), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(226, 246, 255, 0.72), transparent 30%),
+    linear-gradient(180deg, #f7fcff 0%, #e8f8ff 46%, #dff3ff 100%);
+  --welcome-section-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(224, 244, 255, 0.84));
+  --welcome-header-bg: rgba(247, 252, 255, 0.86);
+  --welcome-header-text: #123246;
+  --welcome-header-muted: rgba(75, 107, 128, 0.82);
+  --welcome-header-line: rgba(58, 132, 180, 0.14);
+  --welcome-header-line-strong: rgba(43, 119, 169, 0.24);
+  --welcome-header-shadow: 0 14px 34px rgba(47, 124, 174, 0.1);
+  --welcome-header-pill-bg: #1f8dd1;
+  --welcome-header-pill-text: #f8fdff;
+  --welcome-header-button-bg: rgba(255, 255, 255, 0.62);
+  --welcome-header-button-hover: rgba(235, 248, 255, 0.9);
+  --welcome-header-button-border-hover: rgba(43, 119, 169, 0.22);
+  --welcome-toggle-track-bg: rgba(64, 144, 196, 0.16);
+  --welcome-hero-bg: transparent;
+  --welcome-hero-text: #123246;
+  --welcome-hero-muted: rgba(75, 107, 128, 0.84);
+  --welcome-hero-text-shadow: none;
+  --welcome-hero-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(224, 244, 255, 0.82));
+  --welcome-hero-image-filter: drop-shadow(0 28px 54px rgba(47, 124, 174, 0.18)) saturate(1.04);
+  --welcome-icon-bg: rgba(255, 255, 255, 0.72);
+  --welcome-icon-text: #238fd4;
+  --welcome-stat-accent: #1f8dd1;
+  --welcome-button-bg: linear-gradient(135deg, #23a7ea, #74cbff);
+  --welcome-button-text: #f8fdff;
+  --welcome-button-shadow: 0 16px 34px rgba(35, 136, 203, 0.24);
+  --welcome-ghost-bg: rgba(255, 255, 255, 0.66);
+  --welcome-ghost-border: rgba(58, 132, 180, 0.18);
+  --welcome-ghost-text: #123246;
+  --welcome-footer-bg:
+    radial-gradient(circle at 18% 18%, rgba(114, 201, 255, 0.18), transparent 28%),
+    radial-gradient(circle at 80% 14%, rgba(211, 241, 255, 0.72), transparent 30%),
+    linear-gradient(135deg, rgba(248, 253, 255, 0.96), rgba(224, 244, 255, 0.94));
+  --welcome-footer-border: rgba(117, 190, 232, 0.22);
+  --welcome-footer-text: #123246;
+  --welcome-footer-muted: rgba(75, 107, 128, 0.78);
+  --welcome-footer-chip-bg: rgba(255, 255, 255, 0.66);
+  --welcome-footer-chip-border: rgba(58, 132, 180, 0.14);
+  --mission-bg: rgba(232, 248, 255, 0.72);
+  --mission-panel: rgba(255, 255, 255, 0.76);
+  --mission-panel-strong: rgba(248, 253, 255, 0.92);
+  --mission-line: rgba(58, 132, 180, 0.18);
+  --mission-line-strong: rgba(43, 119, 169, 0.34);
+  --mission-accent: #23a7ea;
+  --mission-cyan: #78d0ff;
+  --mission-cream: #123246;
+  --mission-muted: rgba(75, 107, 128, 0.78);
+  background: var(--welcome-page-gradient) !important;
+  color: var(--welcome-text) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .scene-grid--hero .scene-copy,
+body[data-page="welcome"][data-welcome-theme="light"] .hero-card,
+body[data-page="welcome"][data-welcome-theme="light"] .scene:not(.scene--hero) .container,
+body[data-page="welcome"][data-welcome-theme="light"] .footer-shell,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-status-bar,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-hud__panel,
+body[data-page="welcome"][data-welcome-theme="light"] .process-orbit__core,
+body[data-page="welcome"][data-welcome-theme="light"] .process-step,
+body[data-page="welcome"][data-welcome-theme="light"] .cluster-card,
+body[data-page="welcome"][data-welcome-theme="light"] .proof-collage__tile--anchor,
+body[data-page="welcome"][data-welcome-theme="light"] .proof-collage__tile--support,
+body[data-page="welcome"][data-welcome-theme="light"] .proof-collage__tile--process,
+body[data-page="welcome"][data-welcome-theme="light"] .proof-collage__tile--banner {
+  border-color: var(--welcome-card-border) !important;
+  background: var(--welcome-card-bg) !important;
+  box-shadow: var(--welcome-shadow) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .mission-stage {
+  border-color: rgba(117, 190, 232, 0.24) !important;
+  background:
+    radial-gradient(circle at calc(70% + (var(--mission-x) * 7%)) calc(18% + (var(--mission-y) * 5%)), rgba(115, 202, 255, 0.28), transparent 32%),
+    radial-gradient(circle at calc(22% + (var(--mission-x) * -5%)) 78%, rgba(216, 243, 255, 0.7), transparent 36%),
+    linear-gradient(135deg, rgba(247, 252, 255, 0.92), rgba(222, 244, 255, 0.72) 48%, rgba(248, 253, 255, 0.9)) !important;
+  box-shadow:
+    0 48px 110px rgba(47, 124, 174, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    inset 0 0 0 1px rgba(117, 190, 232, 0.08) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .mission-stage::after,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-visual__frame::before {
+  background:
+    linear-gradient(90deg, rgba(247, 252, 255, 0.95) 0%, rgba(232, 248, 255, 0.74) 30%, rgba(232, 248, 255, 0.34) 56%, transparent 82%),
+    radial-gradient(circle at 70% 46%, transparent 0 21%, rgba(43, 146, 213, 0.22) 21.2%, transparent 22%, transparent 31%, rgba(120, 208, 255, 0.22) 31.2%, transparent 32%),
+    linear-gradient(180deg, transparent 0%, rgba(232, 248, 255, 0.24) 54%, rgba(247, 252, 255, 0.74) 100%) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .mission-ambient__orb--a {
+  background: radial-gradient(circle, rgba(113, 202, 255, 0.3), transparent 62%) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .mission-ambient__orb--b {
+  background: radial-gradient(circle, rgba(204, 239, 255, 0.54), transparent 64%) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .mission-scroll-progress span {
+  background: linear-gradient(90deg, #78d0ff, #23a7ea) !important;
+  box-shadow: 0 0 18px rgba(35, 136, 203, 0.35) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .button--primary {
+  background: var(--welcome-button-bg) !important;
+  color: var(--welcome-button-text) !important;
+  box-shadow: var(--welcome-button-shadow) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .button--ghost,
+body[data-page="welcome"][data-welcome-theme="light"] .button--ghost-light {
+  border-color: var(--welcome-ghost-border) !important;
+  background: var(--welcome-ghost-bg) !important;
+  color: var(--welcome-ghost-text) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .scene-kicker,
+body[data-page="welcome"][data-welcome-theme="light"] .scene-body,
+body[data-page="welcome"][data-welcome-theme="light"] .hero-card__body,
+body[data-page="welcome"][data-welcome-theme="light"] .hero-card__eyebrow,
+body[data-page="welcome"][data-welcome-theme="light"] .cluster-card p,
+body[data-page="welcome"][data-welcome-theme="light"] .process-step p,
+body[data-page="welcome"][data-welcome-theme="light"] .proof-collage__caption p,
+body[data-page="welcome"][data-welcome-theme="light"] .values-spread__copy p,
+body[data-page="welcome"][data-welcome-theme="light"] .scene-quote footer,
+body[data-page="welcome"][data-welcome-theme="light"] .discovery-feature span,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-status-bar,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-status-bar span,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-hud__panel span {
+  color: var(--welcome-muted) !important;
+  text-shadow: none !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .display-title,
+body[data-page="welcome"][data-welcome-theme="light"] .editorial-title,
+body[data-page="welcome"][data-welcome-theme="light"] .hero-card__title,
+body[data-page="welcome"][data-welcome-theme="light"] .hero-card-fact__text strong,
+body[data-page="welcome"][data-welcome-theme="light"] .hero-card-stat strong,
+body[data-page="welcome"][data-welcome-theme="light"] .cluster-card strong,
+body[data-page="welcome"][data-welcome-theme="light"] .proof-collage__caption strong,
+body[data-page="welcome"][data-welcome-theme="light"] .values-spread__copy h3,
+body[data-page="welcome"][data-welcome-theme="light"] .scene-quote p,
+body[data-page="welcome"][data-welcome-theme="light"] .process-step span,
+body[data-page="welcome"][data-welcome-theme="light"] .process-orbit__core strong,
+body[data-page="welcome"][data-welcome-theme="light"] .process-orbit__core span,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-status-bar strong,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-hud__panel strong {
+  color: var(--welcome-text) !important;
+  text-shadow: none !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .footer-shell {
+  border-color: var(--welcome-footer-border) !important;
+  background: var(--welcome-footer-bg) !important;
+  box-shadow: var(--welcome-shadow) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .footer-shell,
+body[data-page="welcome"][data-welcome-theme="light"] .footer-shell p,
+body[data-page="welcome"][data-welcome-theme="light"] .footer-shell span,
+body[data-page="welcome"][data-welcome-theme="light"] .footer-shell a,
+body[data-page="welcome"][data-welcome-theme="light"] .footer-shell__bottom {
+  color: var(--welcome-footer-muted) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .footer-shell h2 {
+  color: var(--welcome-footer-text) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__hero,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-lab__hero,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__cta,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-track,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__stage,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__desk,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__card,
+body[data-theme="light"]:not([data-page="welcome"]) .editorial-article-hero,
+body[data-theme="light"]:not([data-page="welcome"]) .editorial-article-body,
+body[data-theme="light"]:not([data-page="welcome"]) .editorial-empty-card,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-gallery-card,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-buy-card,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-side-card,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tabs-shell,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__main,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__lead-media,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-sidebar-card,
+body[data-theme="light"]:not([data-page="welcome"]) .contact-panel,
+body[data-theme="light"]:not([data-page="welcome"]) .contact-form-wrap,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__head,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__cta,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__section,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-nav__item,
+body[data-theme="light"]:not([data-page="welcome"]) .detail-quote,
+body[data-theme="light"]:not([data-page="welcome"]) .quick-facts > dl > div,
+body[data-theme="light"]:not([data-page="welcome"]) .outcome-card,
+body[data-theme="light"]:not([data-page="welcome"]) .project-stat,
+body[data-theme="light"]:not([data-page="welcome"]) .related-card,
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell {
+  border-color: var(--site-light-line) !important;
+  background: var(--site-light-surface) !important;
+  box-shadow: var(--site-light-shadow) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(114, 201, 255, 0.18), transparent 28%),
+    radial-gradient(circle at 80% 14%, rgba(211, 241, 255, 0.72), transparent 30%),
+    linear-gradient(135deg, rgba(248, 253, 255, 0.96), rgba(224, 244, 255, 0.94)) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell,
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell p,
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell span,
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell a,
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell__bottom,
+body[data-theme="light"]:not([data-page="welcome"]) .archive-entry__copy .archive-entry__tagline,
+body[data-theme="light"]:not([data-page="welcome"]) .archive-entry__copy p,
+body[data-theme="light"]:not([data-page="welcome"]) .detail-hero__project-copy .detail-hero__summary,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__copy .scene-body,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-lab__copy .scene-body,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__cta p,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-track-card__body p,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__stage-body p,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__card-body p,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-summary,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-breadcrumb,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-breadcrumb a,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-stock,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-panel p,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-panel li,
+body[data-theme="light"]:not([data-page="welcome"]) .contact-panel p,
+body[data-theme="light"]:not([data-page="welcome"]) .contact-form label span,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__head p,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__section p,
+body[data-theme="light"]:not([data-page="welcome"]) .related-card p,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__summary,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__prose p,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__prose li {
+  color: var(--site-light-muted) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell h2,
+body[data-theme="light"]:not([data-page="welcome"]) .archive-entry__copy h2,
+body[data-theme="light"]:not([data-page="welcome"]) .detail-hero__project-copy h1,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__copy .editorial-title,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-lab__copy .editorial-title,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__cta h2,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-track-card__body h3,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__stage-body h1,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__card-body h3,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__card-body h3 a,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-title,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-breadcrumb strong,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-panel h2,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-section h3,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__header h1,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__prose h2,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__prose h3,
+body[data-theme="light"]:not([data-page="welcome"]) .contact-panel strong,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__head h2,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__section h3,
+body[data-theme="light"]:not([data-page="welcome"]) .related-card h3,
+body[data-theme="light"]:not([data-page="welcome"]) .related-card h3 a {
+  color: var(--site-light-text) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell__lead,
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell__label,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-side-card h2,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-sidebar-card h2,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__trend-meta em,
+body[data-theme="light"]:not([data-page="welcome"]) .editorial-article-body a,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-btn.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-suggest-item span {
+  color: #1f8dd1 !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .policy-nav__item.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__thumb:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__thumb:focus-visible,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__thumb.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .project-beacon:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .project-beacon:focus-visible,
+body[data-theme="light"]:not([data-page="welcome"]) .project-beacon.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-lab__chip.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-lab__chip:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-lab__chip:focus-visible,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__trend-item.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__trend-item:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__trend-item:focus-visible,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-sidebar-item:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-sidebar-item:focus-visible,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-category-list a.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-category-list a:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-link-list a:hover {
+  border-color: rgba(43, 146, 213, 0.28) !important;
+  background: rgba(114, 201, 255, 0.14) !important;
+  color: var(--site-light-text) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-price-panel,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-review-quote,
+body[data-theme="light"]:not([data-page="welcome"]) .editorial-article-body blockquote {
+  border-color: rgba(43, 146, 213, 0.22) !important;
+  background: linear-gradient(135deg, rgba(114, 201, 255, 0.14), rgba(255, 255, 255, 0.72)) !important;
+}
+
+body[data-theme="light"] .product-detail-qty-control button:hover {
+  background: rgba(114, 201, 255, 0.14) !important;
+}
+
+body[data-theme="light"][data-page="projects"],
+body[data-theme="light"][data-page="project-detail"],
+body[data-theme="light"][data-page="tutorials"],
+body[data-theme="light"][data-page="news"],
+body[data-theme="light"][data-page="contact"] {
+  --page-3d-cyan: #54bff4;
+  --page-3d-accent: #1f8dd1;
+  background:
+    radial-gradient(circle at 50% -16%, rgba(92, 190, 250, 0.34), transparent 34%),
+    radial-gradient(circle at 12% 10%, rgba(171, 224, 255, 0.34), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(207, 239, 255, 0.56), transparent 30%),
+    linear-gradient(180deg, #f7fcff 0%, #e9f8ff 46%, #dff3ff 100%) !important;
+}
+
+body[data-theme="light"] .page-3d-canvas {
+  opacity: 0.28 !important;
+  filter: saturate(0.92) brightness(1.2) hue-rotate(178deg) !important;
+  mix-blend-mode: multiply !important;
+}
+
+body[data-theme="light"] .page-3d-ambient::before {
+  background:
+    linear-gradient(112deg, transparent 0 20%, rgba(84, 191, 244, 0.16) 24%, transparent 32%),
+    linear-gradient(76deg, transparent 0 58%, rgba(150, 222, 255, 0.18) 63%, transparent 72%) !important;
+}
+
+body[data-theme="light"] .page-3d-ambient::after {
+  background-image:
+    radial-gradient(circle at 18% 32%, rgba(43, 146, 213, 0.34) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 18%, rgba(18, 50, 70, 0.16) 0 1px, transparent 2px),
+    radial-gradient(circle at 84% 64%, rgba(114, 201, 255, 0.38) 0 1px, transparent 2px),
+    radial-gradient(circle at 44% 78%, rgba(84, 191, 244, 0.28) 0 1px, transparent 2px) !important;
+}
+
+body[data-theme="light"] .page-3d-ambient__orb--a {
+  background: radial-gradient(circle, rgba(114, 201, 255, 0.26), transparent 62%) !important;
+}
+
+body[data-theme="light"] .page-3d-ambient__orb--b {
+  background: radial-gradient(circle, rgba(84, 191, 244, 0.2), transparent 64%) !important;
+}
+
+body[data-theme="light"] .page-3d-ambient__mesh {
+  background-image:
+    linear-gradient(rgba(84, 191, 244, 0.18) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(84, 191, 244, 0.12) 1px, transparent 1px) !important;
+}
+
+body[data-theme="light"][data-page="news"] .news-signal__stage-body {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(247, 252, 255, 0.42) 22%, rgba(232, 248, 255, 0.92) 64%, rgba(224, 244, 255, 0.98) 100%) !important;
+}
+
+body[data-theme="light"][data-page="news"] .news-signal__stage-media::after {
+  background:
+    radial-gradient(circle at 78% 16%, rgba(114, 201, 255, 0.2), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.18) 30%, rgba(232, 248, 255, 0.76) 70%, rgba(224, 244, 255, 0.98) 100%) !important;
+}
+
+body[data-theme="light"][data-page="contact"] .page-intro--contact .page-intro__layout {
+  border-color: var(--site-light-line) !important;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(114, 201, 255, 0.16), transparent 30%),
+    radial-gradient(circle at 76% 28%, rgba(211, 241, 255, 0.74), transparent 34%),
+    linear-gradient(135deg, rgba(248, 253, 255, 0.96), rgba(224, 244, 255, 0.94)) !important;
+  box-shadow: var(--site-light-shadow) !important;
+}
+
+body[data-theme="light"][data-page="contact"] .page-intro--contact .page-intro__visual .media-frame {
+  border-color: rgba(117, 190, 232, 0.22) !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(224, 244, 255, 0.84)),
+    radial-gradient(circle at 72% 28%, rgba(114, 201, 255, 0.2), transparent 38%) !important;
+  box-shadow: 0 24px 60px rgba(47, 124, 174, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.72) !important;
+}
+
+body[data-page="products"][data-theme="light"] {
+  background:
+    radial-gradient(circle at 50% -18%, rgba(92, 190, 250, 0.34), transparent 34%),
+    radial-gradient(circle at 18% 4%, rgba(171, 224, 255, 0.34), transparent 28%),
+    radial-gradient(circle at 82% 4%, rgba(207, 239, 255, 0.56), transparent 30%),
+    linear-gradient(180deg, #f7fcff 0%, #e9f8ff 46%, #dff3ff 100%) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-search-bar__inner,
+body[data-page="products"][data-theme="light"] .galaxy-filter-panel__inner,
+body[data-page="products"][data-theme="light"] .galaxy-filter-panel__inner--bar,
+body[data-page="products"][data-theme="light"] .galaxy-results-panel,
+body[data-page="products"][data-theme="light"] .galaxy-price-select__menu,
+body[data-page="products"][data-theme="light"] .galaxy-board-hint,
+body[data-page="products"][data-theme="light"] .galaxy-result-item,
+body[data-page="products"][data-theme="light"] .galaxy-search-card,
+body[data-page="products"][data-theme="light"] .galaxy-card__inner,
+body[data-page="products"][data-theme="light"] .galaxy-preview__card,
+body[data-page="products"][data-theme="light"] .galaxy-modal__box,
+body[data-page="products"][data-theme="light"] .galaxy-control-dock,
+body[data-page="products"][data-theme="light"] .galaxy-state-chip,
+body[data-page="products"][data-theme="light"] .galaxy-spotlight {
+  border-color: rgba(58, 132, 180, 0.16) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(224, 244, 255, 0.92)) !important;
+  box-shadow: 0 24px 62px rgba(47, 124, 174, 0.12) !important;
+  color: #123246 !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-overlay__hint,
+body[data-page="products"][data-theme="light"] .galaxy-filter-panel__eyebrow,
+body[data-page="products"][data-theme="light"] .galaxy-filter-field > span,
+body[data-page="products"][data-theme="light"] .galaxy-filter-panel__meta,
+body[data-page="products"][data-theme="light"] .galaxy-search-bar__input::placeholder,
+body[data-page="products"][data-theme="light"] .galaxy-result-item__price,
+body[data-page="products"][data-theme="light"] .galaxy-preview__orig,
+body[data-page="products"][data-theme="light"] .galaxy-preview__qty-label,
+body[data-page="products"][data-theme="light"] .galaxy-modal__orig,
+body[data-page="products"][data-theme="light"] .galaxy-modal__review-count,
+body[data-page="products"][data-theme="light"] .galaxy-modal__meta-line,
+body[data-page="products"][data-theme="light"] .galaxy-modal__facts dt,
+body[data-page="products"][data-theme="light"] .galaxy-chip,
+body[data-page="products"][data-theme="light"] .galaxy-select-arrow {
+  color: rgba(75, 107, 128, 0.82) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-filter-panel__title,
+body[data-page="products"][data-theme="light"] .galaxy-search-bar__input,
+body[data-page="products"][data-theme="light"] .galaxy-filter-select,
+body[data-page="products"][data-theme="light"] .galaxy-price-select__button,
+body[data-page="products"][data-theme="light"] .galaxy-result-item__name,
+body[data-page="products"][data-theme="light"] .galaxy-search-card__name,
+body[data-page="products"][data-theme="light"] .galaxy-card__name,
+body[data-page="products"][data-theme="light"] .galaxy-preview__name,
+body[data-page="products"][data-theme="light"] .galaxy-preview__summary,
+body[data-page="products"][data-theme="light"] .galaxy-preview__stock,
+body[data-page="products"][data-theme="light"] .galaxy-preview__qty span,
+body[data-page="products"][data-theme="light"] .galaxy-modal__name,
+body[data-page="products"][data-theme="light"] .galaxy-modal__summary,
+body[data-page="products"][data-theme="light"] .galaxy-modal__qty-label,
+body[data-page="products"][data-theme="light"] .galaxy-modal__stock-note,
+body[data-page="products"][data-theme="light"] .galaxy-modal__facts dd,
+body[data-page="products"][data-theme="light"] .galaxy-price-select__option {
+  color: #123246 !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-card__price,
+body[data-page="products"][data-theme="light"] .galaxy-search-card__price,
+body[data-page="products"][data-theme="light"] .galaxy-preview__price,
+body[data-page="products"][data-theme="light"] .galaxy-modal__price,
+body[data-page="products"][data-theme="light"] .galaxy-modal__badge,
+body[data-page="products"][data-theme="light"] .galaxy-preview__badge,
+body[data-page="products"][data-theme="light"] .galaxy-modal__fulllink:hover,
+body[data-page="products"][data-theme="light"] .galaxy-preview__more:hover,
+body[data-page="products"][data-theme="light"] .galaxy-spotlight__price {
+  color: #1f8dd1 !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-search-bar__input-wrap,
+body[data-page="products"][data-theme="light"] .galaxy-filter-panel .galaxy-search-bar__input-wrap,
+body[data-page="products"][data-theme="light"] .galaxy-result-item,
+body[data-page="products"][data-theme="light"] .galaxy-search-card,
+body[data-page="products"][data-theme="light"] .galaxy-chip,
+body[data-page="products"][data-theme="light"] .galaxy-price-select__option,
+body[data-page="products"][data-theme="light"] .galaxy-preview__qty,
+body[data-page="products"][data-theme="light"] .galaxy-modal__facts div,
+body[data-page="products"][data-theme="light"] .galaxy-modal__thumb,
+body[data-page="products"][data-theme="light"] .galaxy-modal__thumb.is-active,
+body[data-page="products"][data-theme="light"] .galaxy-modal__price-panel,
+body[data-page="products"][data-theme="light"] .galaxy-control-btn {
+  border-color: rgba(58, 132, 180, 0.16) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-chip:hover,
+body[data-page="products"][data-theme="light"] .galaxy-price-select__option:hover,
+body[data-page="products"][data-theme="light"] .galaxy-price-select__option.is-active,
+body[data-page="products"][data-theme="light"] .galaxy-result-item:hover,
+body[data-page="products"][data-theme="light"] .galaxy-search-card:hover,
+body[data-page="products"][data-theme="light"] .galaxy-search-card:focus-visible {
+  border-color: rgba(43, 146, 213, 0.28) !important;
+  background: rgba(114, 201, 255, 0.15) !important;
+  color: #123246 !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-chip.is-active,
+body[data-page="products"][data-theme="light"] .galaxy-btn-buy {
+  border-color: rgba(33, 142, 207, 0.58) !important;
+  background: linear-gradient(135deg, #23a7ea, #74cbff) !important;
+  color: #f8fdff !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-card__info {
+  background: linear-gradient(180deg, rgba(248, 253, 255, 0.9), rgba(218, 242, 255, 0.96)) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-card__info::before {
+  background: linear-gradient(90deg, rgba(35, 167, 234, 0.54), transparent 48%, rgba(120, 208, 255, 0.56)) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-card__name,
+body[data-page="products"][data-theme="light"] .galaxy-card__xsummary,
+body[data-page="products"][data-theme="light"] .galaxy-card__xstock,
+body[data-page="products"][data-theme="light"] .galaxy-card__xqty span {
+  color: #123246 !important;
+  text-shadow: none !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-card__price,
+body[data-page="products"][data-theme="light"] .galaxy-card__xprice,
+body[data-page="products"][data-theme="light"] .galaxy-card__xprice strong {
+  color: #1f8dd1 !important;
+  text-shadow: none !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-card__xinfo {
+  border-color: rgba(58, 132, 180, 0.16) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(224, 244, 255, 0.96)) !important;
+  box-shadow: 0 18px 44px rgba(47, 124, 174, 0.14) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-card__xqty button,
+body[data-page="products"][data-theme="light"] .galaxy-card__xactions a,
+body[data-page="products"][data-theme="light"] .galaxy-card__xactions button {
+  border-color: rgba(58, 132, 180, 0.16) !important;
+  background: rgba(255, 255, 255, 0.72) !important;
+  color: #123246 !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-card__xactions a:first-child,
+body[data-page="products"][data-theme="light"] .galaxy-card__xactions button:first-child {
+  border-color: rgba(33, 142, 207, 0.58) !important;
+  background: linear-gradient(135deg, #23a7ea, #74cbff) !important;
+  color: #f8fdff !important;
+}
+
+body[data-theme="light"] .product-detail-price {
+  color: #1f8dd1 !important;
+  text-shadow: none !important;
+}
+
+body[data-theme="light"] .product-detail-buy-btn {
+  border-color: rgba(22, 143, 212, 0.42) !important;
+  background: linear-gradient(135deg, #35b8ea, #9fe2ff) !important;
+  color: #0f3550 !important;
+  box-shadow: 0 16px 34px rgba(35, 136, 203, 0.18) !important;
+}
+
+body[data-theme="light"] .product-detail-buy-btn:hover {
+  background: linear-gradient(135deg, #23a7ea, #74cbff) !important;
+  color: #f8fdff !important;
+  box-shadow: 0 18px 38px rgba(35, 136, 203, 0.26) !important;
+}
+
+/* light blue contrast pass */
+body[data-theme="light"] {
+  --text: #092941;
+  --muted: rgba(39, 76, 101, 0.84);
+  --line: rgba(16, 114, 182, 0.24);
+  --line-strong: rgba(0, 105, 177, 0.38);
+  --surface: rgba(255, 255, 255, 0.94);
+  --surface-strong: rgba(250, 254, 255, 0.98);
+  --accent: #0076c8;
+  --accent-soft: #42c8ff;
+  --accent-blue: #13a8ee;
+  --accent-cream: #d8f4ff;
+  --white: #fbfeff;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) {
+  --site-light-text: #092941;
+  --site-light-muted: rgba(39, 76, 101, 0.84);
+  --site-light-line: rgba(16, 114, 182, 0.24);
+  --site-light-line-strong: rgba(0, 105, 177, 0.38);
+  --site-light-surface: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(229, 247, 255, 0.98));
+  --site-light-surface-strong: rgba(250, 254, 255, 0.98);
+  --site-light-shadow: 0 26px 54px rgba(20, 100, 155, 0.18), 0 8px 18px rgba(2, 76, 132, 0.1);
+  background:
+    radial-gradient(circle at 48% -14%, rgba(37, 171, 239, 0.44), transparent 34%),
+    radial-gradient(circle at 11% 9%, rgba(99, 207, 255, 0.38), transparent 25%),
+    radial-gradient(circle at 88% 10%, rgba(190, 237, 255, 0.76), transparent 28%),
+    linear-gradient(180deg, #e2f6ff 0%, #f8fdff 34%, #dff3ff 100%) !important;
+  color: var(--site-light-text) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] {
+  --welcome-bg: #e2f6ff;
+  --welcome-surface: rgba(255, 255, 255, 0.94);
+  --welcome-surface-strong: rgba(250, 254, 255, 0.98);
+  --welcome-text: #092941;
+  --welcome-muted: rgba(39, 76, 101, 0.84);
+  --welcome-line: rgba(16, 114, 182, 0.24);
+  --welcome-line-strong: rgba(0, 105, 177, 0.38);
+  --welcome-card-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(226, 246, 255, 0.98));
+  --welcome-card-border: rgba(16, 114, 182, 0.24);
+  --welcome-shadow: 0 26px 54px rgba(20, 100, 155, 0.18), 0 8px 18px rgba(2, 76, 132, 0.1);
+  --welcome-page-gradient:
+    radial-gradient(circle at 50% -10%, rgba(37, 171, 239, 0.48), transparent 34%),
+    radial-gradient(circle at 12% 12%, rgba(99, 207, 255, 0.4), transparent 26%),
+    radial-gradient(circle at 88% 10%, rgba(210, 243, 255, 0.78), transparent 30%),
+    linear-gradient(180deg, #dff4ff 0%, #f8fdff 36%, #e4f6ff 100%);
+  --welcome-header-bg: rgba(250, 254, 255, 0.96);
+  --welcome-header-text: #092941;
+  --welcome-header-muted: rgba(39, 76, 101, 0.84);
+  --welcome-header-line: rgba(16, 114, 182, 0.22);
+  --welcome-header-line-strong: rgba(0, 105, 177, 0.34);
+  --welcome-header-shadow: 0 14px 30px rgba(20, 100, 155, 0.14);
+  --welcome-header-pill-bg: #0076c8;
+  --welcome-header-pill-text: #fbfeff;
+  --welcome-header-button-bg: rgba(255, 255, 255, 0.9);
+  --welcome-header-button-hover: rgba(225, 247, 255, 0.98);
+  --welcome-header-button-border-hover: rgba(0, 105, 177, 0.32);
+  --welcome-toggle-track-bg: rgba(0, 116, 200, 0.18);
+  --welcome-hero-text: #092941;
+  --welcome-hero-muted: rgba(39, 76, 101, 0.86);
+  --welcome-hero-panel-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(226, 246, 255, 0.96));
+  --welcome-hero-image-filter: drop-shadow(0 30px 58px rgba(15, 92, 150, 0.24)) saturate(1.1) contrast(1.04);
+  --welcome-icon-bg: rgba(255, 255, 255, 0.94);
+  --welcome-icon-text: #0076c8;
+  --welcome-stat-accent: #0076c8;
+  --welcome-button-bg: linear-gradient(135deg, #0076c8, #20b9f5 58%, #7ad9ff);
+  --welcome-button-text: #fbfeff;
+  --welcome-button-shadow: 0 18px 36px rgba(0, 118, 200, 0.28), 0 6px 16px rgba(0, 86, 150, 0.14);
+  --welcome-ghost-bg: rgba(255, 255, 255, 0.92);
+  --welcome-ghost-border: rgba(16, 114, 182, 0.24);
+  --welcome-ghost-text: #092941;
+  --welcome-footer-bg:
+    radial-gradient(circle at 18% 18%, rgba(65, 199, 255, 0.24), transparent 28%),
+    radial-gradient(circle at 80% 14%, rgba(203, 241, 255, 0.82), transparent 30%),
+    linear-gradient(135deg, rgba(250, 254, 255, 0.98), rgba(226, 246, 255, 0.98));
+  --welcome-footer-border: rgba(16, 114, 182, 0.24);
+  --welcome-footer-text: #092941;
+  --welcome-footer-muted: rgba(39, 76, 101, 0.82);
+  --welcome-footer-chip-bg: rgba(255, 255, 255, 0.9);
+  --welcome-footer-chip-border: rgba(16, 114, 182, 0.22);
+  --mission-bg: rgba(224, 246, 255, 0.9);
+  --mission-panel: rgba(255, 255, 255, 0.92);
+  --mission-panel-strong: rgba(250, 254, 255, 0.98);
+  --mission-line: rgba(16, 114, 182, 0.24);
+  --mission-line-strong: rgba(0, 105, 177, 0.4);
+  --mission-accent: #0076c8;
+  --mission-cyan: #4bc8ff;
+  --mission-cream: #092941;
+  --mission-muted: rgba(39, 76, 101, 0.82);
+  background: var(--welcome-page-gradient) !important;
+  color: var(--welcome-text) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .header-shell__inner,
+body[data-page="welcome"][data-welcome-theme="light"] .header-shell__inner {
+  border-bottom-color: rgba(16, 114, 182, 0.22) !important;
+  background: rgba(250, 254, 255, 0.96) !important;
+  box-shadow: 0 14px 30px rgba(20, 100, 155, 0.14) !important;
+  backdrop-filter: blur(16px) saturate(1.18) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .primary-nav__link,
+body[data-theme="light"]:not([data-page="welcome"]) .header-lang-inline a,
+body[data-theme="light"]:not([data-page="welcome"]) .header-lang-inline__sep,
+body[data-page="welcome"][data-welcome-theme="light"] .primary-nav__link,
+body[data-page="welcome"][data-welcome-theme="light"] .header-lang-inline a,
+body[data-page="welcome"][data-welcome-theme="light"] .header-lang-inline__sep {
+  color: rgba(35, 69, 92, 0.86) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .primary-nav__link:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .primary-nav__link.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .brandmark__copy strong,
+body[data-theme="light"]:not([data-page="welcome"]) .brandmark__copy em,
+body[data-page="welcome"][data-welcome-theme="light"] .primary-nav__link:hover,
+body[data-page="welcome"][data-welcome-theme="light"] .primary-nav__link.is-active,
+body[data-page="welcome"][data-welcome-theme="light"] .brandmark__copy strong,
+body[data-page="welcome"][data-welcome-theme="light"] .brandmark__copy em {
+  color: #092941 !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .header-lang-inline a.is-current,
+body[data-page="welcome"][data-welcome-theme="light"] .header-lang-inline a.is-current,
+body[data-page="welcome"][data-welcome-theme="light"] .header-lang-inline .is-current {
+  background: #0076c8 !important;
+  color: #fbfeff !important;
+  box-shadow: 0 10px 22px rgba(0, 118, 200, 0.24) !important;
+}
+
+body[data-theme="light"] .button--primary,
+body[data-theme="light"] .product-detail-cart-btn,
+body[data-theme="light"] .product-detail-buy-btn,
+body[data-theme="light"] .galaxy-btn-buy,
+body[data-theme="light"] .footer-shell__talk,
+body[data-page="products"][data-theme="light"] .galaxy-chip.is-active,
+body[data-page="products"][data-theme="light"] .galaxy-card__xactions a:first-child,
+body[data-page="products"][data-theme="light"] .galaxy-card__xactions button:first-child {
+  border-color: rgba(0, 102, 176, 0.62) !important;
+  background: linear-gradient(135deg, #0076c8, #1eb6f3 58%, #77d9ff) !important;
+  color: #fbfeff !important;
+  box-shadow: 0 18px 36px rgba(0, 118, 200, 0.3), 0 6px 16px rgba(0, 86, 150, 0.16) !important;
+  text-shadow: 0 1px 0 rgba(0, 45, 76, 0.22) !important;
+}
+
+body[data-theme="light"] .button--primary:hover,
+body[data-theme="light"] .product-detail-cart-btn:hover,
+body[data-theme="light"] .product-detail-buy-btn:hover,
+body[data-theme="light"] .galaxy-btn-buy:hover,
+body[data-theme="light"] .footer-shell__talk:hover {
+  background: linear-gradient(135deg, #005fa8, #0ca9eb 58%, #5ed0ff) !important;
+  color: #fbfeff !important;
+  box-shadow: 0 22px 44px rgba(0, 104, 186, 0.34), 0 8px 18px rgba(0, 76, 132, 0.18) !important;
+}
+
+body[data-theme="light"] .button--ghost,
+body[data-theme="light"] .button--ghost-light,
+body[data-theme="light"] .product-detail-copy-btn,
+body[data-theme="light"] .galaxy-btn-cart {
+  border-color: rgba(16, 114, 182, 0.26) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  color: #092941 !important;
+  box-shadow: 0 12px 26px rgba(20, 100, 155, 0.1) !important;
+}
+
+body[data-theme="light"] .media-frame,
+body[data-theme="light"] .product-detail-main-media,
+body[data-theme="light"] .galaxy-card__img .media-frame,
+body[data-theme="light"] .galaxy-result-item__img .media-frame,
+body[data-theme="light"] .galaxy-search-card__media .media-frame,
+body[data-theme="light"] .galaxy-preview__img .media-frame,
+body[data-theme="light"] .galaxy-modal__img .media-frame,
+body[data-theme="light"] .galaxy-modal__thumb .media-frame {
+  border-color: rgba(16, 114, 182, 0.24) !important;
+  background:
+    radial-gradient(circle at 74% 18%, rgba(72, 200, 255, 0.24), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(223, 246, 255, 0.96)) !important;
+  box-shadow: 0 24px 48px rgba(20, 100, 155, 0.16), 0 8px 16px rgba(2, 76, 132, 0.08) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .scene-grid--hero .scene-copy,
+body[data-page="welcome"][data-welcome-theme="light"] .hero-card,
+body[data-page="welcome"][data-welcome-theme="light"] .scene:not(.scene--hero) .container,
+body[data-page="welcome"][data-welcome-theme="light"] .footer-shell,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-status-bar,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-hud__panel,
+body[data-page="welcome"][data-welcome-theme="light"] .process-orbit__core,
+body[data-page="welcome"][data-welcome-theme="light"] .process-step,
+body[data-page="welcome"][data-welcome-theme="light"] .cluster-card,
+body[data-page="welcome"][data-welcome-theme="light"] .proof-collage__tile--anchor,
+body[data-page="welcome"][data-welcome-theme="light"] .proof-collage__tile--support,
+body[data-page="welcome"][data-welcome-theme="light"] .proof-collage__tile--process,
+body[data-page="welcome"][data-welcome-theme="light"] .proof-collage__tile--banner,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__hero,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-lab__hero,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__cta,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-track,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__stage,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__desk,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__card,
+body[data-theme="light"]:not([data-page="welcome"]) .editorial-article-hero,
+body[data-theme="light"]:not([data-page="welcome"]) .editorial-article-body,
+body[data-theme="light"]:not([data-page="welcome"]) .editorial-empty-card,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-gallery-card,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-buy-card,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-side-card,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tabs-shell,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__main,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__lead-media,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-sidebar-card,
+body[data-theme="light"]:not([data-page="welcome"]) .contact-panel,
+body[data-theme="light"]:not([data-page="welcome"]) .contact-form-wrap,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__head,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__cta,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__section,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-nav__item,
+body[data-theme="light"]:not([data-page="welcome"]) .detail-quote,
+body[data-theme="light"]:not([data-page="welcome"]) .quick-facts > dl > div,
+body[data-theme="light"]:not([data-page="welcome"]) .outcome-card,
+body[data-theme="light"]:not([data-page="welcome"]) .project-stat,
+body[data-theme="light"]:not([data-page="welcome"]) .related-card,
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell,
+body[data-page="products"][data-theme="light"] .galaxy-search-bar__inner,
+body[data-page="products"][data-theme="light"] .galaxy-filter-panel__inner,
+body[data-page="products"][data-theme="light"] .galaxy-filter-panel__inner--bar,
+body[data-page="products"][data-theme="light"] .galaxy-results-panel,
+body[data-page="products"][data-theme="light"] .galaxy-price-select__menu,
+body[data-page="products"][data-theme="light"] .galaxy-board-hint,
+body[data-page="products"][data-theme="light"] .galaxy-result-item,
+body[data-page="products"][data-theme="light"] .galaxy-search-card,
+body[data-page="products"][data-theme="light"] .galaxy-card__inner,
+body[data-page="products"][data-theme="light"] .galaxy-preview__card,
+body[data-page="products"][data-theme="light"] .galaxy-modal__box,
+body[data-page="products"][data-theme="light"] .galaxy-control-dock,
+body[data-page="products"][data-theme="light"] .galaxy-state-chip,
+body[data-page="products"][data-theme="light"] .galaxy-spotlight {
+  border-color: rgba(16, 114, 182, 0.24) !important;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(229, 247, 255, 0.98)) !important;
+  box-shadow: 0 26px 54px rgba(20, 100, 155, 0.18), 0 8px 18px rgba(2, 76, 132, 0.1) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell,
+body[data-page="welcome"][data-welcome-theme="light"] .footer-shell {
+  background:
+    radial-gradient(circle at 18% 18%, rgba(65, 199, 255, 0.24), transparent 28%),
+    radial-gradient(circle at 80% 14%, rgba(203, 241, 255, 0.82), transparent 30%),
+    linear-gradient(135deg, rgba(250, 254, 255, 0.98), rgba(226, 246, 255, 0.98)) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell,
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell p,
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell span,
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell a,
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell__bottom,
+body[data-theme="light"]:not([data-page="welcome"]) .archive-entry__copy .archive-entry__tagline,
+body[data-theme="light"]:not([data-page="welcome"]) .archive-entry__copy p,
+body[data-theme="light"]:not([data-page="welcome"]) .detail-hero__project-copy .detail-hero__summary,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__copy .scene-body,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-lab__copy .scene-body,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__cta p,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-track-card__body p,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__stage-body p,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__card-body p,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-summary,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-breadcrumb,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-breadcrumb a,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-stock,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-panel p,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-panel li,
+body[data-theme="light"]:not([data-page="welcome"]) .contact-panel p,
+body[data-theme="light"]:not([data-page="welcome"]) .contact-form label span,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__head p,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__section p,
+body[data-theme="light"]:not([data-page="welcome"]) .related-card p,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__summary,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__prose p,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__prose li,
+body[data-page="welcome"][data-welcome-theme="light"] .scene-kicker,
+body[data-page="welcome"][data-welcome-theme="light"] .scene-body,
+body[data-page="welcome"][data-welcome-theme="light"] .hero-card__body,
+body[data-page="welcome"][data-welcome-theme="light"] .hero-card__eyebrow,
+body[data-page="welcome"][data-welcome-theme="light"] .cluster-card p,
+body[data-page="welcome"][data-welcome-theme="light"] .process-step p,
+body[data-page="welcome"][data-welcome-theme="light"] .proof-collage__caption p,
+body[data-page="welcome"][data-welcome-theme="light"] .values-spread__copy p,
+body[data-page="welcome"][data-welcome-theme="light"] .scene-quote footer,
+body[data-page="welcome"][data-welcome-theme="light"] .discovery-feature span,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-status-bar,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-status-bar span,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-hud__panel span {
+  color: rgba(39, 76, 101, 0.86) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell h2,
+body[data-theme="light"]:not([data-page="welcome"]) .archive-entry__copy h2,
+body[data-theme="light"]:not([data-page="welcome"]) .detail-hero__project-copy h1,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__copy .editorial-title,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-lab__copy .editorial-title,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__cta h2,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-track-card__body h3,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__stage-body h1,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__card-body h3,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__card-body h3 a,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-title,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-breadcrumb strong,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-panel h2,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-section h3,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__header h1,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__prose h2,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-detail__prose h3,
+body[data-theme="light"]:not([data-page="welcome"]) .contact-panel strong,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__head h2,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-detail__section h3,
+body[data-theme="light"]:not([data-page="welcome"]) .related-card h3,
+body[data-theme="light"]:not([data-page="welcome"]) .related-card h3 a,
+body[data-page="welcome"][data-welcome-theme="light"] .display-title,
+body[data-page="welcome"][data-welcome-theme="light"] .editorial-title,
+body[data-page="welcome"][data-welcome-theme="light"] .hero-card__title,
+body[data-page="welcome"][data-welcome-theme="light"] .hero-card-fact__text strong,
+body[data-page="welcome"][data-welcome-theme="light"] .hero-card-stat strong,
+body[data-page="welcome"][data-welcome-theme="light"] .cluster-card strong,
+body[data-page="welcome"][data-welcome-theme="light"] .proof-collage__caption strong,
+body[data-page="welcome"][data-welcome-theme="light"] .values-spread__copy h3,
+body[data-page="welcome"][data-welcome-theme="light"] .scene-quote p,
+body[data-page="welcome"][data-welcome-theme="light"] .process-step span,
+body[data-page="welcome"][data-welcome-theme="light"] .process-orbit__core strong,
+body[data-page="welcome"][data-welcome-theme="light"] .process-orbit__core span,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-status-bar strong,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-hud__panel strong {
+  color: #092941 !important;
+  text-shadow: none !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell__lead,
+body[data-theme="light"]:not([data-page="welcome"]) .footer-shell__label,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-side-card h2,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-sidebar-card h2,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__trend-meta em,
+body[data-theme="light"]:not([data-page="welcome"]) .editorial-article-body a,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-btn.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-suggest-item span,
+body[data-page="products"][data-theme="light"] .galaxy-card__price,
+body[data-page="products"][data-theme="light"] .galaxy-search-card__price,
+body[data-page="products"][data-theme="light"] .galaxy-preview__price,
+body[data-page="products"][data-theme="light"] .galaxy-modal__price,
+body[data-page="products"][data-theme="light"] .galaxy-modal__badge,
+body[data-page="products"][data-theme="light"] .galaxy-preview__badge,
+body[data-page="products"][data-theme="light"] .galaxy-spotlight__price,
+body[data-theme="light"] .product-detail-price {
+  color: #0076c8 !important;
+}
+
+body[data-theme="light"] .page-3d-canvas {
+  opacity: 0.34 !important;
+  filter: saturate(1.08) brightness(1.06) contrast(1.08) hue-rotate(178deg) !important;
+  mix-blend-mode: normal !important;
+}
+
+body[data-theme="light"] .page-3d-ambient::before {
+  opacity: 0.36 !important;
+  background:
+    linear-gradient(112deg, transparent 0 20%, rgba(0, 137, 211, 0.18) 24%, transparent 32%),
+    linear-gradient(76deg, transparent 0 58%, rgba(75, 200, 255, 0.22) 63%, transparent 72%) !important;
+}
+
+body[data-theme="light"] .page-3d-ambient::after {
+  opacity: 0.28 !important;
+  background-image:
+    radial-gradient(circle at 18% 32%, rgba(0, 118, 200, 0.38) 0 1px, transparent 2px),
+    radial-gradient(circle at 72% 18%, rgba(9, 41, 65, 0.22) 0 1px, transparent 2px),
+    radial-gradient(circle at 84% 64%, rgba(65, 199, 255, 0.46) 0 1px, transparent 2px),
+    radial-gradient(circle at 44% 78%, rgba(0, 145, 220, 0.34) 0 1px, transparent 2px) !important;
+}
+
+body[data-theme="light"] .page-3d-ambient__orb--a {
+  opacity: 0.28 !important;
+  background: radial-gradient(circle, rgba(65, 199, 255, 0.34), transparent 62%) !important;
+}
+
+body[data-theme="light"] .page-3d-ambient__orb--b {
+  opacity: 0.26 !important;
+  background: radial-gradient(circle, rgba(0, 137, 211, 0.24), transparent 64%) !important;
+}
+
+body[data-theme="light"] .page-3d-ambient__mesh {
+  opacity: 0.2 !important;
+  background-image:
+    linear-gradient(rgba(0, 137, 211, 0.22) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 137, 211, 0.16) 1px, transparent 1px) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-card__info,
+body[data-page="products"][data-theme="light"] .galaxy-card__xinfo {
+  border-color: rgba(16, 114, 182, 0.24) !important;
+  background: linear-gradient(180deg, rgba(250, 254, 255, 0.98), rgba(218, 243, 255, 0.98)) !important;
+  box-shadow: 0 20px 42px rgba(20, 100, 155, 0.18), 0 6px 14px rgba(2, 76, 132, 0.1) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-card__info::before,
+body[data-page="products"][data-theme="light"] .galaxy-card__xinfo::before {
+  background: linear-gradient(90deg, rgba(0, 118, 200, 0.72), transparent 48%, rgba(75, 200, 255, 0.78)) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-search-bar__input-wrap,
+body[data-page="products"][data-theme="light"] .galaxy-filter-panel .galaxy-search-bar__input-wrap,
+body[data-page="products"][data-theme="light"] .galaxy-chip,
+body[data-page="products"][data-theme="light"] .galaxy-price-select__option,
+body[data-page="products"][data-theme="light"] .galaxy-preview__qty,
+body[data-page="products"][data-theme="light"] .galaxy-modal__facts div,
+body[data-page="products"][data-theme="light"] .galaxy-modal__thumb,
+body[data-page="products"][data-theme="light"] .galaxy-control-btn,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-category-list a,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-link-list a,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-suggest-item,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-thumb,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-qty-control {
+  border-color: rgba(16, 114, 182, 0.22) !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  box-shadow: 0 10px 22px rgba(20, 100, 155, 0.08) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-qty-control button,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-qty-control span {
+  color: #092941 !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-chip:hover,
+body[data-page="products"][data-theme="light"] .galaxy-price-select__option:hover,
+body[data-page="products"][data-theme="light"] .galaxy-price-select__option.is-active,
+body[data-page="products"][data-theme="light"] .galaxy-result-item:hover,
+body[data-page="products"][data-theme="light"] .galaxy-search-card:hover,
+body[data-page="products"][data-theme="light"] .galaxy-search-card:focus-visible,
+body[data-theme="light"]:not([data-page="welcome"]) .policy-nav__item.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__thumb:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__thumb:focus-visible,
+body[data-theme="light"]:not([data-page="welcome"]) .projects-voyage__thumb.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .project-beacon:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .project-beacon:focus-visible,
+body[data-theme="light"]:not([data-page="welcome"]) .project-beacon.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-lab__chip.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-lab__chip:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .tutorial-lab__chip:focus-visible,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__trend-item.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__trend-item:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .news-signal__trend-item:focus-visible,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-sidebar-item:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .knowledge-sidebar-item:focus-visible,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-category-list a.is-active,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-category-list a:hover,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-link-list a:hover {
+  border-color: rgba(0, 105, 177, 0.4) !important;
+  background: linear-gradient(180deg, rgba(226, 247, 255, 0.98), rgba(255, 255, 255, 0.94)) !important;
+  color: #092941 !important;
+  box-shadow: 0 14px 30px rgba(20, 100, 155, 0.14) !important;
+}
+
+body[data-theme="light"] .product-detail-price-panel,
+body[data-theme="light"] .product-detail-review-quote,
+body[data-theme="light"] .editorial-article-body blockquote {
+  border-color: rgba(0, 105, 177, 0.3) !important;
+  background: linear-gradient(135deg, rgba(213, 243, 255, 0.9), rgba(255, 255, 255, 0.96)) !important;
+  box-shadow: inset 4px 0 0 rgba(0, 118, 200, 0.72), 0 16px 34px rgba(20, 100, 155, 0.12) !important;
+}
+
+body[data-theme="light"][data-page="news"] .news-signal__stage-body {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(250, 254, 255, 0.54) 18%, rgba(229, 247, 255, 0.96) 62%, rgba(220, 243, 255, 0.99) 100%) !important;
+}
+
+body[data-theme="light"][data-page="news"] .news-signal__stage-media::after {
+  background:
+    radial-gradient(circle at 78% 16%, rgba(65, 199, 255, 0.28), transparent 24%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.18) 30%, rgba(229, 247, 255, 0.8) 70%, rgba(220, 243, 255, 0.99) 100%) !important;
+}
+
+body[data-theme="light"][data-page="contact"] .page-intro--contact .page-intro__layout {
+  border-color: rgba(16, 114, 182, 0.24) !important;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(65, 199, 255, 0.22), transparent 30%),
+    radial-gradient(circle at 76% 28%, rgba(202, 241, 255, 0.84), transparent 34%),
+    linear-gradient(135deg, rgba(250, 254, 255, 0.98), rgba(226, 246, 255, 0.98)) !important;
+  box-shadow: 0 28px 58px rgba(20, 100, 155, 0.18), 0 8px 18px rgba(2, 76, 132, 0.1) !important;
+}
+
+body[data-theme="light"][data-page="contact"] .page-intro--contact .page-intro__visual .media-frame {
+  border-color: rgba(16, 114, 182, 0.24) !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(224, 246, 255, 0.94)),
+    radial-gradient(circle at 72% 28%, rgba(65, 199, 255, 0.26), transparent 38%) !important;
+  box-shadow: 0 26px 54px rgba(20, 100, 155, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.78) !important;
+}
+
+body[data-theme="light"] .preloader,
+body[data-theme="light"] .transition-layer {
+  background:
+    radial-gradient(circle at 50% -12%, rgba(37, 171, 239, 0.5), transparent 34%),
+    radial-gradient(circle at 15% 22%, rgba(94, 207, 255, 0.36), transparent 26%),
+    radial-gradient(circle at 84% 18%, rgba(205, 242, 255, 0.84), transparent 28%),
+    linear-gradient(135deg, #dff4ff 0%, #f9fdff 48%, #d7f1ff 100%) !important;
+  color: #092941 !important;
+}
+
+body[data-theme="light"] .preloader::before,
+body[data-theme="light"] .transition-layer::before {
+  background:
+    conic-gradient(from 0deg, transparent 0 28%, rgba(0, 118, 200, 0.3), rgba(75, 200, 255, 0.36), transparent 54% 100%),
+    radial-gradient(circle, transparent 0 54%, rgba(0, 118, 200, 0.12) 55%, transparent 56% 100%) !important;
+}
+
+body[data-theme="light"] .preloader__symbol {
+  filter:
+    drop-shadow(0 24px 46px rgba(20, 100, 155, 0.24))
+    drop-shadow(0 0 28px rgba(65, 199, 255, 0.34)) !important;
+}
+
+body[data-theme="light"] .preloader__mark {
+  color: #092941 !important;
+  text-shadow: none !important;
+}
+
+body[data-theme="light"] .preloader__copy,
+body[data-theme="light"] .preloader__percent {
+  color: rgba(39, 76, 101, 0.82) !important;
+}
+
+body[data-theme="light"] .preloader__track {
+  background: rgba(0, 118, 200, 0.16) !important;
+  box-shadow: inset 0 0 0 1px rgba(16, 114, 182, 0.18) !important;
+}
+
+body[data-theme="light"] .preloader__track span {
+  background: linear-gradient(90deg, #0076c8, #27c2ff, #b8eeff) !important;
+  box-shadow: 0 0 24px rgba(0, 118, 200, 0.34) !important;
+}
+
+/* light-mode contrast floor for product universe overlays */
+body[data-page="products"][data-theme="light"] .galaxy-board-hint,
+body[data-page="products"][data-theme="light"] .galaxy-control-btn,
+body[data-page="products"][data-theme="light"] .galaxy-state-chip,
+body[data-page="products"][data-theme="light"] .galaxy-search-bar__input-wrap,
+body[data-page="products"][data-theme="light"] .galaxy-preview__more,
+body[data-page="products"][data-theme="light"] .galaxy-modal__fulllink,
+body[data-page="products"][data-theme="light"] .galaxy-modal__qty-row,
+body[data-page="products"][data-theme="light"] .galaxy-spotlight__summary,
+body[data-page="products"][data-theme="light"] .galaxy-spotlight__stock,
+body[data-page="products"][data-theme="light"] .galaxy-spotlight__state,
+body[data-page="products"][data-theme="light"] .xp-orig,
+body[data-page="products"][data-theme="light"] .xqty-btn,
+body[data-page="products"][data-theme="light"] .galaxy-qty-btn {
+  color: rgba(39, 76, 101, 0.86) !important;
+  text-shadow: none !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-spotlight__name,
+body[data-page="products"][data-theme="light"] .galaxy-modal__facts dd,
+body[data-page="products"][data-theme="light"] .galaxy-modal__stock-note,
+body[data-page="products"][data-theme="light"] .galaxy-modal__qty-label,
+body[data-page="products"][data-theme="light"] .galaxy-preview__name,
+body[data-page="products"][data-theme="light"] .galaxy-preview__qty span,
+body[data-page="products"][data-theme="light"] .galaxy-card__xqty span {
+  color: #092941 !important;
+  text-shadow: none !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-spotlight__kicker,
+body[data-page="products"][data-theme="light"] .galaxy-spotlight__price,
+body[data-page="products"][data-theme="light"] .xp-cur,
+body[data-page="products"][data-theme="light"] .xp-badge,
+body[data-page="products"][data-theme="light"] .xqty-btn:hover,
+body[data-page="products"][data-theme="light"] .galaxy-qty-btn:hover,
+body[data-page="products"][data-theme="light"] .galaxy-preview__more:hover,
+body[data-page="products"][data-theme="light"] .galaxy-modal__fulllink:hover {
+  color: #0076c8 !important;
+  text-shadow: none !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-spotlight__state,
+body[data-page="products"][data-theme="light"] .galaxy-preview__qty,
+body[data-page="products"][data-theme="light"] .galaxy-card__xqty {
+  border-color: rgba(16, 114, 182, 0.22) !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-preview__close,
+body[data-page="products"][data-theme="light"] .galaxy-modal__close {
+  border-color: rgba(16, 114, 182, 0.22) !important;
+  background: rgba(255, 255, 255, 0.88) !important;
+  color: #092941 !important;
+  box-shadow: 0 10px 24px rgba(20, 100, 155, 0.14) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-preview__close:hover,
+body[data-page="products"][data-theme="light"] .galaxy-modal__close:hover,
+body[data-page="products"][data-theme="light"] .galaxy-control-btn:hover,
+body[data-page="products"][data-theme="light"] .galaxy-control-btn:focus-visible {
+  border-color: rgba(0, 105, 177, 0.36) !important;
+  background: rgba(226, 247, 255, 0.96) !important;
+  color: #092941 !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-state-chip[data-orbit-state="dragging"],
+body[data-page="products"][data-theme="light"] .galaxy-state-chip[data-orbit-state="zoom"],
+body[data-page="products"][data-theme="light"] .galaxy-state-chip[data-orbit-state="keyboard"],
+body[data-page="products"][data-theme="light"] .galaxy-state-chip[data-orbit-state="locked"],
+body[data-page="products"][data-theme="light"] .galaxy-state-chip[data-orbit-state="hover"],
+body[data-page="products"][data-theme="light"] .galaxy-state-chip[data-orbit-state="paused"],
+body[data-page="products"][data-theme="light"] .galaxy-state-chip[data-orbit-state="modal"] {
+  color: #092941 !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-modal__star {
+  color: rgba(39, 76, 101, 0.34) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-modal__star.is-on {
+  color: #0076c8 !important;
+  text-shadow: 0 0 12px rgba(0, 118, 200, 0.22) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-modal__left,
+body[data-page="products"][data-theme="light"] .galaxy-modal__thumbs {
+  border-color: rgba(16, 114, 182, 0.14) !important;
+  background: rgba(226, 247, 255, 0.48) !important;
+}
+
+/* light-mode contrast floor for product detail and news panels */
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-suggest-item strong,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-qty-block,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-rating,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-btn,
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-share-feedback,
+body[data-theme="light"][data-page="news"] .news-signal .scene-kicker {
+  color: rgba(39, 76, 101, 0.86) !important;
+  text-shadow: none !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-suggest-item strong {
+  color: #092941 !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-btn.is-active {
+  color: #0076c8 !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-tab-btn.is-active::after {
+  background: #0076c8 !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-stars__star {
+  color: rgba(39, 76, 101, 0.26) !important;
+}
+
+body[data-theme="light"]:not([data-page="welcome"]) .product-detail-stars__star.is-on {
+  color: #0076c8 !important;
+}
+
+/* light-mode 3D background visibility floor */
+body[data-theme="light"] .hero-3d-canvas {
+  opacity: 0.82 !important;
+  filter: saturate(1.34) brightness(0.94) contrast(1.34) !important;
+  mix-blend-mode: multiply !important;
+}
+
+body[data-page="products"][data-theme="light"] .hero-3d-canvas {
+  opacity: 0.78 !important;
+  filter: saturate(1.32) brightness(0.95) contrast(1.3) !important;
+  mix-blend-mode: multiply !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .welcome-hero-canvas {
+  opacity: 0.78 !important;
+  filter: saturate(1.3) brightness(0.94) contrast(1.28) !important;
+  mix-blend-mode: multiply !important;
+}
+
+body[data-theme="light"] .page-3d-ambient,
+body[data-page="welcome"][data-welcome-theme="light"] .mission-ambient {
+  opacity: 0.86 !important;
+}
+
+body[data-theme="light"] .page-3d-ambient::before {
+  opacity: 0.72 !important;
+  background:
+    linear-gradient(112deg, transparent 0 18%, rgba(0, 167, 181, 0.36) 24%, transparent 34%),
+    linear-gradient(76deg, transparent 0 56%, rgba(226, 79, 26, 0.34) 63%, transparent 74%) !important;
+  filter: blur(0.15px) saturate(1.08) !important;
+}
+
+body[data-theme="light"] .page-3d-ambient::after {
+  opacity: 0.78 !important;
+  background-image:
+    radial-gradient(circle at 18% 32%, rgba(18, 48, 168, 0.82) 0 1.2px, transparent 2.45px),
+    radial-gradient(circle at 72% 18%, rgba(7, 31, 53, 0.64) 0 1.15px, transparent 2.35px),
+    radial-gradient(circle at 84% 64%, rgba(226, 79, 26, 0.76) 0 1.2px, transparent 2.45px),
+    radial-gradient(circle at 44% 78%, rgba(0, 182, 173, 0.72) 0 1.2px, transparent 2.45px) !important;
+}
+
+body[data-theme="light"] .page-3d-ambient__orb--a {
+  opacity: 0.44 !important;
+  background: radial-gradient(circle, rgba(0, 118, 200, 0.42), transparent 62%) !important;
+}
+
+body[data-theme="light"] .page-3d-ambient__orb--b {
+  opacity: 0.4 !important;
+  background: radial-gradient(circle, rgba(209, 95, 36, 0.26), transparent 64%) !important;
+}
+
+body[data-theme="light"] .page-3d-ambient__mesh {
+  opacity: 0.46 !important;
+  background-image:
+    linear-gradient(rgba(0, 118, 200, 0.34) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 118, 200, 0.24) 1px, transparent 1px) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .mission-ambient__orb--a {
+  opacity: 0.46 !important;
+  background: radial-gradient(circle, rgba(0, 118, 200, 0.42), transparent 62%) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .mission-ambient__orb--b {
+  opacity: 0.42 !important;
+  background: radial-gradient(circle, rgba(209, 95, 36, 0.22), transparent 64%) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .mission-ambient__mesh {
+  opacity: 0.5 !important;
+  background-image:
+    linear-gradient(rgba(0, 118, 200, 0.34) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 118, 200, 0.24) 1px, transparent 1px) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .mission-hero__scanner {
+  opacity: 0.62 !important;
+  background:
+    linear-gradient(90deg, transparent, rgba(0, 118, 200, 0.22), transparent),
+    repeating-linear-gradient(180deg, rgba(0, 118, 200, 0.08) 0 1px, transparent 1px 8px) !important;
+}
+
+body[data-page="welcome"][data-welcome-theme="light"] .mission-stage::before {
+  opacity: 0.38 !important;
+}
+
+body[data-page="products"][data-theme="light"]::before {
+  opacity: 0.42 !important;
+}
+
+body[data-page="products"][data-theme="light"]::after {
+  opacity: 0.44 !important;
+  mix-blend-mode: multiply !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-scene::before {
+  opacity: 0.34 !important;
+  background-image:
+    linear-gradient(rgba(0, 118, 200, 0.34) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 118, 200, 0.22) 1px, transparent 1px) !important;
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-scene::after {
+  opacity: 0.68 !important;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(0, 118, 200, 0.2), transparent 20%),
+    radial-gradient(circle at 50% 48%, transparent 0 31%, rgba(209, 95, 36, 0.18) 32%, transparent 34%, transparent 42%, rgba(0, 118, 200, 0.16) 43%, transparent 44%) !important;
+}
+
+@keyframes hint-pulse-light {
+  0%, 100% { opacity: 0.72; }
+  50% { opacity: 1; }
+}
+
+body[data-page="products"][data-theme="light"] .galaxy-overlay__hint {
+  color: rgba(9, 41, 65, 0.78) !important;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.58) !important;
+  animation-name: hint-pulse-light !important;
+}

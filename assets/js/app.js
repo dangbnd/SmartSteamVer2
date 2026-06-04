@@ -155,6 +155,8 @@
   const GROUPS = ["age", "theme", "format", "occasion", "difficulty"];
   const APP_THEME_STORAGE_KEY = "smartsteam:theme";
   const WELCOME_THEME_STORAGE_KEY = "smartsteam:welcome-theme";
+  const THEME_DEFAULT_VERSION_STORAGE_KEY = "smartsteam:theme-default-version";
+  const LIGHT_THEME_DEFAULT_VERSION = "20260604-light";
   const PROJECT_ARCHIVE_SCROLL_KEY = "smartsteam:project-archive-scroll";
   const PERFORMANCE_PROFILE_STORAGE_KEY = "smartsteam:performance-profile:v2";
   const PERFORMANCE_MODES = ["auto", "full", "balanced", "safe"];
@@ -767,6 +769,33 @@
     }
   }
 
+  function getStoredThemeDefaultVersion() {
+    try {
+      return window.localStorage.getItem(THEME_DEFAULT_VERSION_STORAGE_KEY) || "";
+    } catch (error) {
+      return LIGHT_THEME_DEFAULT_VERSION;
+    }
+  }
+
+  function syncStoredThemeDefaultVersion(theme) {
+    const nextTheme = normalizeThemeValue(theme);
+    try {
+      window.localStorage.setItem(THEME_DEFAULT_VERSION_STORAGE_KEY, LIGHT_THEME_DEFAULT_VERSION);
+      window.localStorage.setItem(APP_THEME_STORAGE_KEY, nextTheme);
+      if (page === "welcome") window.localStorage.setItem(WELCOME_THEME_STORAGE_KEY, nextTheme);
+    } catch (error) {
+      // Ignore storage failures and keep the current UI state.
+    }
+    return nextTheme;
+  }
+
+  function getStoredThemeAfterLightDefaultMigration() {
+    if (getStoredThemeDefaultVersion() !== LIGHT_THEME_DEFAULT_VERSION) {
+      return syncStoredThemeDefaultVersion("light");
+    }
+    return readStoredTheme(APP_THEME_STORAGE_KEY) || readStoredTheme(WELCOME_THEME_STORAGE_KEY) || "light";
+  }
+
   function updateWelcomeThemeToggle() {
     const button = $(".js-welcome-theme-toggle");
     if (!button) return;
@@ -805,35 +834,17 @@
     const themeFromBody = body.dataset.theme || body.dataset.welcomeTheme;
     if (themeFromBody === "light" || themeFromBody === "dark") return themeFromBody;
 
-    return readStoredTheme(APP_THEME_STORAGE_KEY) || readStoredTheme(WELCOME_THEME_STORAGE_KEY) || "dark";
+    return getStoredThemeAfterLightDefaultMigration();
   }
 
   function setWelcomeTheme(theme) {
     const nextTheme = syncPageThemeState(theme);
-
-    try {
-      window.localStorage.setItem(APP_THEME_STORAGE_KEY, nextTheme);
-      if (page === "welcome") {
-        window.localStorage.setItem(WELCOME_THEME_STORAGE_KEY, nextTheme);
-      }
-    } catch (error) {
-      // Ignore storage failures and keep the current UI state.
-    }
+    syncStoredThemeDefaultVersion(nextTheme);
   }
 
   function initWelcomeTheme() {
     const nextTheme = syncPageThemeState(getWelcomeTheme());
-
-    try {
-      if (window.localStorage.getItem(APP_THEME_STORAGE_KEY) !== nextTheme) {
-        window.localStorage.setItem(APP_THEME_STORAGE_KEY, nextTheme);
-      }
-      if (page === "welcome" && window.localStorage.getItem(WELCOME_THEME_STORAGE_KEY) !== nextTheme) {
-        window.localStorage.setItem(WELCOME_THEME_STORAGE_KEY, nextTheme);
-      }
-    } catch (error) {
-      // Ignore storage failures and keep the current UI state.
-    }
+    syncStoredThemeDefaultVersion(nextTheme);
   }
 
   function slugFromPath() {
@@ -9294,15 +9305,20 @@
         if (isLightTheme) {
           return {
             key: "light",
-            opacity: isProductCanvas ? "0.62" : "0.68",
-            particles: [0x3b85a8, 0xc96734, 0x6b7f89],
-            particleOpacity: 0.7,
-            gridPrimary: 0x3b85a8,
-            gridSecondary: 0x3b85a8,
-            gridOpacity: 0.24,
-            core: 0x3b85a8,
-            orbitA: 0x3b85a8,
-            orbitB: 0xc96734,
+            opacity: isProductCanvas || body.dataset.page === "welcome" ? "0.78" : "0.82",
+            particles: [0x1230a8, 0xe24f1a, 0x071f35, 0x00b6ad],
+            particleOpacity: 1,
+            particleSize: lowPowerDevice ? 0.082 : 0.072,
+            particleBlending: THREE.NormalBlending,
+            gridPrimary: 0x006ea8,
+            gridSecondary: 0x006ea8,
+            gridOpacity: isProductCanvas ? 0.52 : 0.46,
+            core: 0x00a7b5,
+            coreOpacity: isProductCanvas ? 0.52 : 0.62,
+            detailBlending: THREE.NormalBlending,
+            orbitA: 0x2643d8,
+            orbitB: 0xe24f1a,
+            orbitOpacity: isProductCanvas ? [0.64, 0.54, 0.44] : [0.72, 0.6, 0.48],
           };
         }
 
@@ -9311,12 +9327,17 @@
           opacity: isProductCanvas ? "0.96" : "0.94",
           particles: [0x86ddff, 0xf68c4b, 0xf4fbff],
           particleOpacity: 0.9,
+          particleSize: lowPowerDevice ? 0.055 : 0.048,
+          particleBlending: THREE.AdditiveBlending,
           gridPrimary: 0x86ddff,
           gridSecondary: 0x86ddff,
           gridOpacity: 0.34,
           core: 0x86ddff,
+          coreOpacity: 0.14,
+          detailBlending: THREE.AdditiveBlending,
           orbitA: 0x86ddff,
           orbitB: 0xf68c4b,
+          orbitOpacity: [0.3, 0.23, 0.15],
         };
       }
 
@@ -9328,7 +9349,13 @@
         canvas.dataset.renderer = "three";
         canvas.style.opacity = palette.opacity;
         particleMaterial.opacity = palette.particleOpacity;
+        particleMaterial.size = palette.particleSize;
+        particleMaterial.blending = palette.particleBlending;
+        particleMaterial.needsUpdate = true;
         coreMaterial.color.setHex(palette.core);
+        coreMaterial.opacity = palette.coreOpacity;
+        coreMaterial.blending = palette.detailBlending;
+        coreMaterial.needsUpdate = true;
 
         eachMaterial(grid.material, (material, index) => {
           material.transparent = true;
@@ -9338,7 +9365,9 @@
 
         orbits.forEach((orbit, index) => {
           orbit.material.color.setHex(index === 1 ? palette.orbitB : palette.orbitA);
-          orbit.material.opacity = index === 0 ? 0.3 : index === 1 ? 0.23 : 0.15;
+          orbit.material.opacity = palette.orbitOpacity[index];
+          orbit.material.blending = palette.detailBlending;
+          orbit.material.needsUpdate = true;
         });
 
         for (let i = 0; i < particleCount; i++) {
@@ -9599,15 +9628,15 @@
       if (isLightTheme) {
         return {
           theme: "light",
-          opacity: isProductCanvas ? "0.58" : "0.62",
-          grid: "rgba(191, 98, 49, 0.065)",
-          nodeRgb: "88, 125, 150",
-          nodeBoost: 1.05,
-          linkRgb: "191, 98, 49",
-          linkBoost: 0.58,
-          fog: "rgba(248, 244, 236, 0.2)",
-          glowA: "rgba(191, 98, 49, 0.16)",
-          glowB: "rgba(95, 150, 182, 0.12)",
+          opacity: isProductCanvas || body.dataset.page === "welcome" ? "0.78" : "0.82",
+          grid: "rgba(0, 102, 160, 0.16)",
+          nodeRgb: "0, 92, 145",
+          nodeBoost: 1.42,
+          linkRgb: "0, 118, 200",
+          linkBoost: 0.96,
+          fog: "rgba(248, 253, 255, 0.04)",
+          glowA: "rgba(0, 118, 200, 0.22)",
+          glowB: "rgba(209, 95, 36, 0.18)",
         };
       }
 
