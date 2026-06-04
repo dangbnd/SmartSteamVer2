@@ -28,6 +28,7 @@
   --header-h: 5.625rem;
   --header-gap: 0.75rem;
   --header-shell-h: calc(var(--header-h) + (var(--header-gap) * 2));
+  --header-progress-top: calc(var(--header-gap) + var(--header-h));
   --transition: cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -11521,7 +11522,7 @@ body[data-page="welcome"] .welcome-flow {
 
 body[data-page="welcome"] .mission-scroll-progress {
   position: fixed;
-  top: calc(var(--header-shell-h) + 0.22rem);
+  top: var(--header-progress-top);
   left: max(1rem, calc((100vw - var(--max)) / 2));
   right: max(1rem, calc((100vw - var(--max)) / 2));
   z-index: 89;
@@ -12406,7 +12407,7 @@ body.is-ready .galaxy-state-chip {
 
 @media (max-width: 760px) {
   body[data-page="welcome"] .mission-scroll-progress {
-    top: calc(var(--header-shell-h) + 0.1rem);
+    top: var(--header-progress-top);
     left: 0.8rem;
     right: 0.8rem;
   }
