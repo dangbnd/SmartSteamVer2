@@ -6196,7 +6196,7 @@
     var productPerfSampleRafId = 0;
     var productPerfSampleTimer = null;
     var galaxyRuntimeStarted = false;
-    var PRODUCT_ORBIT_DELTA_CLAMP = 3.5;
+    var PRODUCT_ORBIT_DELTA_CLAMP = 10;
 
     function scaleMotionEase(ease, scale) {
       var safeEase = Math.max(0, Math.min(1, Number(ease) || 0));
