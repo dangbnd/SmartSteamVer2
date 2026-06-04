@@ -2796,6 +2796,7 @@
 
     const root = $(".js-page-root");
     const heroImage = getHeroImage(root);
+    const backgroundReady = getRevealBackgroundReady(root);
     const shellDelay = reducedMotion ? 0 : stageTuning.shellDelay || 70;
     const heroDelay = reducedMotion ? 0 : stageTuning.heroDelay || 150;
     const copyDelay = reducedMotion ? 0 : stageTuning.copyDelay || 300;
@@ -2832,9 +2833,12 @@
       await waitForNextPaints(preloadTuning.primaryReadyPaints || 1);
     };
 
-    state.pageExperiencePromise = Promise.race([
-      ensureImageReady(heroImage),
-      wait(preloadTuning.heroReadyFallback || 1400),
+    state.pageExperiencePromise = Promise.all([
+      Promise.race([
+        ensureImageReady(heroImage),
+        wait(preloadTuning.heroReadyFallback || 1400),
+      ]),
+      backgroundReady,
     ]).then(revealSequence, revealSequence);
 
     return state.pageExperiencePromise;
@@ -2973,19 +2977,40 @@
     `;
   }
 
+  function getRevealBackgroundReady(root) {
+    if (!root || !SHARED_3D_BACKGROUND_PAGES.has(page)) return Promise.resolve(false);
+    const canvas = $(".js-hero-3d-canvas", root);
+    if (!canvas) return Promise.resolve(false);
+    const readyPromise = initHero3DCanvas(root);
+    const mode = getCurrentPerformanceMode();
+    const fallbackMs = mode === "full"
+      ? preloadTuning.fullBackgroundReadyFallback || preloadTuning.backgroundReadyFallback || 1400
+      : preloadTuning.backgroundReadyFallback || 700;
+    return Promise.race([
+      readyPromise,
+      wait(fallbackMs),
+    ]).catch(() => false);
+  }
+
   function scheduleHero3DCanvas(root, delayMs, idleTimeoutMs) {
     const delay = Number.isFinite(delayMs) ? delayMs : 180;
     const idleTimeout = Number.isFinite(idleTimeoutMs) ? idleTimeoutMs : 900;
-    window.setTimeout(() => {
-      const start = () => {
-        if (root && root.isConnected) initHero3DCanvas(root);
-      };
-      if (typeof window.requestIdleCallback === "function") {
-        window.requestIdleCallback(start, { timeout: idleTimeout });
-      } else {
-        window.requestAnimationFrame(() => window.setTimeout(start, 0));
-      }
-    }, reducedMotion ? 0 : delay);
+    return new Promise((resolve) => {
+      window.setTimeout(() => {
+        const start = () => {
+          if (!root || !root.isConnected) {
+            resolve(false);
+            return;
+          }
+          Promise.resolve(initHero3DCanvas(root)).then(resolve, () => resolve(false));
+        };
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(start, { timeout: idleTimeout });
+        } else {
+          window.requestAnimationFrame(() => window.setTimeout(start, 0));
+        }
+      }, reducedMotion ? 0 : delay);
+    });
   }
 
   function mountShared3DBackground(root) {
@@ -2993,7 +3018,7 @@
     if (!$('.js-hero-3d-canvas', root)) {
       root.insertAdjacentHTML("afterbegin", renderShared3DBackground());
     }
-    scheduleHero3DCanvas(root, 220);
+    initHero3DCanvas(root);
   }
 
   function renderCurrentPage() {
@@ -9453,18 +9478,27 @@
 
   function initHero3DCanvas(root) {
     const canvas = $(".js-hero-3d-canvas", root);
-    if (!canvas) return;
+    if (!canvas) return Promise.resolve(false);
+    if (canvas.__smartsteam3DReadyPromise) return canvas.__smartsteam3DReadyPromise;
+
+    const markReady = (value) => {
+      if (canvas.isConnected) canvas.dataset.hero3dReady = "true";
+      return value;
+    };
+
     if (canvas.dataset.fallback2d !== "true" && supportsWebGLCanvas()) {
-      initThreeHero3DCanvas(root, canvas).catch(() => {
+      canvas.__smartsteam3DReadyPromise = initThreeHero3DCanvas(root, canvas).then(() => markReady(true)).catch(() => {
         canvas.dataset.fallback2d = "true";
-        initHero3DCanvas(root);
+        canvas.__smartsteam3DReadyPromise = null;
+        return initHero3DCanvas(root);
       });
-      return;
+      return canvas.__smartsteam3DReadyPromise;
     }
     const ctx = canvas.getContext("2d", { alpha: true });
-    if (!ctx) return;
+    if (!ctx) return Promise.resolve(false);
     canvas.dataset.fallback2d = "true";
     canvas.dataset.renderer = "canvas";
+    canvas.__smartsteam3DReadyPromise = Promise.resolve(true);
 
     let rafId = 0;
     let isDisposed = false;
@@ -9791,7 +9825,10 @@
     });
 
     drawFrame(false);
+    markReady(true);
     if (supportsBackgroundMotion) rafId = window.requestAnimationFrame(loop);
+
+    return canvas.__smartsteam3DReadyPromise;
   }
 
   function initCopyLink(root, successMessage) {

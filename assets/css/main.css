@@ -14249,6 +14249,45 @@ body[data-page="contact"] .site-main {
   isolation: isolate;
 }
 
+body[data-page="projects"] .page-shell,
+body[data-page="projects"] .site-main,
+body[data-page="projects"] .site-footer,
+body[data-page="tutorials"] .page-shell,
+body[data-page="tutorials"] .site-main,
+body[data-page="tutorials"] .site-footer,
+body[data-page="news"] .page-shell,
+body[data-page="news"] .site-main,
+body[data-page="news"] .site-footer,
+body[data-page="contact"] .page-shell,
+body[data-page="contact"] .site-main,
+body[data-page="contact"] .site-footer {
+  transform: none !important;
+  transition: opacity 0.48s var(--transition);
+}
+
+body[data-page="projects"]:not(.is-ready) .page-shell,
+body[data-page="projects"]:not(.is-shell-visible) .site-main,
+body[data-page="projects"]:not(.is-shell-visible) .site-footer,
+body[data-page="tutorials"]:not(.is-ready) .page-shell,
+body[data-page="tutorials"]:not(.is-shell-visible) .site-main,
+body[data-page="tutorials"]:not(.is-shell-visible) .site-footer,
+body[data-page="news"]:not(.is-ready) .page-shell,
+body[data-page="news"]:not(.is-shell-visible) .site-main,
+body[data-page="news"]:not(.is-shell-visible) .site-footer,
+body[data-page="contact"]:not(.is-ready) .page-shell,
+body[data-page="contact"]:not(.is-shell-visible) .site-main,
+body[data-page="contact"]:not(.is-shell-visible) .site-footer {
+  transform: none !important;
+}
+
+body[data-page="projects"] [data-motion="text-stagger"] > *,
+body[data-page="tutorials"] [data-motion="text-stagger"] > *,
+body[data-page="news"] [data-motion="text-stagger"] > *,
+body[data-page="contact"] [data-motion="text-stagger"] > * {
+  transform: none;
+  transition-property: opacity;
+}
+
 body[data-page="projects"] .page-3d-ambient,
 body[data-page="tutorials"] .page-3d-ambient,
 body[data-page="news"] .page-3d-ambient,
