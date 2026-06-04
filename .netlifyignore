@@ -1,0 +1,42 @@
+# Dev-only screenshots and local review output.
+shots/
+products-wow2.png
+welcome-wow2.png
+
+# Superseded source images. WebP replacements are referenced by the site.
+assets/img/luxury-3d-chip-hero.png
+assets/img/stem-kids-workshop.png
+uploads/image-1757121942243-393980081.png
+uploads/image-1757121974669-659184661.png
+uploads/image-1757561533112-500019044.png
+uploads/image-1757582421519-776650810.jpg
+uploads/image-1758610234203-812672170.png
+uploads/image-1757471354502-819389918.png
+uploads/image-1757560849851-548785459.png
+uploads/image-1757576599844-601868021.png
+uploads/image-1757579659126-901903974.png
+
+# Migration/admin source data should not be part of the public deploy.
+migration-full-input/
+migration-full.zip
+transformed-products.js
+out.txt
+parse-migration.js
+splice-data.js
+transform-products.js
+madi-demo.html
+
+# Local tools and admin/editor bundles are blocked by redirects and excluded here too.
+tools/
+assets/js/admin.js
+assets/js/product-details.js
+assets/css/admin.css
+assets/vendor/tinymce/
+
+# Repo/dev metadata not needed by the static site.
+README.md
+package.json
+scripts/
+*.log
+*.pyc
+__pycache__/

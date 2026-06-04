@@ -896,7 +896,7 @@ body.is-transitioning {
 
 .preloader {
   z-index: 110;
-  transition: opacity 0.46s var(--transition), visibility 0.46s var(--transition);
+  transition: opacity 0.22s var(--transition), visibility 0.22s var(--transition);
 }
 
 .preloader::before,
@@ -923,17 +923,7 @@ body.is-transitioning {
 
 .preloader::after,
 .transition-layer::after {
-  z-index: -1;
-  inset: 0;
-  opacity: 0.34;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-    linear-gradient(180deg, transparent 0 45%, rgba(82, 218, 244, 0.18) 50%, transparent 55% 100%);
-  background-size: 72px 72px, 72px 72px, 100% 180%;
-  transform: perspective(900px) rotateX(62deg) translateY(16%);
-  transform-origin: center bottom;
-  animation: smartsteamPreloaderScan 1.8s ease-in-out infinite;
+  display: none;
 }
 
 .preloader.is-hidden {
@@ -14711,5 +14701,31 @@ body[data-page="contact"] .page-intro--contact .page-intro__visual .media-frame:
 
   body[data-page="contact"] .page-intro--contact .editorial-title {
     text-shadow: 0 12px 38px rgba(0, 0, 0, 0.72) !important;
+  }
+}
+
+@supports (content-visibility: auto) {
+  .archive-stream__list > .archive-entry:not(:first-child),
+  body[data-page="projects"] .project-archive-entry:not(:first-child),
+  .project-sections .project-section:not(:first-child),
+  .project-gallery,
+  .product-detail-tabs-shell,
+  .policy-detail__sections > .policy-detail__section,
+  body[data-page="contact"] .contact-panel:not(:first-child) {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 560px;
+  }
+
+  .project-gallery {
+    contain-intrinsic-size: auto 720px;
+  }
+
+  .product-detail-tabs-shell {
+    contain-intrinsic-size: auto 760px;
+  }
+
+  .policy-detail__sections > .policy-detail__section,
+  body[data-page="contact"] .contact-panel:not(:first-child) {
+    contain-intrinsic-size: auto 320px;
   }
 }

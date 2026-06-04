@@ -105,8 +105,12 @@
   const transitionTuning = runtimeTuning.transitions || {};
   const ASSET_VERSION = runtimeTuning.assetVersion ? `?v=${runtimeTuning.assetVersion}` : "";
   const THREE_MODULE_URL = "/assets/vendor/three/three.module.min.js";
-  const PUBLIC_ARCHIVE_ENDPOINT = "/assets/data/archive.json";
-  const MIGRATION_FETCH_TIMEOUT_MS = 2500;
+  const PUBLIC_ARCHIVE_ENDPOINT = `/assets/data/archive.json${ASSET_VERSION}`;
+  const PUBLIC_PRODUCTS_ENDPOINT = `/assets/data/products.json${ASSET_VERSION}`;
+  const PUBLIC_PROJECTS_ENDPOINT = `/assets/data/projects.json${ASSET_VERSION}`;
+  const PUBLIC_POLICIES_ENDPOINT = `/assets/data/policies.json${ASSET_VERSION}`;
+  const PUBLIC_DATA_FETCH_TIMEOUT_MS = Math.max(3000, Number(runtimeTuning.publicDataTimeoutMs) || 9000);
+  const PUBLIC_DATA_RETRY_DELAY_MS = 180;
   const MEDIA_FALLBACKS = {
     hero: "/assets/img/product-robotics.svg",
     editorial: "/assets/img/product-science.svg",
@@ -131,8 +135,13 @@
     scrollHandler: null,
     resizeHandler: null,
     migratedArchivePromise: null,
+    productsDataPromise: null,
+    projectsDataPromise: null,
+    policiesDataPromise: null,
     experienceStarted: false,
+    pageExperiencePromise: null,
     transitionPending: sessionStorage.getItem("smartsteam_transition_pending") === "1",
+    transitionStarted: false,
     textNormalizationObserver: null,
     textNormalizeRaf: 0,
     normalizingText: false,
@@ -141,11 +150,13 @@
     mediaLoadedSources: new Set(),
     performanceAutoFloor: "full",
     performanceMetrics: null,
+    productSceneBootUntil: 0,
   };
   const GROUPS = ["age", "theme", "format", "occasion", "difficulty"];
   const APP_THEME_STORAGE_KEY = "smartsteam:theme";
   const WELCOME_THEME_STORAGE_KEY = "smartsteam:welcome-theme";
   const PROJECT_ARCHIVE_SCROLL_KEY = "smartsteam:project-archive-scroll";
+  const PERFORMANCE_PROFILE_STORAGE_KEY = "smartsteam:performance-profile:v2";
   const PERFORMANCE_MODES = ["auto", "full", "balanced", "safe"];
   const PERFORMANCE_MODE_RANK = { full: 0, balanced: 1, safe: 2 };
   const BACKGROUND_3D_PAGES = new Set(["welcome", "products", "projects", "tutorials", "news", "contact"]);
@@ -187,6 +198,70 @@
 
   function getRequestedPerformanceMode() {
     return getPerformanceQueryMode() || "auto";
+  }
+
+  function shouldResetPerformanceProfile() {
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      return params.get("resetPerf") === "1" || params.get("performanceReset") === "1";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function getStoredPerformanceProfile(details) {
+    if (shouldResetPerformanceProfile()) {
+      try { localStorage.removeItem(PERFORMANCE_PROFILE_STORAGE_KEY); } catch (error) {}
+      return null;
+    }
+    try {
+      const profile = JSON.parse(localStorage.getItem(PERFORMANCE_PROFILE_STORAGE_KEY) || "null");
+      if (!profile || profile.version !== 2) return null;
+      if (profile.signature !== getPerformanceSignature(details)) return null;
+      const mode = normalizePerformanceMode(profile.mode);
+      if (!mode || mode === "auto") return null;
+      return Object.assign({}, profile, { mode });
+    } catch (error) {
+      return null;
+    }
+  }
+
+  function savePerformanceProfile(profile) {
+    try {
+      localStorage.setItem(PERFORMANCE_PROFILE_STORAGE_KEY, JSON.stringify(profile));
+    } catch (error) {}
+  }
+
+  function getPerformanceSignature(details) {
+    const renderer = normalizeText((details && details.renderer) || "").toLowerCase().slice(0, 96);
+    const vendor = normalizeText((details && details.vendor) || "").toLowerCase().slice(0, 64);
+    const cores = navigator.hardwareConcurrency || 0;
+    const memory = navigator.deviceMemory || 0;
+    return [
+      details && details.webgl ? "webgl" : "no-webgl",
+      details && details.softwareLike ? "software" : "gpu",
+      details && details.weakGpu ? "weak" : "ok",
+      details && details.lowCpu ? "lowcpu" : "cpu",
+      details && details.lowMemory ? "lowmem" : "mem",
+      details && details.reducedMotion ? "reduced" : "motion",
+      `c${cores}`,
+      `m${memory}`,
+      vendor,
+      renderer,
+    ].join("|");
+  }
+
+  function createPerformanceProfile(details) {
+    const mode = chooseAutoPerformanceMode(details);
+    const profile = {
+      version: 2,
+      mode,
+      signature: getPerformanceSignature(details),
+      createdAt: Date.now(),
+      reason: "device-detect",
+    };
+    savePerformanceProfile(profile);
+    return profile;
   }
 
   function detectPerformanceDetails() {
@@ -243,8 +318,9 @@
     const previousPreference = performanceModeState.preference;
     const details = detectPerformanceDetails();
     const preference = getRequestedPerformanceMode();
-    const detectedAuto = chooseAutoPerformanceMode(details);
-    const autoMode = getWorstPerformanceMode(detectedAuto, state.performanceAutoFloor || "full");
+    const storedProfile = preference === "auto" ? getStoredPerformanceProfile(details) : null;
+    const autoProfile = storedProfile || (preference === "auto" ? createPerformanceProfile(details) : null);
+    const autoMode = autoProfile ? autoProfile.mode : chooseAutoPerformanceMode(details);
     const appliedMode = preference === "auto" ? autoMode : preference;
 
     performanceModeState.preference = preference;
@@ -266,6 +342,8 @@
       reason: performanceModeState.reason,
       metrics: state.performanceMetrics,
       details,
+      locked: preference === "auto",
+      profile: autoProfile,
     };
 
     if (previousApplied !== appliedMode || previousPreference !== preference) {
@@ -291,15 +369,13 @@
   }
 
   function downgradeAutoPerformanceMode(mode, metrics) {
-    const nextMode = normalizePerformanceMode(mode);
-    if (!nextMode || nextMode === "auto" || performanceModeState.preference !== "auto") return false;
-    const currentFloor = state.performanceAutoFloor || "full";
-    const nextFloor = getWorstPerformanceMode(currentFloor, nextMode);
-    if (nextFloor === currentFloor && performanceModeState.applied === nextFloor) return false;
-    state.performanceAutoFloor = nextFloor;
+    // Performance tier is locked by the device profile; runtime samplers only report diagnostics.
     state.performanceMetrics = metrics || null;
-    applyPerformanceModeState("frame-health");
-    return true;
+    return false;
+  }
+
+  function isProductSceneBooting() {
+    return page === "products" && state.productSceneBootUntil && performance.now() < state.productSceneBootUntil;
   }
 
   function getBackgroundPixelRatioLimit(lowPowerDevice) {
@@ -311,6 +387,11 @@
 
   function getBackgroundParticleLimit(maxCount, isProductCanvas, lowPowerDevice) {
     const mode = getCurrentPerformanceMode();
+    if (isProductCanvas && isProductSceneBooting()) {
+      if (mode === "safe") return Math.min(maxCount, 90);
+      if (mode === "balanced") return Math.min(maxCount, 150);
+      return Math.min(maxCount, lowPowerDevice ? 180 : 240);
+    }
     if (mode === "safe") return Math.min(maxCount, isProductCanvas ? 170 : 130);
     if (mode === "balanced") return Math.min(maxCount, isProductCanvas ? 360 : 280);
     if (lowPowerDevice) return Math.min(maxCount, isProductCanvas ? 360 : 320);
@@ -319,6 +400,11 @@
 
   function getBackgroundNodeLimit(maxCount, isProductCanvas, lowPowerDevice) {
     const mode = getCurrentPerformanceMode();
+    if (isProductCanvas && isProductSceneBooting()) {
+      if (mode === "safe") return Math.min(maxCount, 22);
+      if (mode === "balanced") return Math.min(maxCount, 34);
+      return Math.min(maxCount, lowPowerDevice ? 38 : 46);
+    }
     if (mode === "safe") return Math.min(maxCount, isProductCanvas ? 34 : 28);
     if (mode === "balanced") return Math.min(maxCount, isProductCanvas ? 58 : 48);
     if (lowPowerDevice) return Math.min(maxCount, isProductCanvas ? 62 : 56);
@@ -337,6 +423,7 @@
     const performanceMode = getCurrentPerformanceMode();
     const reduceForMotion = reducedMotion && performanceModeState.preference === "auto";
     const inProductGrid = isProductCanvas && body.classList.contains("is-product-grid-mode");
+    const productBooting = isProductCanvas && isProductSceneBooting();
     const busyGrid = inProductGrid && sceneEl && (
       sceneEl.classList.contains("is-board-scrolling") ||
       sceneEl.classList.contains("is-grid-reflowing") ||
@@ -356,7 +443,7 @@
     const baseInterval = performanceMode === "balanced" ? (lowPowerDevice ? 50 : 33) : (lowPowerDevice ? 33 : 16);
     const gridInterval = performanceMode === "balanced" ? (lowPowerDevice ? 84 : 58) : (lowPowerDevice ? 66 : 42);
     const busyInterval = performanceMode === "balanced" ? (lowPowerDevice ? 132 : 100) : (lowPowerDevice ? 100 : 76);
-    const interval = reduceForMotion
+    let interval = reduceForMotion
       ? Math.max(inProductGrid ? gridInterval : baseInterval, 66)
       : (busyGrid ? busyInterval : (inProductGrid ? gridInterval : baseInterval));
     const reducedScale = reduceForMotion ? 0.42 : 1;
@@ -367,7 +454,7 @@
       active: true,
       interval,
       speed: Math.max(0.16, reducedScale * performanceScale * gridScale),
-      pointer: !reduceForMotion && !busyGrid,
+      pointer: !productBooting && !reduceForMotion && !busyGrid,
     };
   }
 
@@ -414,9 +501,9 @@
   }
 
   function createBackgroundHealthSampler(rendererName, isProductCanvas) {
-    const enabled = pageSupportsBackgroundMotion() && !isProductCanvas;
-    const warmupMs = 700;
-    const sampleMs = 2600;
+    const enabled = pageSupportsBackgroundMotion();
+    const warmupMs = isProductCanvas ? 900 : 700;
+    const sampleMs = isProductCanvas ? 2200 : 2600;
     let active = enabled;
     let round = 0;
     let bootTime = 0;
@@ -476,8 +563,8 @@
         lastSampleTime = timestamp;
         if (!Number.isFinite(delta) || delta <= 0) return;
 
-        const slowThreshold = Math.max(currentMode === "balanced" ? 76 : 52, targetInterval * 1.75);
-        const severeThreshold = Math.max(currentMode === "balanced" ? 150 : 110, targetInterval * 3.2);
+        const slowThreshold = Math.max(currentMode === "balanced" ? 72 : 48, targetInterval * 1.65);
+        const severeThreshold = Math.max(currentMode === "balanced" ? 138 : 96, targetInterval * 2.85);
         frames += 1;
         deltaSum += delta;
         targetSum += targetInterval;
@@ -507,10 +594,9 @@
 
         let nextMode = "";
         if (currentMode === "full") {
-          if (fps < 24 || severeFrames >= 3 || maxDelta > 180 || avgDelta > avgTarget * 2.25) nextMode = "safe";
-          else if (fps < 42 || slowFrames >= 5 || maxDelta > 96 || avgDelta > avgTarget * 1.55) nextMode = "balanced";
+          if (fps < 50 || severeFrames >= 2 || slowFrames >= 4 || maxDelta > 82 || avgDelta > avgTarget * 1.42) nextMode = "balanced";
         } else if (currentMode === "balanced") {
-          if (fps < 20 || severeFrames >= 3 || slowFrames >= 9 || maxDelta > 190 || avgDelta > avgTarget * 2.25) nextMode = "safe";
+          if (fps < 26 || severeFrames >= 2 || slowFrames >= 7 || maxDelta > 150 || avgDelta > avgTarget * 2.05) nextMode = "safe";
         }
 
         if (nextMode && downgradeAutoPerformanceMode(nextMode, metrics)) {
@@ -546,6 +632,85 @@
     return new Promise((resolve) => {
       window.setTimeout(resolve, duration);
     });
+  }
+
+  function waitForNextPaints(count) {
+    const frames = Math.max(1, count || 1);
+    return new Promise((resolve) => {
+      let remaining = frames;
+      const step = () => {
+        remaining -= 1;
+        if (remaining <= 0) {
+          resolve();
+          return;
+        }
+        requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  function restoreScrollInstant(top) {
+    const doc = document.documentElement;
+    const maxScroll = Math.max(
+      0,
+      Math.max(doc.scrollHeight || 0, body.scrollHeight || 0) - Math.max(window.innerHeight || 0, doc.clientHeight || 0)
+    );
+    const targetTop = clamp(Number(top) || 0, 0, maxScroll);
+    const previousHtmlBehavior = doc.style.scrollBehavior;
+    const previousBodyBehavior = body.style.scrollBehavior;
+
+    doc.style.scrollBehavior = "auto";
+    body.style.scrollBehavior = "auto";
+    window.scrollTo({ top: targetTop, left: 0, behavior: "auto" });
+
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        doc.style.scrollBehavior = previousHtmlBehavior;
+        body.style.scrollBehavior = previousBodyBehavior;
+      });
+    });
+  }
+
+  function runAfterPageShell(callback, fallbackMs) {
+    if (typeof callback !== "function") return function() {};
+    let done = false;
+    let frameId = 0;
+    let settleFrameId = 0;
+    const timerId = window.setTimeout(finish, Math.max(120, fallbackMs || 1200));
+
+    function cleanup() {
+      done = true;
+      window.clearTimeout(timerId);
+      if (frameId) window.cancelAnimationFrame(frameId);
+      if (settleFrameId) window.cancelAnimationFrame(settleFrameId);
+      frameId = 0;
+      settleFrameId = 0;
+    }
+
+    function finish() {
+      if (done) return;
+      window.clearTimeout(timerId);
+      done = true;
+      if (frameId) window.cancelAnimationFrame(frameId);
+      frameId = 0;
+      settleFrameId = window.requestAnimationFrame(() => {
+        settleFrameId = 0;
+        callback();
+      });
+    }
+
+    function poll() {
+      if (done) return;
+      if (body.classList.contains("is-shell-visible") || body.classList.contains("is-copy-visible")) {
+        finish();
+        return;
+      }
+      frameId = window.requestAnimationFrame(poll);
+    }
+
+    frameId = window.requestAnimationFrame(poll);
+    return cleanup;
   }
 
   function debounce(callback, delay) {
@@ -1190,7 +1355,7 @@
     if (window.location.protocol === "http:" || window.location.protocol === "https:") {
       return window.location.origin;
     }
-    return "https://ssteam.netlify.app";
+    return "https://stemora.vn";
   })();
 
   function ensureHeadTag(selector, create) {
@@ -1262,7 +1427,7 @@
     if (title) setMetaTag("og:title", title, "property");
     if (description) setMetaTag("og:description", description, "property");
 
-    const ogImage = opts.image || (data.siteMeta && data.siteMeta.ogImage) || `${SITE_ORIGIN}/assets/img/luxury-3d-chip-hero.png`;
+    const ogImage = opts.image || (data.siteMeta && data.siteMeta.ogImage) || `${SITE_ORIGIN}/assets/img/luxury-3d-chip-hero.webp`;
     setMetaTag("og:image", ogImage, "property");
     setMetaTag("twitter:card", "summary_large_image");
     setMetaTag("twitter:title", title || "SMARTSTEAM");
@@ -1308,6 +1473,7 @@
     if (isRemoteMediaSource(normalizedSource)) return normalizedSource;
     const localSource = normalizedSource.startsWith("/") ? normalizedSource : `/${normalizedSource.replace(/^\.\//, "")}`;
     if (!ASSET_VERSION) return localSource;
+    if (/[?&]v=/.test(localSource)) return localSource;
     return `${localSource}${localSource.includes("?") ? "&" : "?"}${ASSET_VERSION.slice(1)}`;
   }
 
@@ -1445,7 +1611,7 @@
   }
 
   function sortedProducts() {
-    return [...data.products].sort((a, b) => a.featuredOrder - b.featuredOrder);
+    return [...(data.products || [])].sort((a, b) => a.featuredOrder - b.featuredOrder);
   }
 
   function getValidTimestamp(value) {
@@ -1524,17 +1690,26 @@
     });
   }
 
-  async function loadJsonEndpoint(path) {
+  async function fetchJsonWithTimeout(path, timeoutMs) {
     const controller = typeof AbortController !== "undefined" ? new AbortController() : null;
     const timeoutId = controller
-      ? window.setTimeout(() => controller.abort(), MIGRATION_FETCH_TIMEOUT_MS)
+      ? window.setTimeout(() => controller.abort(), timeoutMs)
       : 0;
     try {
-      const response = await fetch(path, { cache: "no-store", signal: controller ? controller.signal : undefined });
+      const response = await fetch(path, { cache: "force-cache", signal: controller ? controller.signal : undefined });
       if (!response.ok) throw new Error(`Failed to load ${path}`);
       return response.json();
     } finally {
       if (timeoutId) window.clearTimeout(timeoutId);
+    }
+  }
+
+  async function loadJsonEndpoint(path) {
+    try {
+      return await fetchJsonWithTimeout(path, PUBLIC_DATA_FETCH_TIMEOUT_MS);
+    } catch (error) {
+      await wait(PUBLIC_DATA_RETRY_DELAY_MS);
+      return fetchJsonWithTimeout(path, PUBLIC_DATA_FETCH_TIMEOUT_MS + 3000);
     }
   }
 
@@ -1748,22 +1923,89 @@
     return formatter.format(dateValue);
   }
 
+  function normalizeLoadedArray(items) {
+    return Array.isArray(items) ? normalizeDataTree(items) : [];
+  }
+
+  function loadDataArray(endpoint, key, promiseKey) {
+    if (Array.isArray(data[key]) && data[key].length) return Promise.resolve(data[key]);
+    if (state[promiseKey]) return state[promiseKey];
+
+    state[promiseKey] = loadJsonEndpoint(endpoint).then((items) => {
+      data[key] = normalizeLoadedArray(items);
+      return data[key];
+    }).catch(() => {
+      if (!Array.isArray(data[key])) data[key] = [];
+      return data[key];
+    });
+
+    return state[promiseKey];
+  }
+
+  function loadProductsData() {
+    return loadDataArray(PUBLIC_PRODUCTS_ENDPOINT, "products", "productsDataPromise");
+  }
+
+  function loadProjectsData() {
+    return loadDataArray(PUBLIC_PROJECTS_ENDPOINT, "projects", "projectsDataPromise");
+  }
+
+  function loadPoliciesData() {
+    return loadDataArray(PUBLIC_POLICIES_ENDPOINT, "policies", "policiesDataPromise");
+  }
+
+  function shouldLoadProductsData() {
+    return page === "products"
+      || page === "product-detail"
+      || page === "project-detail"
+      || page === "tutorial-detail"
+      || page === "news-detail";
+  }
+
+  function shouldLoadProjectsData() {
+    return page === "projects" || page === "project-detail";
+  }
+
+  function shouldLoadPoliciesData() {
+    return page === "policy" || page === "policy-detail";
+  }
+
+  function shouldLoadTutorialArchiveData() {
+    return page === "tutorials"
+      || page === "tutorial-detail"
+      || page === "project-detail"
+      || page === "news-detail";
+  }
+
+  function shouldLoadNewsArchiveData() {
+    return page === "news" || page === "news-detail" || page === "tutorial-detail";
+  }
+
   function loadMigratedArchiveData() {
     if (state.migratedArchivePromise) return state.migratedArchivePromise;
 
-    const shouldLoadTutorials = page === "tutorials" || page === "tutorial-detail";
-    const shouldLoadNews = page === "news" || page === "news-detail";
+    const shouldLoadTutorials = shouldLoadTutorialArchiveData();
+    const shouldLoadNews = shouldLoadNewsArchiveData();
     state.migratedArchivePromise = loadJsonEndpoint(PUBLIC_ARCHIVE_ENDPOINT).then((archiveData) => {
-      const nextTutorials = Array.isArray(archiveData && archiveData.tutorials) ? archiveData.tutorials : [];
-      const nextNews = Array.isArray(archiveData && archiveData.news) ? archiveData.news : [];
-      if (shouldLoadTutorials && (nextTutorials.length || !Array.isArray(data.tutorials))) data.tutorials = nextTutorials;
-      if (shouldLoadNews && (nextNews.length || !Array.isArray(data.news))) data.news = nextNews;
+      const nextTutorials = normalizeLoadedArray(archiveData && archiveData.tutorials);
+      const nextNews = normalizeLoadedArray(archiveData && archiveData.news);
+      if (shouldLoadTutorials) data.tutorials = nextTutorials;
+      if (shouldLoadNews) data.news = nextNews;
     }).catch(() => {
       if (shouldLoadTutorials && !Array.isArray(data.tutorials)) data.tutorials = [];
       if (shouldLoadNews && !Array.isArray(data.news)) data.news = [];
     });
 
     return state.migratedArchivePromise;
+  }
+
+  function loadPageData() {
+    const requests = [];
+    if (shouldLoadProductsData()) requests.push(loadProductsData());
+    if (shouldLoadProjectsData()) requests.push(loadProjectsData());
+    if (shouldLoadPoliciesData()) requests.push(loadPoliciesData());
+    if (shouldLoadMigratedArchiveData()) requests.push(loadMigratedArchiveData());
+    return requests.length ? Promise.all(requests).then(() => null) : Promise.resolve(null);
   }
 
   function hydrateRenderedPage() {
@@ -1779,7 +2021,7 @@
 
 
   function shouldLoadMigratedArchiveData() {
-    return page === "tutorials" || page === "tutorial-detail" || page === "news" || page === "news-detail";
+    return shouldLoadTutorialArchiveData() || shouldLoadNewsArchiveData();
   }
 
   function markMediaFrameLoaded(image) {
@@ -1987,13 +2229,24 @@
     initScrollMotion();
   }
 
+  function setTransitionProgress(value) {
+    const nextValue = clamp(Math.round(value || 0), 0, 100);
+    const percent = $(".js-transition-percent");
+    const bar = $(".js-transition-bar");
+    if (percent) percent.textContent = `${nextValue}%`;
+    if (bar) bar.style.width = `${nextValue}%`;
+  }
+
   function releaseTransitionHold(delay) {
     const layer = $(".js-transition-layer");
     if (!layer || !state.transitionPending) return;
+    setTransitionProgress(100);
     window.setTimeout(() => {
       layer.classList.remove("is-active", "is-holding");
+      layer.setAttribute("aria-hidden", "true");
       sessionStorage.removeItem("smartsteam_transition_pending");
       state.transitionPending = false;
+      state.transitionStarted = false;
       body.classList.remove("is-transitioning");
     }, delay);
   }
@@ -2318,12 +2571,53 @@
 
     const clearTransitionState = () => {
       layer.classList.remove("is-active", "is-holding");
+      layer.setAttribute("aria-hidden", "true");
       sessionStorage.removeItem("smartsteam_transition_pending");
       state.transitionPending = false;
+      state.transitionStarted = false;
       body.classList.remove("is-transitioning");
     };
 
+    const beginRouteTransition = (href) => {
+      if (state.transitionStarted) return;
+      state.transitionStarted = true;
+      state.transitionPending = true;
+      sessionStorage.setItem("smartsteam_transition_pending", "1");
+      window.location.href = href;
+    };
+
     clearTransitionState();
+
+    document.addEventListener("click", (event) => {
+      if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const link = event.target.closest("a[data-transition]");
+      if (!link || link.hasAttribute("download")) return;
+      const target = (link.getAttribute("target") || "").trim().toLowerCase();
+      if (target && target !== "_self") return;
+      const rawHref = (link.getAttribute("href") || "").trim();
+      if (!rawHref || rawHref.charAt(0) === "#") return;
+
+      let url;
+      try {
+        url = new URL(link.href, window.location.href);
+      } catch (error) {
+        return;
+      }
+
+      if (url.origin !== window.location.origin) return;
+
+      const samePath = normalizePath(url.pathname) === currentPath;
+      const sameSearch = url.search === window.location.search;
+      const sameHash = url.hash === window.location.hash;
+      if (samePath && sameSearch && url.hash && !sameHash) return;
+
+      event.preventDefault();
+      if (samePath && sameSearch && sameHash) {
+        clearTransitionState();
+        return;
+      }
+      beginRouteTransition(url.href);
+    });
 
     window.addEventListener("pageshow", (event) => {
       if (!event.persisted) return;
@@ -2335,8 +2629,18 @@
     const preloader = $(".js-preloader");
     const percent = $(".js-preloader-percent");
     const bar = $(".js-preloader-bar");
+
+    const revealPage = () => {
+      setTransitionProgress(86);
+      const finishReveal = () => {
+        setTransitionProgress(100);
+        releaseTransitionHold(transitionTuning.releaseDelay || 180);
+      };
+      return initPageExperience().then(finishReveal, finishReveal);
+    };
+
     if (!preloader || !percent || !bar) {
-      initPageExperience();
+      revealPage();
       return;
     }
 
@@ -2355,16 +2659,20 @@
       if (finished) return;
       finished = true;
       if (hardTimeoutId) window.clearTimeout(hardTimeoutId);
-      percent.textContent = "100%";
-      bar.style.width = "100%";
+      percent.textContent = "98%";
+      bar.style.width = "98%";
       sessionStorage.setItem("smartsteam_has_visited", "1");
-      body.classList.add("is-ready");
-      preloader.classList.add("is-hidden");
-      initPageExperience();
-      window.setTimeout(() => {
-        preloader.setAttribute("aria-hidden", "true");
-        preloader.remove();
-      }, 520);
+      revealPage().finally(() => {
+        percent.textContent = "100%";
+        bar.style.width = "100%";
+        window.setTimeout(() => {
+          preloader.classList.add("is-hidden");
+          window.setTimeout(() => {
+            preloader.setAttribute("aria-hidden", "true");
+            preloader.remove();
+          }, preloadTuning.fadeDuration || 220);
+        }, preloadTuning.finishDelay || 30);
+      });
     };
 
     const handleResolved = () => {
@@ -2391,7 +2699,7 @@
       percent.textContent = `${rounded}%`;
       bar.style.width = `${rounded}%`;
 
-      if ((resolved || fallbackDone) && displayProgress > 99.4) {
+      if ((resolved || fallbackDone) && displayProgress > 96.4) {
         done();
         return;
       }
@@ -2405,7 +2713,7 @@
 
   function getCriticalAssetsForPage() {
     const logo = data.siteMeta.logo.src;
-    const sources = [logo];
+    const sources = [logo, ...getDocumentPreloadedImageSources()];
     const pushMediaSource = (media) => {
       const source = typeof media === "string" ? media : media && media.src;
       if (source) sources.push(source);
@@ -2448,11 +2756,42 @@
     return unique(sources.map((source, index) => {
       if (!source) return "";
       return index === 0 ? normalizeMediaSource(source) : resolveAssetSource(source);
-    }).filter(Boolean));
+      }).filter(Boolean));
+  }
+
+  function getDocumentPreloadedImageSources() {
+    return $$('link[rel~="preload"][as="image"][href]', document.head)
+      .map((link) => normalizeMediaSource(link.getAttribute("href") || ""))
+      .filter(Boolean);
+  }
+
+  function getViewportRankedImages(selector, root, limit) {
+    const scope = root || document;
+    const viewportW = Math.max(1, window.innerWidth || 1);
+    const viewportH = Math.max(1, window.innerHeight || 1);
+    const centerX = viewportW / 2;
+    const centerY = viewportH / 2;
+    return $$(selector, scope)
+      .map((image) => {
+        if (!image || image.dataset.mediaLoaded === "true") return null;
+        if (!(image.dataset.src || image.currentSrc || image.getAttribute("src"))) return null;
+        const frame = image.closest(".galaxy-card__inner") || image.closest(".media-frame") || image;
+        const rect = frame.getBoundingClientRect();
+        if (!rect.width || !rect.height) return null;
+        if (rect.right < -80 || rect.left > viewportW + 80 || rect.bottom < -80 || rect.top > viewportH + 80) return null;
+        const dx = rect.left + rect.width / 2 - centerX;
+        const dy = rect.top + rect.height / 2 - centerY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        return { image, score: rect.width * rect.height - distance * 3 };
+      })
+      .filter(Boolean)
+      .sort((left, right) => right.score - left.score)
+      .slice(0, limit || 4)
+      .map((entry) => entry.image);
   }
 
   function initPageExperience() {
-    if (state.experienceStarted) return;
+    if (state.pageExperiencePromise) return state.pageExperiencePromise;
     state.experienceStarted = true;
 
     const root = $(".js-page-root");
@@ -2462,15 +2801,16 @@
     const copyDelay = reducedMotion ? 0 : stageTuning.copyDelay || 300;
     const secondaryDelay = reducedMotion ? 0 : stageTuning.secondaryDelay || 520;
 
-    const revealSequence = async () => {
-      body.classList.add("is-ready");
-      await wait(shellDelay);
-      body.classList.add("is-shell-visible");
-      await wait(Math.max(0, heroDelay - shellDelay));
-      body.classList.add("is-hero-visible");
-      await wait(Math.max(0, copyDelay - heroDelay));
-      body.classList.add("is-copy-visible");
-      releaseTransitionHold(transitionTuning.releaseDelay || 180);
+    const warmVisibleProductImages = () => {
+      if (page !== "products") return;
+      const sphere = $(".js-galaxy-sphere", root);
+      if (!sphere) return;
+      const limit = window.innerWidth < 760 ? 4 : 6;
+      const images = getViewportRankedImages(".galaxy-card img", sphere, limit);
+      if (images.length) loadMediaBatch(images, window.innerWidth < 760 ? 2 : 3);
+    };
+
+    const revealSecondarySequence = async () => {
       await wait(Math.max(0, secondaryDelay - copyDelay));
       body.classList.add("is-secondary-visible");
       initMediaPriorityLoading(root);
@@ -2479,10 +2819,25 @@
       initContactForm();
     };
 
-    Promise.race([
+    const revealSequence = async () => {
+      body.classList.add("is-ready");
+      await wait(shellDelay);
+      body.classList.add("is-shell-visible");
+      await wait(Math.max(0, heroDelay - shellDelay));
+      body.classList.add("is-hero-visible");
+      await wait(Math.max(0, copyDelay - heroDelay));
+      body.classList.add("is-copy-visible");
+      warmVisibleProductImages();
+      revealSecondarySequence().catch(() => {});
+      await waitForNextPaints(preloadTuning.primaryReadyPaints || 1);
+    };
+
+    state.pageExperiencePromise = Promise.race([
       ensureImageReady(heroImage),
       wait(preloadTuning.heroReadyFallback || 1400),
-    ]).finally(revealSequence);
+    ]).then(revealSequence, revealSequence);
+
+    return state.pageExperiencePromise;
   }
 
   function initMediaPriorityLoading(root) {
@@ -2618,14 +2973,15 @@
     `;
   }
 
-  function scheduleHero3DCanvas(root, delayMs) {
+  function scheduleHero3DCanvas(root, delayMs, idleTimeoutMs) {
     const delay = Number.isFinite(delayMs) ? delayMs : 180;
+    const idleTimeout = Number.isFinite(idleTimeoutMs) ? idleTimeoutMs : 900;
     window.setTimeout(() => {
       const start = () => {
         if (root && root.isConnected) initHero3DCanvas(root);
       };
       if (typeof window.requestIdleCallback === "function") {
-        window.requestIdleCallback(start, { timeout: 900 });
+        window.requestIdleCallback(start, { timeout: idleTimeout });
       } else {
         window.requestAnimationFrame(() => window.setTimeout(start, 0));
       }
@@ -3012,6 +3368,7 @@
     var footer = document.querySelector('.site-footer');
     var previousFooterDisplay = footer ? footer.style.display : '';
     if (footer) footer.style.display = 'none';
+    state.productSceneBootUntil = performance.now() + 900;
     updateMeta(strings.pageMeta.products.title, strings.pageMeta.products.description);
     var productCleanups = [];
     function bindProductEvent(target, type, handler, options) {
@@ -3343,7 +3700,50 @@
       return loadMediaBatch(pendingImages, batchSize || (window.innerWidth < 760 ? 3 : 5));
     }
 
+    function getGalaxyImageLoadPlan() {
+      var mode = getCurrentPerformanceMode();
+      var mobile = window.innerWidth < 760;
+      if (mode === 'safe') {
+        return {
+          visibleLimit: mobile ? 5 : 8,
+          visibleBatch: mobile ? 2 : 3,
+          firstBatch: mobile ? 8 : 12,
+          firstBatchSize: mobile ? 2 : 3,
+          firstDelay: 260,
+          idleBatchSize: mobile ? 2 : 3,
+          idleMaxBatch: mobile ? 2 : 4,
+          idleStartDelay: 1250,
+          idleStepDelay: 260,
+        };
+      }
+      if (mode === 'balanced') {
+        return {
+          visibleLimit: mobile ? 6 : 10,
+          visibleBatch: mobile ? 3 : 4,
+          firstBatch: mobile ? 10 : 18,
+          firstBatchSize: mobile ? 3 : 5,
+          firstDelay: 180,
+          idleBatchSize: mobile ? 2 : 4,
+          idleMaxBatch: mobile ? 3 : 6,
+          idleStartDelay: 980,
+          idleStepDelay: 210,
+        };
+      }
+      return {
+        visibleLimit: mobile ? 8 : 12,
+        visibleBatch: mobile ? 4 : 6,
+        firstBatch: mobile ? 14 : 24,
+        firstBatchSize: mobile ? 4 : 7,
+        firstDelay: 110,
+        idleBatchSize: mobile ? 3 : 5,
+        idleMaxBatch: mobile ? 4 : 8,
+        idleStartDelay: 760,
+        idleStepDelay: 170,
+      };
+    }
+
     var galaxyImagePumpTimer = null;
+    var galaxyImagePumpIdle = 0;
     var galaxyInitialImageTimer = null;
     var galaxyVisibleImageFrame = 0;
     var lastVisibleImageLoadAt = 0;
@@ -3378,9 +3778,8 @@
       var now = performance.now ? performance.now() : Date.now();
       if (!force && now - lastVisibleImageLoadAt < 260) return;
       lastVisibleImageLoadAt = now;
-      var limit = window.innerWidth < 760 ? 8 : 12;
-      var batchSize = window.innerWidth < 760 ? 4 : 6;
-      loadGalaxyImages(getVisibleGalaxyImages(limit), batchSize);
+      var plan = getGalaxyImageLoadPlan();
+      loadGalaxyImages(getVisibleGalaxyImages(plan.visibleLimit), plan.visibleBatch);
     }
 
     function getInitialGalaxyImages(limit) {
@@ -3407,11 +3806,20 @@
       var pendingImages = (images || []).slice(startIndex || 0).filter(Boolean);
       if (!pendingImages.length) return;
       var index = 0;
-      var idleBatchSize = window.innerWidth < 760 ? 3 : 6;
-      var maxBatch = window.innerWidth < 760 ? 4 : 9;
+      var plan = getGalaxyImageLoadPlan();
+      var idleBatchSize = plan.idleBatchSize;
+      var maxBatch = plan.idleMaxBatch;
       var queueNext = function(delay) {
         galaxyImagePumpTimer = window.setTimeout(function() {
-          window.requestAnimationFrame(function() { loadNext(null); });
+          galaxyImagePumpTimer = null;
+          if (typeof window.requestIdleCallback === 'function') {
+            galaxyImagePumpIdle = window.requestIdleCallback(function(deadline) {
+              galaxyImagePumpIdle = 0;
+              loadNext(deadline);
+            }, { timeout: 900 });
+          } else {
+            window.requestAnimationFrame(function() { loadNext(null); });
+          }
         }, delay);
       };
       var loadNext = function(deadline) {
@@ -3432,18 +3840,19 @@
         }
         loadGalaxyImages(batch, idleBatchSize).finally(function() {
           if (index >= pendingImages.length || layoutMode !== 'sphere') return;
-          queueNext(140);
+          queueNext(plan.idleStepDelay);
         });
       };
-      queueNext(520);
+      queueNext(plan.idleStartDelay);
     }
 
     if (galaxyImagesByDepth.length) {
-      var firstGalaxyBatch = window.innerWidth < 760 ? 18 : 30;
+      var initialImagePlan = getGalaxyImageLoadPlan();
+      var firstGalaxyBatch = initialImagePlan.firstBatch;
       requestVisibleGalaxyImages(true);
       galaxyInitialImageTimer = window.setTimeout(function() {
-        loadGalaxyImages(getInitialGalaxyImages(firstGalaxyBatch), window.innerWidth < 760 ? 5 : 8);
-      }, 90);
+        loadGalaxyImages(getInitialGalaxyImages(firstGalaxyBatch), initialImagePlan.firstBatchSize);
+      }, initialImagePlan.firstDelay);
       scheduleGalaxyIdleImages(galaxyImagesByDepth, 0);
     }
     var layoutMode = 'sphere';
@@ -5700,6 +6109,7 @@
     var lastGalaxyRenderTime = 0;
     var productPerfSampleRafId = 0;
     var productPerfSampleTimer = null;
+    var galaxyRuntimeStarted = false;
 
     function getProductOrbitFrameInterval() {
       var mode = getCurrentPerformanceMode();
@@ -5787,11 +6197,19 @@
 
     function sampleProductFrameHealth() {
       if (performanceModeState.preference !== 'auto' || document.hidden) return;
+      if (getCurrentPerformanceMode() === 'safe') return;
+      if (isProductSceneBooting()) {
+        var bootWait = Math.max(700, Math.min(3200, state.productSceneBootUntil - performance.now() + 650));
+        productPerfSampleTimer = setTimeout(sampleProductFrameHealth, bootWait);
+        return;
+      }
       var startTime = 0;
       var lastTime = 0;
       var frames = 0;
       var slowFrames = 0;
+      var severeFrames = 0;
       var maxDelta = 0;
+      var deltaSum = 0;
 
       function sample(timestamp) {
         if (performanceModeState.preference !== 'auto' || document.hidden || layoutMode !== 'sphere') {
@@ -5801,13 +6219,15 @@
         if (!startTime) startTime = timestamp;
         if (lastTime) {
           var delta = timestamp - lastTime;
+          deltaSum += delta;
           maxDelta = Math.max(maxDelta, delta);
-          if (delta > 52) slowFrames += 1;
+          if (delta > 48) slowFrames += 1;
+          if (delta > 96) severeFrames += 1;
         }
         lastTime = timestamp;
         frames += 1;
 
-        if (timestamp - startTime < 2600) {
+        if (timestamp - startTime < 2200) {
           productPerfSampleRafId = requestAnimationFrame(sample);
           return;
         }
@@ -5815,9 +6235,30 @@
         productPerfSampleRafId = 0;
         var elapsed = Math.max(1, timestamp - startTime);
         var fps = Math.round((frames / elapsed) * 1000);
-        var metrics = { page: 'products', fps: fps, slowFrames: slowFrames, maxDelta: Math.round(maxDelta), elapsed: Math.round(elapsed) };
-        if (fps < 24 || slowFrames >= 16 || maxDelta > 180) downgradeAutoPerformanceMode('safe', metrics);
-        else if (fps < 42 || slowFrames >= 7 || maxDelta > 90) downgradeAutoPerformanceMode('balanced', metrics);
+        var avgDelta = deltaSum / Math.max(1, frames - 1);
+        var currentMode = getCurrentPerformanceMode();
+        var metrics = {
+          page: 'products',
+          renderer: 'product-sphere',
+          mode: currentMode,
+          fps: fps,
+          slowFrames: slowFrames,
+          severeFrames: severeFrames,
+          maxDelta: Math.round(maxDelta),
+          avgDelta: Math.round(avgDelta),
+          elapsed: Math.round(elapsed),
+        };
+        if (currentMode === 'full') {
+          if (fps < 50 || severeFrames >= 2 || slowFrames >= 4 || maxDelta > 72 || avgDelta > 28) {
+            if (downgradeAutoPerformanceMode('balanced', metrics)) {
+              productPerfSampleTimer = setTimeout(sampleProductFrameHealth, 1800);
+            }
+          }
+        } else if (currentMode === 'balanced') {
+          if (fps < 30 || severeFrames >= 2 || slowFrames >= 8 || maxDelta > 130 || avgDelta > 44) {
+            downgradeAutoPerformanceMode('safe', metrics);
+          }
+        }
       }
 
       productPerfSampleRafId = requestAnimationFrame(sample);
@@ -5825,11 +6266,12 @@
 
     productCleanups.push(onPerformanceModeChange(function() {
       lastGalaxyRenderTime = 0;
-      requestGalaxyFrame();
+      if (galaxyRuntimeStarted) requestGalaxyFrame();
     }));
 
+    galaxyRuntimeStarted = true;
     requestGalaxyFrame();
-    productPerfSampleTimer = setTimeout(sampleProductFrameHealth, 1600);
+    productPerfSampleTimer = setTimeout(sampleProductFrameHealth, 1400);
 
     // --- Search & Filter ---
     var activeFilter = 'all';
@@ -6139,6 +6581,7 @@
       clearTimeout(productPerfSampleTimer);
       clearTimeout(galaxyImagePumpTimer);
       clearTimeout(galaxyInitialImageTimer);
+      if (galaxyImagePumpIdle && typeof window.cancelIdleCallback === 'function') window.cancelIdleCallback(galaxyImagePumpIdle);
       if (categoryDropdownUi && categoryDropdownUi.closeTimer) clearTimeout(categoryDropdownUi.closeTimer);
       if (sortDropdownUi && sortDropdownUi.closeTimer) clearTimeout(sortDropdownUi.closeTimer);
       if (hoverPickFrame) cancelAnimationFrame(hoverPickFrame);
@@ -6149,6 +6592,9 @@
       galaxyRafId = 0;
       productPerfSampleRafId = 0;
       galaxyVisibleImageFrame = 0;
+      galaxyImagePumpIdle = 0;
+      galaxyRuntimeStarted = false;
+      state.productSceneBootUntil = 0;
       clearMorphLayer();
       clearGravityCollapseFx();
       clearBoardConnections();
@@ -6159,7 +6605,7 @@
     });
     renderInitialProductResults();
 
-    scheduleHero3DCanvas(root, 320);
+    scheduleHero3DCanvas(root, 80, 260);
   }
 
   function renderProductDetailPageV2() {
@@ -6642,304 +7088,6 @@
   }
 
 
-  function renderProductDetailPage() {
-    const root = $(".js-page-root");
-    if (!root) return;
-    const item = data.products.find((entry) => entry.slug === slugFromPath());
-    if (!item) return renderMissing(root, getLocalePath("products"));
-    updateMeta(`${getText(item, "titleVi", "titleEn")} | SMARTSTEAM`, getText(item, "summaryVi", "summaryEn"));
-
-    const related = getRelatedProducts(item).slice(0, 4);
-    const detailGallery = [...(Array.isArray(item.gallery) ? item.gallery : []), item.hero, item.cover].filter(Boolean);
-    const dedupedGallery = [];
-    const seenGallery = new Set();
-    detailGallery.forEach((mediaItem) => {
-      const key = typeof mediaItem === "string" ? mediaItem : mediaItem.src;
-      if (!key || seenGallery.has(key)) return;
-      seenGallery.add(key);
-      dedupedGallery.push(mediaItem);
-    });
-    if (!dedupedGallery.length && item.hero) dedupedGallery.push(item.hero);
-
-    const title = getText(item, "titleVi", "titleEn");
-    const tagline = getText(item, "taglineVi", "taglineEn");
-    const summary = getText(item, "summaryVi", "summaryEn") || tagline;
-    const summaryConfig = getProductCardSummaryConfig(title);
-    const detailSummary = truncateText(summary, summaryConfig.maxLength);
-    const description = getText(item, "descriptionVi", "descriptionEn") || summary;
-    const priceLabel = locale === "vi" ? item.priceVi : item.priceEn;
-    const reviewScore = 4 + ((item.featuredOrder || 0) % 2);
-    const reviewCount = 12 + ((item.featuredOrder || 0) % 7) * 2;
-    const stockCount = Number(item.stock || 0);
-    const stockNote = locale === "vi"
-      ? (stockCount > 0 ? `Chỉ còn ${stockCount} sản phẩm` : "Liên hệ để kiểm tra tồn kho")
-      : (stockCount > 0 ? `Only ${stockCount} items left` : "Contact us for stock status");
-    const stars = Array.from({ length: 5 }, (_, index) => `<span class="product-detail-stars__star${index < reviewScore ? " is-on" : ""}">${index < reviewScore ? "★" : "☆"}</span>`).join("");
-    const infoRows = [
-      [locale === "vi" ? "Danh mục" : "Category", (item.facts && item.facts[0] ? getText(item.facts[0], "valueVi", "valueEn") : tagline)],
-      [locale === "vi" ? "Tình trạng" : "Stock", locale === "vi" ? (item.availabilityVi || "Còn hàng") : (item.availabilityEn || "In stock")],
-      [locale === "vi" ? "Giá" : "Price", priceLabel],
-      [getGroupLabel("age"), item.age.map((value) => getTaxonomyLabel("age", value)).join(", ")],
-      [getGroupLabel("theme"), item.theme.map((value) => getTaxonomyLabel("theme", value)).join(", ")],
-      [getGroupLabel("format"), item.format.map((value) => getTaxonomyLabel("format", value)).join(", ")],
-      [getGroupLabel("difficulty"), item.difficulty.map((value) => getTaxonomyLabel("difficulty", value)).join(", ")],
-    ];
-    const categories = Array.from(
-      new Set(
-        data.products
-          .map((product) => product.facts && product.facts[0] ? getText(product.facts[0], "valueVi", "valueEn") : "")
-          .filter(Boolean)
-      )
-    );
-    const tabItems = [
-      {
-        key: "description",
-        label: locale === "vi" ? "Mô tả chi tiết" : "Description",
-        content: `
-          <h2>${locale === "vi" ? "Mô tả sản phẩm" : "Product description"}</h2>
-          ${descriptionMarkup}
-          ${Array.isArray(item.detailSections) && item.detailSections.length
-            ? item.detailSections.map((section) => `
-              <article class="product-detail-tab-section">
-                <h3>${getText(section, "headingVi", "headingEn")}</h3>
-                <div class="product-detail-rich-copy">${renderRichTextBlocks(getText(section, "bodyVi", "bodyEn"))}</div>
-              </article>
-            `).join("")
-            : ""}
-        `,
-      },
-      {
-        key: "specs",
-        label: locale === "vi" ? "Thông số kỹ thuật" : "Specifications",
-        content: `
-          <h2>${locale === "vi" ? "Thông số kỹ thuật" : "Specifications"}</h2>
-          <dl class="product-detail-spec-list">
-            ${infoRows.map((row) => `<div><dt>${row[0]}</dt><dd>${row[1]}</dd></div>`).join("")}
-          </dl>
-        `,
-      },
-      {
-        key: "features",
-        label: locale === "vi" ? "Tính năng" : "Features",
-        content: `
-          <h2>${locale === "vi" ? "Tính năng nổi bật" : "Key features"}</h2>
-          <ul class="product-detail-feature-list">
-            ${(locale === "vi" ? item.outcomesVi : item.outcomesEn).length
-              ? (locale === "vi" ? item.outcomesVi : item.outcomesEn).map((entry) => `<li>${entry}</li>`).join("")
-              : `
-                <li>${summary}</li>
-                <li>${locale === "vi" ? "Dễ tích hợp vào workshop, lớp học và dự án maker." : "Easy to integrate into workshops, classrooms, and maker builds."}</li>
-                <li>${locale === "vi" ? "Phù hợp để demo cơ cấu, thuật toán và tư duy kỹ thuật." : "Useful for demonstrating mechanisms, algorithms, and engineering thinking."}</li>
-              `}
-          </ul>
-        `,
-      },
-      {
-        key: "reviews",
-        label: locale === "vi" ? "Đánh giá & Bình luận" : "Reviews & Comments",
-        content: `
-          <h2>${locale === "vi" ? "Đánh giá & Bình luận" : "Reviews & Comments"}</h2>
-          <p>${locale === "vi"
-            ? `${reviewCount} đánh giá từ giáo viên, phụ huynh và đội triển khai. Điểm trung bình ${reviewScore}/5 cho độ dễ tích hợp và khả năng demo trên lớp.`
-            : `${reviewCount} reviews from teachers, parents, and deployment teams. Average score ${reviewScore}/5 for integration quality and classroom demonstration.`}</p>
-          <blockquote class="product-detail-review-quote">
-            <p>${getText(item.highlightQuote, "textVi", "textEn")}</p>
-            <footer>${getText(item.highlightQuote, "authorVi", "authorEn")}</footer>
-          </blockquote>
-        `,
-      },
-    ];
-
-    root.innerHTML = `
-      <section class="product-detail-page js-detail-stage">
-        <div class="container product-detail-shell">
-          <nav class="product-detail-breadcrumb" aria-label="Breadcrumb">
-            <a href="${getLocalePath("welcome")}" data-transition>${locale === "vi" ? "Trang chủ" : "Home"}</a>
-            <span>›</span>
-            <a href="${getLocalePath("products")}" data-transition>${locale === "vi" ? "Sản phẩm" : "Products"}</a>
-            <span>›</span>
-            <strong>${title}</strong>
-          </nav>
-
-          <div class="product-detail-layout">
-            <section class="product-detail-gallery-card" data-stage="hero">
-              <div class="product-detail-main-media js-detail-main-media">
-                ${renderMedia(dedupedGallery[0] || item.hero || item.cover, "", { priority: true, stage: "hero" })}
-              </div>
-              <div class="product-detail-thumb-row">
-                <button class="product-detail-thumb-nav js-detail-thumb-prev" type="button" aria-label="${locale === "vi" ? "Ảnh trước" : "Previous image"}">‹</button>
-                <div class="product-detail-thumbs js-detail-thumbs">
-                  ${dedupedGallery.map((mediaItem, index) => `
-                    <button class="product-detail-thumb${index === 0 ? " is-active" : ""}" type="button" data-idx="${index}">
-                      ${renderMedia(mediaItem, "", { tier: index < 2 ? "near" : "deferred" })}
-                    </button>
-                  `).join("")}
-                </div>
-                <button class="product-detail-thumb-nav js-detail-thumb-next" type="button" aria-label="${locale === "vi" ? "Ảnh sau" : "Next image"}">›</button>
-              </div>
-            </section>
-
-            <section class="product-detail-buy-card" data-stage="copy">
-              <h1 class="product-detail-title">${title}</h1>
-              <div class="product-detail-rating">
-                <div class="product-detail-stars">${stars}</div>
-                <span>(${reviewCount} ${locale === "vi" ? "đánh giá" : "reviews"})</span>
-              </div>
-              <div class="product-detail-price-panel">
-                <p class="product-detail-price">${priceLabel}</p>
-              </div>
-              <p class="product-detail-summary" style="--product-summary-lines:${summaryConfig.lines};">${escapeHtmlText(detailSummary || summary)}</p>
-              <div class="product-detail-purchase-row">
-                <div class="product-detail-qty-block">
-                  <span>${locale === "vi" ? "Số lượng:" : "Quantity:"}</span>
-                  <div class="product-detail-qty-control">
-                    <button class="js-detail-qty-minus" type="button">−</button>
-                    <span class="js-detail-qty-value">1</span>
-                    <button class="js-detail-qty-plus" type="button">+</button>
-                  </div>
-                </div>
-                <p class="product-detail-stock">${stockNote}</p>
-              </div>
-              <div class="product-detail-cta-row">
-                <button class="product-detail-cart-btn" type="button">${locale === "vi" ? "THÊM VÀO GIỎ HÀNG" : "ADD TO CART"}</button>
-                <a class="product-detail-buy-btn" href="${getLocalePath("contact")}" data-transition>${locale === "vi" ? "MUA NGAY" : "BUY NOW"}</a>
-              </div>
-              <div class="product-detail-share-row">
-                <button class="product-detail-copy-btn js-copy-link" type="button">${locale === "vi" ? "Sao chép liên kết" : "Copy link"}</button>
-                <span class="product-detail-share-feedback js-share-feedback" aria-live="polite"></span>
-              </div>
-            </section>
-
-            <aside class="product-detail-sidebar">
-              <section class="product-detail-side-card">
-                <h2>${locale === "vi" ? "DANH MỤC SẢN PHẨM" : "PRODUCT CATEGORIES"}</h2>
-                <div class="product-detail-category-list">
-                  <a class="is-active" href="${getLocalePath("products")}" data-transition>${locale === "vi" ? "Tất cả sản phẩm" : "All products"}</a>
-                  ${categories.map((category, index) => `<a href="${getLocalePath("products")}" data-transition>${["🤖", "💻", "🎮", "▦", "📦"][index % 5]} ${category}</a>`).join("")}
-                </div>
-              </section>
-
-              <section class="product-detail-side-card">
-                <h2>${locale === "vi" ? "SẢN PHẨM GỢI Ý" : "SUGGESTED PRODUCTS"}</h2>
-                <div class="product-detail-suggest-list">
-                  ${related.map((entry, index) => `
-                    <a class="product-detail-suggest-item" href="${getLocalePath("product-detail", entry.slug)}" data-transition>
-                      <div class="product-detail-suggest-thumb">${renderMedia(entry.cover, "", { tier: index < 2 ? "near" : "deferred" })}</div>
-                      <div>
-                        <strong>${getText(entry, "titleVi", "titleEn")}</strong>
-                        <span>${locale === "vi" ? entry.priceVi : entry.priceEn}</span>
-                      </div>
-                    </a>
-                  `).join("")}
-                </div>
-              </section>
-
-              <section class="product-detail-side-card">
-                <h2>${locale === "vi" ? "KHÁC" : "MORE"}</h2>
-                <div class="product-detail-link-list">
-                  <a href="${getLocalePath("policy")}" data-transition>${locale === "vi" ? "Hướng dẫn mua hàng" : "Buying guide"}</a>
-                  <a href="${getLocalePath("policy")}" data-transition>${locale === "vi" ? "Hướng dẫn thanh toán" : "Payment guide"}</a>
-                  <a href="${getLocalePath("contact")}" data-transition>${locale === "vi" ? "Kiểm tra đơn hàng" : "Check order"}</a>
-                </div>
-              </section>
-            </aside>
-
-            <section class="product-detail-tabs-shell">
-              <div class="product-detail-tabs-nav" role="tablist" aria-label="${locale === "vi" ? "Thông tin sản phẩm" : "Product information"}">
-                ${tabItems.map((tab, index) => `
-                  <button
-                    class="product-detail-tab-btn${index === 0 ? " is-active" : ""} js-product-detail-tab"
-                    type="button"
-                    role="tab"
-                    aria-selected="${index === 0 ? "true" : "false"}"
-                    data-tab="${tab.key}"
-                  >${tab.label}</button>
-                `).join("")}
-              </div>
-              <div class="product-detail-tabs-panels">
-                ${tabItems.map((tab, index) => `
-                  <article class="product-detail-tab-panel${index === 0 ? " is-active" : ""}" data-panel="${tab.key}" role="tabpanel">
-                    ${tab.content}
-                  </article>
-                `).join("")}
-              </div>
-            </section>
-          </div>
-        </div>
-      </section>
-    `;
-
-    const mainMedia = $(".js-detail-main-media", root);
-    const thumbWrap = $(".js-detail-thumbs", root);
-    let activeGalleryIndex = 0;
-
-    const renderActiveGallery = () => {
-      if (!mainMedia || !dedupedGallery[activeGalleryIndex]) return;
-      mainMedia.innerHTML = renderMedia(dedupedGallery[activeGalleryIndex], "", { priority: true, stage: "hero" });
-      hydrateDynamicMedia(mainMedia);
-      $$(".product-detail-thumb", thumbWrap).forEach((thumbButton, thumbIndex) => {
-        thumbButton.classList.toggle("is-active", thumbIndex === activeGalleryIndex);
-      });
-    };
-
-    if (thumbWrap) {
-      thumbWrap.addEventListener("click", (event) => {
-        const thumbButton = event.target.closest(".product-detail-thumb");
-        if (!thumbButton) return;
-        activeGalleryIndex = Number(thumbButton.dataset.idx || 0);
-        renderActiveGallery();
-      });
-    }
-
-    const prevButton = $(".js-detail-thumb-prev", root);
-    const nextButton = $(".js-detail-thumb-next", root);
-    if (prevButton) {
-      prevButton.addEventListener("click", () => {
-        activeGalleryIndex = (activeGalleryIndex - 1 + dedupedGallery.length) % dedupedGallery.length;
-        renderActiveGallery();
-      });
-    }
-    if (nextButton) {
-      nextButton.addEventListener("click", () => {
-        activeGalleryIndex = (activeGalleryIndex + 1) % dedupedGallery.length;
-        renderActiveGallery();
-      });
-    }
-
-    const qtyValue = $(".js-detail-qty-value", root);
-    const qtyMinus = $(".js-detail-qty-minus", root);
-    const qtyPlus = $(".js-detail-qty-plus", root);
-    if (qtyMinus && qtyValue) {
-      qtyMinus.addEventListener("click", () => {
-        const current = Number(qtyValue.textContent || 1);
-        qtyValue.textContent = String(Math.max(1, current - 1));
-      });
-    }
-    if (qtyPlus && qtyValue) {
-      qtyPlus.addEventListener("click", () => {
-        const current = Number(qtyValue.textContent || 1);
-        qtyValue.textContent = String(stockCount > 0 ? Math.min(stockCount, current + 1) : current + 1);
-      });
-    }
-
-    $$(".js-product-detail-tab", root).forEach((tabButton) => {
-      tabButton.addEventListener("click", () => {
-        const targetKey = tabButton.dataset.tab;
-        $$(".js-product-detail-tab", root).forEach((button) => {
-          const isCurrent = button === tabButton;
-          button.classList.toggle("is-active", isCurrent);
-          button.setAttribute("aria-selected", isCurrent ? "true" : "false");
-        });
-        $$(".product-detail-tab-panel", root).forEach((panel) => {
-          panel.classList.toggle("is-active", panel.dataset.panel === targetKey);
-        });
-      });
-    });
-
-    initCopyLink(root, strings.productDetail.copyLinkSuccess);
-    hydrateDynamicMedia(root);
-  }
-
   function getRelatedProducts(currentItem) {
     return sortedProducts()
       .filter((entry) => entry.slug !== currentItem.slug)
@@ -6954,156 +7102,6 @@
     const cleanEntries = (entries || []).map((entry) => normalizeText(entry || "")).filter(Boolean);
     if (!cleanEntries.length) return "";
     return `<div class="archive-entry__meta">${cleanEntries.map((entry) => `<span>${escapeHtmlText(entry)}</span>`).join("")}</div>`;
-  }
-
-  function renderArchiveHeroShell(eyebrow, title, intro, mediaItem) {
-    return `
-      <section class="page-intro page-intro--archive">
-        <div class="container page-intro__layout">
-          <div class="page-intro__copy" data-stage="copy">
-            <p class="scene-kicker">${escapeHtmlText(eyebrow)}</p>
-            <h1 class="editorial-title">${escapeHtmlText(title)}</h1>
-            <p class="scene-body">${escapeHtmlText(intro)}</p>
-          </div>
-          <div class="page-intro__visual" data-stage="hero">
-            ${renderMedia(mediaItem || data.siteMeta.pageAssets.projects, "", { priority: true, stage: "hero" })}
-          </div>
-        </div>
-      </section>
-    `;
-  }
-
-  function renderCollectionEntries(items, detailKey, emptyMessage) {
-    if (!items.length) {
-      return `
-        <section class="archive-stream">
-          <div class="container">
-            <article class="contact-panel editorial-empty-card">
-              <p>${escapeHtmlText(emptyMessage)}</p>
-            </article>
-          </div>
-        </section>
-      `;
-    }
-
-    return `
-      <section class="archive-stream">
-        <div class="container archive-stream__list">
-          ${items.map((item, index) => {
-            const isMediaLeft = index % 2 === 0;
-            const title = getText(item, "titleVi", "titleEn");
-            const summary = getText(item, "summaryVi", "summaryEn");
-            const metaMarkup = renderArchiveMetaRow([
-              item.season || formatArchiveDate(item.publishedAt),
-              getText(item, "categoryVi", "categoryEn") || item.type,
-              item.durationLabel,
-              getText(item, "authorVi", "authorEn"),
-            ]);
-            const mediaMarkup = `
-              <a class="archive-entry__media" href="${getLocalePath(detailKey, item.slug)}" data-transition>
-                ${renderMedia(item.cover, "", { tier: index < 2 ? "near" : "deferred", loading: index === 0 ? "eager" : "lazy" })}
-              </a>
-            `;
-            const copyMarkup = `
-              <div class="archive-entry__copy">
-                ${metaMarkup}
-                <h2><a href="${getLocalePath(detailKey, item.slug)}" data-transition>${escapeHtmlText(title)}</a></h2>
-                ${summary ? `<p class="archive-entry__tagline">${escapeHtmlText(summary)}</p>` : ""}
-                <a class="archive-entry__link" href="${getLocalePath(detailKey, item.slug)}" data-transition>${strings.actions.viewDetail}</a>
-              </div>
-            `;
-            return `
-              <article class="archive-entry archive-entry--${isMediaLeft ? "media-left" : "media-right"}" data-motion="scene-enter">
-                ${isMediaLeft ? `${mediaMarkup}${copyMarkup}` : `${copyMarkup}${mediaMarkup}`}
-              </article>
-            `;
-          }).join("")}
-        </div>
-      </section>
-    `;
-  }
-
-  function renderArticleDetailPage(items, options) {
-    const root = $(".js-page-root");
-    if (!root) return;
-    const config = options || {};
-    const item = items.find((entry) => entry.slug === slugFromPath() || entry.sourceSlug === slugFromPath());
-    if (!item) return renderMissing(root, getLocalePath(config.archiveKey || "welcome"));
-
-    const title = getText(item, "titleVi", "titleEn");
-    const summary = getText(item, "summaryVi", "summaryEn");
-    const related = items.filter((entry) => entry.slug !== item.slug).slice(0, 3);
-
-    updateMeta(`${title} | SMARTSTEAM`, summary);
-    root.innerHTML = `
-      <section class="editorial-article-page js-detail-stage">
-        <div class="container editorial-article-shell">
-          <nav class="product-detail-breadcrumb" aria-label="Breadcrumb">
-            <a href="${getLocalePath("welcome")}" data-transition>${locale === "vi" ? "Trang chủ" : "Home"}</a>
-            <span>›</span>
-            <a href="${getLocalePath(config.archiveKey || "projects")}" data-transition>${escapeHtmlText(config.archiveLabel || "")}</a>
-            <span>›</span>
-            <strong>${escapeHtmlText(title)}</strong>
-          </nav>
-
-          <div class="detail-hero__project editorial-article-hero">
-            <div class="detail-hero__project-media" data-stage="hero">
-              ${renderMedia(item.hero || item.cover, "", { priority: true, stage: "hero" })}
-            </div>
-            <div class="detail-hero__project-copy" data-stage="copy">
-              <p class="scene-kicker">${escapeHtmlText(config.detailEyebrow || config.archiveLabel || "")}</p>
-              <h1>${escapeHtmlText(title)}</h1>
-              ${summary ? `<p class="detail-hero__summary">${escapeHtmlText(summary)}</p>` : ""}
-              ${renderArchiveMetaRow([
-                formatArchiveDate(item.publishedAt),
-                getText(item, "categoryVi", "categoryEn") || item.type,
-                item.durationLabel,
-                getText(item, "authorVi", "authorEn"),
-              ])}
-              ${Array.isArray(item.tags) && item.tags.length ? `
-                <div class="editorial-tag-list">
-                  ${item.tags.slice(0, 10).map((tag) => `<span class="editorial-tag">${escapeHtmlText(tag)}</span>`).join("")}
-                </div>
-              ` : ""}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="project-sections editorial-article-section">
-        <div class="container">
-          <article class="contact-panel editorial-article-body" data-motion="scene-enter">
-            ${item.contentHtml || `<p>${escapeHtmlText(summary)}</p>`}
-          </article>
-        </div>
-      </section>
-
-      ${related.length ? `
-        <section class="related-block">
-          <div class="container">
-            <div class="related-block__header">
-              <p class="scene-kicker">${escapeHtmlText(config.relatedEyebrow || "")}</p>
-              <h2>${escapeHtmlText(config.relatedTitle || "")}</h2>
-            </div>
-            <div class="related-grid">
-              ${related.map((entry) => `
-                <article class="related-card" data-motion="scene-enter">
-                  <a href="${getLocalePath(config.detailKey, entry.slug)}" data-transition>
-                    ${renderMedia(entry.cover, "", { tier: "deferred" })}
-                  </a>
-                  <h3><a href="${getLocalePath(config.detailKey, entry.slug)}" data-transition>${escapeHtmlText(getText(entry, "titleVi", "titleEn"))}</a></h3>
-                  <p>${escapeHtmlText(getText(entry, "summaryVi", "summaryEn"))}</p>
-                </article>
-              `).join("")}
-            </div>
-          </div>
-        </section>
-      ` : ""}
-    `;
-
-    hydrateDynamicMedia(root);
-    refreshInteractiveLayers(root);
-    initProjectArchiveScrollMemory(root);
   }
 
   function renderArchiveShowcaseEmptyState(eyebrow, title, copy) {
@@ -7869,11 +7867,7 @@
 
     if (Number.isFinite(storedScroll) && storedScroll > 0) {
       window.sessionStorage.removeItem(storageKey);
-      window.requestAnimationFrame(() => {
-        window.requestAnimationFrame(() => {
-          window.scrollTo(0, storedScroll);
-        });
-      });
+      restoreScrollInstant(storedScroll);
     }
 
     const projectLinks = $$(".project-archive-entry__link", root);
@@ -8671,89 +8665,6 @@
       bodySelector: ".knowledge-detail__prose",
       progressSelector: ".knowledge-detail__progress .js-detail-progress-fill",
     });
-    return;
-
-    updateMeta(`${title} | SMARTSTEAM`, summary);
-    root.innerHTML = `
-      <section class="tutorial-chapter">
-        <div class="detail-reading-progress tutorial-chapter__progress">
-          <span class="js-detail-progress-fill"></span>
-        </div>
-        <div class="container tutorial-chapter__shell">
-          ${renderDetailBreadcrumb("tutorials", strings.nav.tutorials, title)}
-
-          <section class="tutorial-chapter__hero">
-            <div class="tutorial-chapter__media" data-stage="hero">
-              ${renderMedia(item.cover, "", { priority: true, stage: "hero" })}
-            </div>
-
-            <div class="tutorial-chapter__dashboard" data-stage="copy">
-              <p class="scene-kicker">${locale === "vi" ? "Lesson board" : "Lesson board"}</p>
-              ${renderArchiveMetaRow([
-                formatArchiveDate(item.publishedAt),
-                categoryLabel,
-                item.durationLabel,
-              ])}
-              <h1>${escapeHtmlText(title)}</h1>
-              ${summary ? `<p class="tutorial-chapter__summary">${escapeHtmlText(summary)}</p>` : ""}
-              <div class="tutorial-chapter__metric-grid">
-                <article><span>${locale === "vi" ? "Th\u1eddi l\u01b0\u1ee3ng" : "Duration"}</span><strong>${escapeHtmlText(item.durationLabel || (locale === "vi" ? "T\u00f9y b\u00e0i" : "Flexible"))}</strong></article>
-                <article><span>${locale === "vi" ? "\u0110\u1ed9 kh\u00f3" : "Level"}</span><strong>${escapeHtmlText(difficultyLabel)}</strong></article>
-                <article><span>${locale === "vi" ? "L\u01b0\u1ee3t xem" : "Views"}</span><strong>${Number(item.views || 0).toLocaleString(locale === "vi" ? "vi-VN" : "en-US")}</strong></article>
-                <article><span>${locale === "vi" ? "Y\u00eau th\u00edch" : "Likes"}</span><strong>${Number(item.likes || 0).toLocaleString(locale === "vi" ? "vi-VN" : "en-US")}</strong></article>
-              </div>
-              ${Array.isArray(item.tags) && item.tags.length ? `
-                <div class="editorial-tag-list">
-                  ${item.tags.slice(0, 10).map((tag) => `<span class="editorial-tag">${escapeHtmlText(tag)}</span>`).join("")}
-                </div>
-              ` : ""}
-              <div class="tutorial-chapter__actions">
-                <a class="button button--primary" href="${getLocalePath("tutorials")}" data-transition>${locale === "vi" ? "Quay l\u1ea1i th\u01b0 vi\u1ec7n" : "Back to tutorials"}</a>
-                <button class="share-button js-copy-link" type="button">${locale === "vi" ? "Sao ch\u00e9p link" : "Copy link"}</button>
-                <span class="share-feedback js-share-feedback" aria-live="polite"></span>
-              </div>
-            </div>
-          </section>
-
-          <section class="tutorial-chapter__content">
-            <aside class="tutorial-chapter__sidebar">
-              ${renderDetailOutlinePanel(
-                locale === "vi" ? "L\u1ed9 tr\u00ecnh b\u00e0i h\u1ecdc" : "Lesson map",
-                locale === "vi" ? "C\u00e1c b\u01b0\u1edbc ch\u00ednh" : "Main steps",
-                contentModel.headings,
-                locale === "vi" ? "B\u00e0i gi\u1ea3ng n\u00e0y kh\u00f4ng chia th\u00e0nh heading." : "This tutorial does not include section headings."
-              )}
-              <article class="tutorial-chapter__coach contact-panel" data-motion="scene-enter">
-                <p class="scene-kicker">${locale === "vi" ? "Lesson mode" : "Lesson mode"}</p>
-                <h3>${escapeHtmlText(categoryLabel)}</h3>
-                <p>${locale === "vi"
-                  ? `${contentModel.readingMinutes} ph\u00fat \u0111\u1ecdc \u2022 ${contentModel.headings.length || 1} ch\u1eb7ng n\u1ed9i dung \u2022 ${difficultyLabel}`
-                  : `${contentModel.readingMinutes} min read • ${contentModel.headings.length || 1} sections • ${difficultyLabel}`}</p>
-              </article>
-            </aside>
-
-            <article class="contact-panel editorial-article-body tutorial-chapter__body js-detail-body" data-motion="scene-enter">
-              ${contentModel.html}
-            </article>
-          </section>
-
-          ${renderDetailRelatedSection(related, {
-            className: "tutorial-chapter__related",
-            eyebrow: locale === "vi" ? "B\u00e0i gi\u1ea3ng li\u00ean quan" : "Related tutorials",
-            title: locale === "vi" ? "Ti\u1ebfp t\u1ee5c track n\u00e0y" : "Continue this learning track",
-            detailKey: "tutorial-detail",
-          })}
-        </div>
-      </section>
-    `;
-
-    hydrateDynamicMedia(root);
-    refreshInteractiveLayers(root);
-    initCopyLink(root, locale === "vi" ? "\u0110\u00e3 sao ch\u00e9p li\u00ean k\u1ebft b\u00e0i gi\u1ea3ng." : "Tutorial link copied.");
-    initDetailScaffold(root, {
-      bodySelector: ".tutorial-chapter__body",
-      progressSelector: ".tutorial-chapter__progress .js-detail-progress-fill",
-    });
   }
 
   function renderNewsDossierDetail() {
@@ -8823,94 +8734,6 @@
     initDetailScaffold(root, {
       bodySelector: ".knowledge-detail__prose",
       progressSelector: ".knowledge-detail__progress .js-detail-progress-fill",
-    });
-    return;
-
-    updateMeta(`${title} | SMARTSTEAM`, summary);
-    root.innerHTML = `
-      <section class="news-dossier">
-        <div class="detail-reading-progress news-dossier__progress">
-          <span class="js-detail-progress-fill"></span>
-        </div>
-        <div class="container news-dossier__shell">
-          ${renderDetailBreadcrumb("news", strings.nav.news, title)}
-
-          <section class="news-dossier__hero">
-            <div class="news-dossier__copy" data-stage="copy">
-              <p class="scene-kicker">${locale === "vi" ? "Signal dossier" : "Signal dossier"}</p>
-              ${renderArchiveMetaRow([
-                formatArchiveDate(item.publishedAt),
-                categoryLabel,
-                authorLabel,
-              ])}
-              <h1>${escapeHtmlText(title)}</h1>
-              ${summary ? `<p class="news-dossier__summary">${escapeHtmlText(summary)}</p>` : ""}
-              <div class="news-dossier__deck">
-                <article><span>${locale === "vi" ? "Xu\u1ea5t b\u1ea3n" : "Published"}</span><strong>${escapeHtmlText(formatArchiveDate(item.publishedAt))}</strong></article>
-                <article><span>${locale === "vi" ? "Chuy\u00ean m\u1ee5c" : "Category"}</span><strong>${escapeHtmlText(categoryLabel)}</strong></article>
-                <article><span>${locale === "vi" ? "Reading time" : "Reading time"}</span><strong>${contentModel.readingMinutes} ${locale === "vi" ? "ph\u00fat" : "min"}</strong></article>
-              </div>
-              <div class="news-dossier__actions">
-                <button class="share-button js-copy-link" type="button">${locale === "vi" ? "Sao ch\u00e9p link" : "Copy link"}</button>
-                <a class="button button--ghost" href="${getLocalePath("news")}" data-transition>${locale === "vi" ? "Quay l\u1ea1i newsroom" : "Back to newsroom"}</a>
-                <span class="share-feedback js-share-feedback" aria-live="polite"></span>
-              </div>
-            </div>
-
-            <div class="news-dossier__media" data-stage="hero">
-              ${renderMedia(item.cover, "", { priority: true, stage: "hero" })}
-              ${Array.isArray(item.tags) && item.tags.length ? `
-                <div class="news-dossier__tag-band">
-                  ${item.tags.slice(0, 10).map((tag) => `<span>${escapeHtmlText(tag)}</span>`).join("")}
-                </div>
-              ` : ""}
-            </div>
-          </section>
-
-          <section class="news-dossier__story">
-            <article class="contact-panel editorial-article-body news-dossier__body js-detail-body" data-motion="scene-enter">
-              ${contentModel.html}
-            </article>
-
-            <aside class="news-dossier__rail">
-              ${renderDetailOutlinePanel(
-                locale === "vi" ? "Story map" : "Story map",
-                locale === "vi" ? "M\u1ee5c \u0111ang \u0111\u1ecdc" : "Current thread",
-                contentModel.headings,
-                locale === "vi" ? "B\u00e0i vi\u1ebft n\u00e0y kh\u00f4ng c\u00f3 heading n\u1ed9i dung." : "No section headings are available for this article."
-              )}
-              <article class="news-dossier__bulletin contact-panel" data-motion="scene-enter">
-                <p class="scene-kicker">${locale === "vi" ? "Tin nhanh" : "Quick signal"}</p>
-                <h3>${escapeHtmlText(authorLabel)}</h3>
-                <p>${locale === "vi"
-                  ? `${contentModel.readingMinutes} ph\u00fat \u0111\u1ecdc \u2022 ${contentModel.imageCount || 1} media \u2022 ${contentModel.paragraphCount || 1} \u0111o\u1ea1n n\u1ed9i dung`
-                  : `${contentModel.readingMinutes} min read • ${contentModel.imageCount || 1} media blocks • ${contentModel.paragraphCount || 1} sections of copy`}</p>
-              </article>
-              ${related.length ? `
-                <div class="news-dossier__stack">
-                  ${related.map((entry, index) => `
-                    <a class="news-dossier__stack-item" href="${getLocalePath("news-detail", entry.slug)}" data-transition data-motion="scene-enter">
-                      <div class="news-dossier__stack-thumb">${renderMedia(entry.cover, "", { tier: index < 2 ? "near" : "deferred" })}</div>
-                      <div>
-                        <span>${escapeHtmlText(formatArchiveDate(entry.publishedAt))}</span>
-                        <strong>${escapeHtmlText(getText(entry, "titleVi", "titleEn"))}</strong>
-                      </div>
-                    </a>
-                  `).join("")}
-                </div>
-              ` : ""}
-            </aside>
-          </section>
-        </div>
-      </section>
-    `;
-
-    hydrateDynamicMedia(root);
-    refreshInteractiveLayers(root);
-    initCopyLink(root, locale === "vi" ? "\u0110\u00e3 sao ch\u00e9p li\u00ean k\u1ebft tin t\u1ee9c." : "News link copied.");
-    initDetailScaffold(root, {
-      bodySelector: ".news-dossier__body",
-      progressSelector: ".news-dossier__progress .js-detail-progress-fill",
     });
   }
 
@@ -9117,50 +8940,6 @@
         </div>
       </section>
     `;
-  }
-
-  function renderNewsPageLegacy() {
-    const root = $(".js-page-root");
-    if (!root) return;
-    const items = sortedNews();
-    updateMeta(strings.pageMeta.news.title, strings.pageMeta.news.description);
-
-    root.innerHTML = `
-      ${renderArchiveHeroShell(
-        locale === "vi" ? "Tin tức" : "News",
-        locale === "vi" ? "Tin tức & Cập nhật" : "News & Updates",
-        locale === "vi"
-          ? "Các bài viết, bản tin và cập nhật công nghệ được lấy trực tiếp từ dữ liệu gốc."
-          : "Articles, reports, and technology updates are rendered directly from the source archive.",
-        items[0] ? items[0].cover : data.siteMeta.pageAssets.projects
-      )}
-      ${renderCollectionEntries(items, "news-detail", locale === "vi" ? "Chưa có bài tin nào để hiển thị." : "No news entries available.")}
-    `;
-
-    hydrateDynamicMedia(root);
-    refreshInteractiveLayers(root);
-  }
-
-  function renderTutorialsPageLegacy() {
-    const root = $(".js-page-root");
-    if (!root) return;
-    const items = sortedTutorials();
-    updateMeta(strings.pageMeta.tutorials.title, strings.pageMeta.tutorials.description);
-
-    root.innerHTML = `
-      ${renderArchiveHeroShell(
-        locale === "vi" ? "Bài giảng" : "Tutorials",
-        locale === "vi" ? "Thư viện bài giảng STEM" : "STEM Tutorial Library",
-        locale === "vi"
-          ? "Toàn bộ bài giảng và học liệu được lấy từ dữ liệu gốc, giữ đúng ảnh, tác giả, thời lượng và nội dung."
-          : "Every tutorial is rendered from the source archive with original images, authors, duration, and content.",
-        items[0] ? items[0].cover : data.siteMeta.pageAssets.products
-      )}
-      ${renderCollectionEntries(items, "tutorial-detail", locale === "vi" ? "Chưa có bài giảng nào để hiển thị." : "No tutorials available.")}
-    `;
-
-    hydrateDynamicMedia(root);
-    refreshInteractiveLayers(root);
   }
 
   function renderTutorialDetailPage() {
@@ -9575,6 +9354,13 @@
         if (isDisposed || !isVisible) {
           rafId = 0;
           return;
+        }
+
+        const nextParticleCount = getBackgroundParticleLimit(particleCount, isProductCanvas, lowPowerDevice);
+        if (nextParticleCount !== activeParticleCount) {
+          activeParticleCount = nextParticleCount;
+          particleGeometry.setDrawRange(0, activeParticleCount);
+          canvas.dataset.performanceMode = getCurrentPerformanceMode();
         }
 
         const motionProfile = getBackgroundMotionProfile(isProductCanvas, getProductSceneEl(), lowPowerDevice);
@@ -10030,16 +9816,12 @@
     initGlobalShell();
     initPageTransition();
     initMenuOverlay();
+
+    await loadPageData();
+
     renderCurrentPage();
     hydrateRenderedPage();
     initPreloader();
-
-    if (!shouldLoadMigratedArchiveData()) return;
-
-    loadMigratedArchiveData().then(() => {
-      renderCurrentPage();
-      hydrateRenderedPage();
-    });
   }
 
 

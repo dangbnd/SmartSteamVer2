@@ -1,0 +1,107 @@
+[
+  {
+    "slug": "thanh-toan-va-dat-lich",
+    "titleVi": "Thanh toán & đặt lịch",
+    "titleEn": "Payment & booking",
+    "summaryVi": "Cách giữ chỗ, xác nhận lịch và các mốc thanh toán cho lớp học, workshop hoặc activation.",
+    "summaryEn": "How slots are held, confirmed, and paid for across classes, workshops, and activations.",
+    "sections": [
+      {
+        "headingVi": "Giữ chỗ và xác nhận",
+        "headingEn": "Holding and confirming a slot",
+        "bodyVi": "Sau khi nhận tư vấn, đội ngũ sẽ gửi xác nhận ngắn qua email hoặc Zalo. Slot được giữ tối đa 48 giờ trước khi đặt cọc hoặc xác nhận lịch chính thức.",
+        "bodyEn": "After consultation, the team sends a short confirmation by email or Zalo. A slot is held for up to 48 hours before deposit or final confirmation."
+      },
+      {
+        "headingVi": "Thanh toán theo loại chương trình",
+        "headingEn": "Payment by program type",
+        "bodyVi": "Khóa học theo cohort thường giữ bằng đặt cọc. Workshop hoặc activation theo trường học có thể tách thành các mốc theo proposal đã chốt.",
+        "bodyEn": "Recurring cohorts are usually secured by deposit. Workshops or school activations can be split into proposal-based milestones."
+      }
+    ]
+  },
+  {
+    "slug": "doi-lich-va-bao-luu",
+    "titleVi": "Đổi lịch & bảo lưu",
+    "titleEn": "Rescheduling & holds",
+    "summaryVi": "Quy tắc đổi ngày, bảo lưu chỗ học và cách xử lý khi kế hoạch thay đổi đột ngột.",
+    "summaryEn": "Rules for moving dates, holding seats, and handling sudden changes in schedule.",
+    "sections": [
+      {
+        "headingVi": "Đổi lịch với workshop hoặc lịch cá nhân",
+        "headingEn": "Rescheduling workshops or individual sessions",
+        "bodyVi": "Nếu thông báo trước ít nhất 48 giờ, đội ngũ sẽ ưu tiên đổi sang lịch gần nhất còn chỗ. Với các ca quá sát giờ, khả năng đổi lịch phụ thuộc vào chuẩn bị vật tư và lịch facilitator.",
+        "bodyEn": "With at least 48 hours notice, the team will prioritize the nearest available replacement slot. Closer changes depend on material prep and facilitator scheduling."
+      },
+      {
+        "headingVi": "Bảo lưu cho cohort dài hạn",
+        "headingEn": "Holding a place for longer cohorts",
+        "bodyVi": "Với khóa học nhiều buổi, bảo lưu được xử lý theo số buổi còn lại và lý do thay đổi. Đội ngũ sẽ xác nhận lại bằng văn bản để tránh nhầm lịch.",
+        "bodyEn": "For longer cohorts, holds are handled based on remaining sessions and reason for change. The team confirms the arrangement in writing to avoid confusion."
+      }
+    ]
+  },
+  {
+    "slug": "giao-kit-va-nhan-kit",
+    "titleVi": "Giao kit & nhận kit",
+    "titleEn": "Kit delivery & pickup",
+    "summaryVi": "Cách đóng gói, checklist bàn giao và các bước kiểm tra khi nhận hoặc đổi kit.",
+    "summaryEn": "Packing method, handoff checklist, and inspection steps for receiving or replacing kits.",
+    "sections": [
+      {
+        "headingVi": "Đóng gói và checklist",
+        "headingEn": "Packing and checklist",
+        "bodyVi": "Mỗi kit được niêm phong theo checklist và gắn nhãn rõ cho từng hoạt động. Với đơn nhiều hộp, đội ngũ gửi kèm sơ đồ nhóm vật liệu để giảm thời gian chuẩn bị.",
+        "bodyEn": "Each kit is sealed against a checklist and labeled clearly by activity. For multi-box orders, the team includes a grouping guide to reduce setup time."
+      },
+      {
+        "headingVi": "Thiếu vật tư hoặc lỗi vận chuyển",
+        "headingEn": "Missing materials or delivery damage",
+        "bodyVi": "Nếu phát hiện thiếu hoặc hỏng trong lúc nhận, khách hàng có thể phản hồi trong ngày để đội ngũ ưu tiên gửi bổ sung hoặc thay thế mà không tính thêm phí.",
+        "bodyEn": "If anything is missing or damaged at handoff, customers can report it on the same day for prioritized replacement at no extra charge."
+      }
+    ]
+  },
+  {
+    "slug": "hoan-huy-va-hoan-phi",
+    "titleVi": "Hoàn hủy & hoàn phí",
+    "titleEn": "Cancellation & refunds",
+    "summaryVi": "Các nguyên tắc hoàn tiền, hủy lịch và điều chỉnh proposal khi chương trình không thể diễn ra như dự kiến.",
+    "summaryEn": "Refund, cancellation, and proposal adjustment rules when a program cannot go ahead as planned.",
+    "sections": [
+      {
+        "headingVi": "Hủy trước ngày triển khai",
+        "headingEn": "Cancelling before delivery",
+        "bodyVi": "Mức hoàn phí phụ thuộc vào thời điểm thông báo và lượng vật tư đã được chuẩn bị. Với activation hoặc trường học, phần đã triển khai sản xuất riêng sẽ được thể hiện minh bạch trong proposal.",
+        "bodyEn": "Refund level depends on notice timing and how much material prep has already taken place. For activations or schools, any custom production already started is itemized transparently in the proposal."
+      },
+      {
+        "headingVi": "Khi đội ngũ phải thay đổi lịch từ phía vận hành",
+        "headingEn": "When the team needs to shift the schedule",
+        "bodyVi": "Nếu thay đổi phát sinh từ phía SMARTSTEAM, đội ngũ sẽ ưu tiên một lịch thay thế phù hợp hoặc đề xuất hình thức bù trừ tương xứng.",
+        "bodyEn": "If the change originates from SMARTSTEAM, the team prioritizes a suitable replacement date or proposes a fair compensation route."
+      }
+    ]
+  },
+  {
+    "slug": "huong-dan-va-cam-ket",
+    "titleVi": "Hướng dẫn sử dụng & FAQ",
+    "titleEn": "Usage guide & FAQ",
+    "summaryVi": "Lưu ý an toàn, vai trò đồng hành của người lớn và các câu hỏi thường gặp trước khi bắt đầu.",
+    "summaryEn": "Safety guidance, adult support notes, and common questions before getting started.",
+    "sections": [
+      {
+        "headingVi": "Lưu ý an toàn",
+        "headingEn": "Safety notes",
+        "bodyVi": "Tất cả chương trình và kit đều có hướng dẫn phù hợp độ tuổi. Với các bước liên quan đến nước nóng, vật sắc hoặc linh kiện nhỏ, người lớn cần đồng hành trực tiếp.",
+        "bodyEn": "All programs and kits include age-appropriate guidance. Steps involving hot water, sharp tools, or small parts require direct adult supervision."
+      },
+      {
+        "headingVi": "FAQ trước khi bắt đầu",
+        "headingEn": "FAQ before starting",
+        "bodyVi": "Nếu chưa chắc nên chọn format nào, hãy bắt đầu từ độ tuổi, mục tiêu học và thời lượng mong muốn. Đội ngũ sẽ gợi ý route phù hợp thay vì chỉ gửi danh sách chương trình.",
+        "bodyEn": "If you are unsure which format fits, begin with age range, learning goal, and time frame. The team can suggest a route instead of simply sending the full catalogue."
+      }
+    ]
+  }
+]

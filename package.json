@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "scripts": {
+    "refresh:html": "node scripts/refresh-static-html.js",
+    "validate": "node scripts/validate-site.js",
+    "smoke": "node scripts/smoke-site.js"
+  }
+}
