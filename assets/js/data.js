@@ -340,7 +340,7 @@
       contact: media("contactHero"),
     },
     runtimeTuning: {
-      assetVersion: "20260604-smartsteam-opt-r25",
+      assetVersion: "20260606-smartsteam-mobile-flicker-r39",
       publicDataTimeoutMs: 9000,
       preloader: {
         firstVisitFallback: 900,
@@ -474,7 +474,7 @@
             { key: "products", title: "Sản phẩm", teaser: "Danh mục giàu biên tập với taxonomy rõ ràng và nhịp hiển thị có chủ đích." },
             { key: "projects", title: "Dự án", teaser: "Archive dự án theo nhịp case study, không phải lưới card đồng dạng." },
             { key: "tutorials", title: "Bài giảng", teaser: "Thư viện bài giảng, học liệu STEM." },
-            { key: "news", title: "News", teaser: "Tin tức sự kiện và các nhịp cập nhật mới nhất." },
+            { key: "news", title: "Tin tức", teaser: "Tin tức sự kiện và các nhịp cập nhật mới nhất." },
             { key: "contact", title: "Liên hệ", teaser: "Một funnel liên hệ nhẹ, rõ và mang tinh thần brand page." },
           ],
         },
@@ -632,7 +632,7 @@
             { key: "projects", title: "Projects", teaser: "An archive of campaigns and case studies rather than a standard card grid." },
             { key: "tutorials", title: "Tutorials", teaser: "A library of STEM tutorials and academic materials." },
             { key: "news", title: "News", teaser: "Latest news, events, and brand updates." },
-            { key: "contact", title: "ConTact", teaser: "A quieter contact funnel that behaves like a brand page, not a SaaS form block." },
+            { key: "contact", title: "Contact", teaser: "A quieter contact funnel that behaves like a brand page, not a SaaS form block." },
           ],
         },
         preloader: {

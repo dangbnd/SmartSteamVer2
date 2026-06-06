@@ -158,7 +158,7 @@
   const THEME_DEFAULT_VERSION_STORAGE_KEY = "smartsteam:theme-default-version";
   const LIGHT_THEME_DEFAULT_VERSION = "20260604-light";
   const PROJECT_ARCHIVE_SCROLL_KEY = "smartsteam:project-archive-scroll";
-  const PERFORMANCE_PROFILE_STORAGE_KEY = "smartsteam:performance-profile:v2";
+  const PERFORMANCE_PROFILE_STORAGE_KEY = "smartsteam:performance-profile:v3";
   const PERFORMANCE_MODES = ["auto", "full", "balanced", "safe"];
   const PERFORMANCE_MODE_RANK = { full: 0, balanced: 1, safe: 2 };
   const BACKGROUND_3D_PAGES = new Set(["welcome", "products", "projects", "tutorials", "news", "contact"]);
@@ -202,6 +202,23 @@
     return getPerformanceQueryMode() || "auto";
   }
 
+  function isMobileViewport() {
+    return Math.min(window.innerWidth || 9999, window.innerHeight || 9999) <= 760;
+  }
+
+  function isSiteMenuOpen() {
+    return Boolean(state.menuOpen || body.classList.contains("menu-open"));
+  }
+
+  function shouldPauseBackgroundForMenu() {
+    return isMobileViewport() && isSiteMenuOpen();
+  }
+
+  function isMobilePerformanceTarget(details) {
+    const minSide = Math.min(window.innerWidth || 9999, window.innerHeight || 9999);
+    return minSide <= 760;
+  }
+
   function shouldResetPerformanceProfile() {
     try {
       const params = new URLSearchParams(window.location.search || "");
@@ -218,7 +235,7 @@
     }
     try {
       const profile = JSON.parse(localStorage.getItem(PERFORMANCE_PROFILE_STORAGE_KEY) || "null");
-      if (!profile || profile.version !== 2) return null;
+      if (!profile || profile.version !== 3) return null;
       if (profile.signature !== getPerformanceSignature(details)) return null;
       const mode = normalizePerformanceMode(profile.mode);
       if (!mode || mode === "auto") return null;
@@ -256,7 +273,7 @@
   function createPerformanceProfile(details) {
     const mode = chooseAutoPerformanceMode(details);
     const profile = {
-      version: 2,
+      version: 3,
       mode,
       signature: getPerformanceSignature(details),
       createdAt: Date.now(),
@@ -308,8 +325,11 @@
   }
 
   function chooseAutoPerformanceMode(details) {
-    if (!details || !details.webgl || details.softwareLike) return "safe";
+    if (!details || !details.webgl) return "safe";
     if (reducedMotion) return "safe";
+    if (details.softwareLike) return isMobilePerformanceTarget(details) ? "safe" : "safe";
+    if (isMobilePerformanceTarget(details) && (details.lowCpu || details.lowMemory)) return "safe";
+    if (isMobilePerformanceTarget(details) && details.pixelWork > 2600000) return "balanced";
     if (details.weakGpu || details.lowCpu || details.lowMemory) return "balanced";
     if (details.integratedGpu && details.pixelWork > 2600000) return "balanced";
     return "full";
@@ -371,9 +391,25 @@
   }
 
   function downgradeAutoPerformanceMode(mode, metrics) {
-    // Performance tier is locked by the device profile; runtime samplers only report diagnostics.
     state.performanceMetrics = metrics || null;
-    return false;
+    if (performanceModeState.preference !== "auto") return false;
+    if (!isMobileViewport()) return false;
+    const requestedMode = normalizePerformanceMode(mode);
+    if (!requestedMode || requestedMode === "auto") return false;
+    const currentMode = getCurrentPerformanceMode();
+    const nextMode = getWorstPerformanceMode(currentMode, requestedMode);
+    if (nextMode === currentMode) return false;
+    const details = performanceModeState.details || detectPerformanceDetails();
+    savePerformanceProfile({
+      version: 3,
+      mode: nextMode,
+      signature: getPerformanceSignature(details),
+      createdAt: Date.now(),
+      reason: "runtime-downgrade",
+      metrics: metrics || null,
+    });
+    applyPerformanceModeState("runtime-downgrade");
+    return true;
   }
 
   function isProductSceneBooting() {
@@ -382,33 +418,36 @@
 
   function getBackgroundPixelRatioLimit(lowPowerDevice) {
     const mode = getCurrentPerformanceMode();
-    if (mode === "safe") return 0.85;
-    if (mode === "balanced") return 1;
+    const mobile = isMobileViewport();
+    if (mode === "safe") return mobile && lowPowerDevice ? 0.65 : 0.85;
+    if (mode === "balanced") return mobile && lowPowerDevice ? 0.85 : 1;
     return lowPowerDevice ? 1.15 : 1.35;
   }
 
   function getBackgroundParticleLimit(maxCount, isProductCanvas, lowPowerDevice) {
     const mode = getCurrentPerformanceMode();
+    const mobile = isMobileViewport();
     if (isProductCanvas && isProductSceneBooting()) {
       if (mode === "safe") return Math.min(maxCount, 90);
       if (mode === "balanced") return Math.min(maxCount, 150);
       return Math.min(maxCount, lowPowerDevice ? 180 : 240);
     }
-    if (mode === "safe") return Math.min(maxCount, isProductCanvas ? 170 : 130);
-    if (mode === "balanced") return Math.min(maxCount, isProductCanvas ? 360 : 280);
+    if (mode === "safe") return Math.min(maxCount, mobile ? (isProductCanvas ? 60 : 48) : (isProductCanvas ? 170 : 130));
+    if (mode === "balanced") return Math.min(maxCount, isMobileViewport() && lowPowerDevice ? (isProductCanvas ? 120 : 90) : (isProductCanvas ? 360 : 280));
     if (lowPowerDevice) return Math.min(maxCount, isProductCanvas ? 360 : 320);
     return maxCount;
   }
 
   function getBackgroundNodeLimit(maxCount, isProductCanvas, lowPowerDevice) {
     const mode = getCurrentPerformanceMode();
+    const mobile = isMobileViewport();
     if (isProductCanvas && isProductSceneBooting()) {
       if (mode === "safe") return Math.min(maxCount, 22);
       if (mode === "balanced") return Math.min(maxCount, 34);
       return Math.min(maxCount, lowPowerDevice ? 38 : 46);
     }
-    if (mode === "safe") return Math.min(maxCount, isProductCanvas ? 34 : 28);
-    if (mode === "balanced") return Math.min(maxCount, isProductCanvas ? 58 : 48);
+    if (mode === "safe") return Math.min(maxCount, mobile ? (isProductCanvas ? 16 : 14) : (isProductCanvas ? 34 : 28));
+    if (mode === "balanced") return Math.min(maxCount, isMobileViewport() && lowPowerDevice ? (isProductCanvas ? 26 : 22) : (isProductCanvas ? 58 : 48));
     if (lowPowerDevice) return Math.min(maxCount, isProductCanvas ? 62 : 56);
     return maxCount;
   }
@@ -419,6 +458,14 @@
 
   function getBackgroundMotionProfile(isProductCanvas, sceneEl, lowPowerDevice) {
     if (!pageSupportsBackgroundMotion()) {
+      return { active: false, interval: 1000, speed: 0, pointer: false };
+    }
+
+    if (shouldPauseBackgroundForMenu()) {
+      return { active: false, interval: 1000, speed: 0, pointer: false };
+    }
+
+    if (!isProductCanvas && page === "welcome" && isMobileViewport()) {
       return { active: false, interval: 1000, speed: 0, pointer: false };
     }
 
@@ -434,10 +481,22 @@
     );
 
     if (performanceMode === "safe") {
+      if (isMobileViewport() && (page === "welcome" || page === "products")) {
+        return { active: false, interval: 1000, speed: 0, pointer: false };
+      }
       return {
         active: true,
         interval: busyGrid ? 140 : (isProductCanvas ? 96 : 82),
         speed: isProductCanvas ? 0.16 : 0.22,
+        pointer: false,
+      };
+    }
+
+    if (performanceMode === "balanced" && isMobileViewport() && (page === "welcome" || page === "products")) {
+      return {
+        active: true,
+        interval: busyGrid ? 220 : (isProductCanvas ? 160 : 140),
+        speed: isProductCanvas ? 0.08 : 0.1,
         pointer: false,
       };
     }
@@ -814,6 +873,22 @@
     button.title = nextAriaLabel;
   }
 
+  let productUiStabilizeTimer = 0;
+
+  function isMobileProductsViewport() {
+    return page === "products" && window.innerWidth <= 760;
+  }
+
+  function stabilizeMobileProductUi(duration) {
+    if (!isMobileProductsViewport()) return false;
+    window.clearTimeout(productUiStabilizeTimer);
+    body.classList.add("is-product-ui-stabilizing");
+    productUiStabilizeTimer = window.setTimeout(() => {
+      body.classList.remove("is-product-ui-stabilizing");
+    }, typeof duration === "number" ? duration : 420);
+    return true;
+  }
+
   function syncPageThemeState(theme) {
     const nextTheme = normalizeThemeValue(theme);
     body.dataset.theme = nextTheme;
@@ -839,6 +914,7 @@
   }
 
   function setWelcomeTheme(theme) {
+    stabilizeMobileProductUi(520);
     const nextTheme = syncPageThemeState(theme);
     syncStoredThemeDefaultVersion(nextTheme);
   }
@@ -1535,9 +1611,12 @@
     const config = options || {};
     const normalizedMedia = normalizeMediaObject(media, config);
     const tier = safeMediaToken(config.tier || (config.priority ? "critical" : "") || normalizedMedia.loadingTier || "deferred", "deferred");
-    const inlineSource = tier === "critical";
+    const inlineSource = tier === "critical" || config.inline === true;
     const loading = inlineSource ? config.loading || "eager" : "lazy";
-    const fetchPriority = tier === "critical" ? ' fetchpriority="high"' : "";
+    const fetchPriorityValue = ["auto", "high", "low"].includes(config.fetchPriority) ? config.fetchPriority : "";
+    const fetchPriority = fetchPriorityValue
+      ? ` fetchpriority="${fetchPriorityValue}"`
+      : (tier === "critical" ? ' fetchpriority="high"' : "");
     const decoding = tier === "critical" ? "sync" : "async";
     const alt = config.alt !== undefined ? config.alt : getMediaAlt(normalizedMedia);
     const fit = safeMediaToken(normalizedMedia.fit || "cover", "cover");
@@ -2311,15 +2390,26 @@
   }
 
   function renderMenuOverlay() {
+    const compactTitle = locale === "vi" ? "Khám phá" : "Explore";
     const routeMarkup = strings.menu.routes
       .map(
-        (item, index) => `
-          <a class="menu-route" href="${getLocalePath(item.key)}" data-transition style="--stagger-index:${index};">
-            <span class="menu-route__kicker">${item.title}</span>
-            <strong class="menu-route__title">${item.title}</strong>
-            <span class="menu-route__teaser">${item.teaser}</span>
+        (item, index) => {
+          const isActiveRoute = item.key === page
+            || (item.key === "products" && page === "product-detail")
+            || (item.key === "projects" && page === "project-detail")
+            || (item.key === "tutorials" && page === "tutorial-detail")
+            || (item.key === "news" && page === "news-detail");
+          return `
+          <a class="menu-route${isActiveRoute ? " is-active" : ""}" href="${getLocalePath(item.key)}" data-transition style="--stagger-index:${index};" ${isActiveRoute ? 'aria-current="page"' : ""}>
+            <span class="menu-route__index">${String(index + 1).padStart(2, "0")}</span>
+            <span class="menu-route__copy">
+              <strong class="menu-route__title">${item.title}</strong>
+              <span class="menu-route__teaser">${item.teaser}</span>
+            </span>
+            <span class="menu-route__arrow" aria-hidden="true">›</span>
           </a>
-        `
+        `;
+        }
       )
       .join("");
 
@@ -2341,7 +2431,7 @@
             <button class="menu-sheet__close js-menu-close" type="button" aria-label="${strings.actions.closeMenu}">${strings.actions.closeMenu}</button>
           </div>
           <div class="menu-sheet__intro">
-            <h2>${strings.menu.title}</h2>
+            <h2><span class="menu-sheet__title-full">${strings.menu.title}</span><span class="menu-sheet__title-compact">${compactTitle}</span></h2>
             <p>${strings.menu.intro}</p>
           </div>
           <div class="menu-sheet__routes">${routeMarkup}</div>
@@ -2427,6 +2517,17 @@
               <span class="welcome-theme-toggle__track" aria-hidden="true">
                 <span class="welcome-theme-toggle__thumb"></span>
               </span>
+              <span class="welcome-theme-toggle__icon welcome-theme-toggle__icon--sun" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <circle cx="12" cy="12" r="4"></circle>
+                  <path d="M12 2v2.4M12 19.6V22M4.93 4.93l1.7 1.7M17.37 17.37l1.7 1.7M2 12h2.4M19.6 12H22M4.93 19.07l1.7-1.7M17.37 6.63l1.7-1.7"></path>
+                </svg>
+              </span>
+              <span class="welcome-theme-toggle__icon welcome-theme-toggle__icon--moon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M20.4 14.2A7.8 7.8 0 0 1 9.8 3.6a8.7 8.7 0 1 0 10.6 10.6Z"></path>
+                </svg>
+              </span>
               <span class="welcome-theme-toggle__label js-welcome-theme-toggle-label">${currentWelcomeTheme === "light" ? welcomeThemeLabels.light : welcomeThemeLabels.dark}</span>
             </button>
           `;
@@ -2458,6 +2559,10 @@
               <a href="${getAlternateLocalePath("en")}" data-transition class="${locale === "en" ? "is-current" : ""}">EN</a>
             </span>
             <a class="header-consult-btn" href="${getLocalePath("contact")}" data-transition>${locale === "vi" ? "Nhận tư vấn" : "Consultation"}</a>
+            <button class="menu-trigger js-menu-trigger" type="button" aria-label="${strings.actions.openMenu}" aria-controls="site-menu" aria-expanded="false">
+              <span>${strings.actions.openMenu}</span>
+              <span class="menu-trigger__glyph" aria-hidden="true"><span></span><span></span></span>
+            </button>
           </div>
         </div>
       </div>
@@ -2521,6 +2626,7 @@
     if (!overlay || !sheet) return;
 
     const closeMenu = () => {
+      stabilizeMobileProductUi(360);
       state.menuOpen = false;
       overlay.classList.remove("is-open");
       body.classList.remove("menu-open");
@@ -2532,6 +2638,7 @@
     };
 
     const openMenu = (trigger) => {
+      stabilizeMobileProductUi(420);
       state.menuOpen = true;
       state.lastFocused = trigger || document.activeElement;
       overlay.removeAttribute("hidden");
@@ -2539,8 +2646,7 @@
       $$(".js-menu-trigger").forEach((button) => button.setAttribute("aria-expanded", "true"));
       requestAnimationFrame(() => overlay.classList.add("is-open"));
       window.setTimeout(() => {
-        const firstLink = $(".menu-route", overlay);
-        if (firstLink) firstLink.focus();
+        sheet.focus();
       }, 120);
     };
 
@@ -3682,6 +3788,7 @@
     var priceMenu = document.querySelector('.js-galaxy-price-menu');
     var priceValueLabel = document.querySelector('.js-galaxy-price-label');
     var priceCloseTimer = null;
+    var priceOpenedByFocusAt = 0;
     var productDetailNavigationPending = false;
 
     function syncProductFilterBarFrame() {
@@ -3698,6 +3805,7 @@
     var RADIUS = window.innerWidth < 900 ? 380 : 520;
     var TOTAL = demoProducts.length;
     var goldenAngle = Math.PI * (3 - Math.sqrt(5));
+    var mobileProductCardImagesInline = window.innerWidth < 760;
 
     // Store card positions for hover-to-center
     var cardPositions = [];
@@ -3737,9 +3845,13 @@
       var cardTitle = locale === 'vi' ? item.titleVi : item.titleEn;
       var cardTagline = locale === 'vi' ? (item.taglineVi || item.summaryVi || '') : (item.taglineEn || item.summaryEn || '');
 
+      var cardMediaOptions = mobileProductCardImagesInline
+        ? { tier: 'near', loading: 'eager', inline: true, fetchPriority: 'auto' }
+        : { tier: 'deferred', loading: 'lazy', manual: true };
+
       cardsHTML += '<div class="galaxy-card ' + sc + '" data-card-idx="' + i + '" style="--card-delay:' + ((i % 18) * 42) + 'ms; --card-phase:' + ((i % 12) * 30) + 'deg; --card-depth:' + Math.round(pz) + '; transform:' + sphereTransform + '">' +
         '<div class="galaxy-card__inner">' +
-          '<div class="galaxy-card__img">' + renderMedia(getCatalogueThumbMedia(item.cover), '', { tier: 'deferred', loading: 'lazy', manual: true }) + '</div>' +
+          '<div class="galaxy-card__img">' + renderMedia(getCatalogueThumbMedia(item.cover), '', cardMediaOptions) + '</div>' +
           '<div class="galaxy-card__info">' +
             '<span class="galaxy-card__name">' + cardTitle + '</span>' +
             '<span class="galaxy-card__price">' + (locale === 'vi' ? item.priceVi : item.priceEn) + '</span>' +
@@ -3789,38 +3901,38 @@
       var mobile = window.innerWidth < 760;
       if (mode === 'safe') {
         return {
-          visibleLimit: mobile ? 5 : 8,
+          visibleLimit: mobile ? 4 : 8,
           visibleBatch: mobile ? 2 : 3,
-          firstBatch: mobile ? 8 : 12,
+          firstBatch: mobile ? 5 : 12,
           firstBatchSize: mobile ? 2 : 3,
           firstDelay: 260,
           idleBatchSize: mobile ? 2 : 3,
-          idleMaxBatch: mobile ? 2 : 4,
+          idleMaxBatch: mobile ? 0 : 4,
           idleStartDelay: 1250,
           idleStepDelay: 260,
         };
       }
       if (mode === 'balanced') {
         return {
-          visibleLimit: mobile ? 6 : 10,
+          visibleLimit: mobile ? 5 : 10,
           visibleBatch: mobile ? 3 : 4,
-          firstBatch: mobile ? 10 : 18,
+          firstBatch: mobile ? 7 : 18,
           firstBatchSize: mobile ? 3 : 5,
           firstDelay: 180,
           idleBatchSize: mobile ? 2 : 4,
-          idleMaxBatch: mobile ? 3 : 6,
+          idleMaxBatch: mobile ? 0 : 6,
           idleStartDelay: 980,
           idleStepDelay: 210,
         };
       }
       return {
-        visibleLimit: mobile ? 8 : 12,
+        visibleLimit: mobile ? 6 : 12,
         visibleBatch: mobile ? 4 : 6,
-        firstBatch: mobile ? 14 : 24,
+        firstBatch: mobile ? 9 : 24,
         firstBatchSize: mobile ? 4 : 7,
         firstDelay: 110,
         idleBatchSize: mobile ? 3 : 5,
-        idleMaxBatch: mobile ? 4 : 8,
+        idleMaxBatch: mobile ? 0 : 8,
         idleStartDelay: 760,
         idleStepDelay: 170,
       };
@@ -3831,6 +3943,11 @@
     var galaxyInitialImageTimer = null;
     var galaxyVisibleImageFrame = 0;
     var lastVisibleImageLoadAt = 0;
+    var lastGridImageLoadAt = 0;
+
+    function isMobileProductLite() {
+      return window.innerWidth < 760;
+    }
 
     function getVisibleGalaxyImages(limit) {
       var viewportW = Math.max(1, window.innerWidth || 1);
@@ -3893,6 +4010,7 @@
       var plan = getGalaxyImageLoadPlan();
       var idleBatchSize = plan.idleBatchSize;
       var maxBatch = plan.idleMaxBatch;
+      if (isMobileProductLite() || maxBatch <= 0) return;
       var queueNext = function(delay) {
         galaxyImagePumpTimer = window.setTimeout(function() {
           galaxyImagePumpTimer = null;
@@ -4722,6 +4840,8 @@
       if (layoutMode !== 'grid') {
         sceneEl.style.removeProperty('position');
         sceneEl.style.removeProperty('top');
+        sceneEl.style.removeProperty('left');
+        sceneEl.style.removeProperty('right');
         sceneEl.style.removeProperty('width');
         sceneEl.style.removeProperty('height');
         sceneEl.style.removeProperty('margin-top');
@@ -4752,15 +4872,19 @@
       sceneEl.style.transform = 'translate3d(0, 0, 0)';
 
       if (window.innerWidth < 900 || !headerRect) {
-        sceneEl.style.width = 'min(calc(100vw - 1.5rem), var(--max))';
-        sceneEl.style.marginLeft = 'auto';
-        sceneEl.style.marginRight = 'auto';
+        sceneEl.style.left = '0.75rem';
+        sceneEl.style.right = '0.75rem';
+        sceneEl.style.width = 'auto';
+        sceneEl.style.marginLeft = '0px';
+        sceneEl.style.marginRight = '0px';
         return;
       }
 
+      sceneEl.style.removeProperty('right');
       sceneEl.style.width = Math.round(headerRect.width) + 'px';
-      sceneEl.style.marginLeft = Math.max(0, Math.round(headerRect.left)) + 'px';
-      sceneEl.style.marginRight = 'auto';
+      sceneEl.style.left = Math.max(0, Math.round(headerRect.left)) + 'px';
+      sceneEl.style.marginLeft = '0px';
+      sceneEl.style.marginRight = '0px';
     }
 
     function getBoardWorkspace() {
@@ -4945,6 +5069,7 @@
     }
 
     function cancelGridCardAnimations() {
+      if (isMobileProductLite()) return;
       cardNodes.forEach(function(card) {
         if (!card.getAnimations) return;
         card.getAnimations().forEach(function(animation) {
@@ -4955,7 +5080,7 @@
 
     function setCardOpacityNow(card, opacityValue) {
       if (!card) return;
-      if (card.getAnimations) {
+      if (!isMobileProductLite() && card.getAnimations) {
         card.getAnimations().forEach(function(animation) {
           var target = animation.effect && animation.effect.target;
           if (target === card && !animation.id) animation.cancel();
@@ -4982,6 +5107,10 @@
     }
 
     function scheduleBoardConnections(items, boardPose, delayMs) {
+      if (isMobileProductLite()) {
+        clearBoardConnections();
+        return;
+      }
       clearTimeout(boardConnectionTimer);
       boardConnectionToken += 1;
       var connectionToken = boardConnectionToken;
@@ -5289,7 +5418,7 @@
 
     function applySphereLayout() {
       var wasGridMode = layoutMode === 'grid';
-      var firstRects = wasGridMode ? captureCardRects() : null;
+      var firstRects = wasGridMode && !isMobileProductLite() ? captureCardRects() : null;
       clearGridMotionTimers();
       cancelGridCardAnimations();
       layoutMode = 'sphere';
@@ -5338,14 +5467,14 @@
           : 'Sphere mode active. Search or filter to snap cards into a grid.';
       }
       if (wasGridMode) {
-        animateSphereReturn(firstRects);
+        if (!isMobileProductLite()) animateSphereReturn(firstRects);
         clearTimeout(gridMorphTimer);
         gridMorphTimer = setTimeout(function() {
           sceneEl.classList.remove('is-grid-reflowing', 'is-morphing-to-grid', 'is-morphing-to-sphere');
           sphereFrozen = false;
           setInteractionState('idle');
           resumeSphere(true);
-        }, reducedMotion ? 0 : GRID_MORPH_DURATION + 120);
+        }, reducedMotion || isMobileProductLite() ? 0 : GRID_MORPH_DURATION + 120);
       } else {
         setInteractionState('idle');
         resumeSphere();
@@ -5407,6 +5536,26 @@
 
     function updateBoardCardVisibility() {
       if (layoutMode !== 'grid') return;
+      if (!isMobileProductLite()) return;
+      var now = performance.now ? performance.now() : Date.now();
+      if (now - lastGridImageLoadAt < 320) return;
+      lastGridImageLoadAt = now;
+      var sceneHeight = Math.max(1, sceneEl.clientHeight || window.innerHeight || 1);
+      var preloadPad = sceneHeight * 0.7;
+      var topY = -sceneHeight / 2 - preloadPad - boardScrollCurrent;
+      var bottomY = sceneHeight / 2 + preloadPad - boardScrollCurrent;
+      var images = [];
+      cardNodes.forEach(function(card) {
+        if (images.length >= 10) return;
+        if (!card.classList.contains('galaxy-card--grid')) return;
+        var product = getCardProduct(card);
+        var pose = product && boardGridPose[product.slug];
+        if (!pose) return;
+        if (pose.y + pose.height < topY || pose.y > bottomY) return;
+        var image = card.querySelector('img[data-src]');
+        if (image && image.dataset.mediaLoaded !== 'true') images.push(image);
+      });
+      if (images.length) loadGalaxyImages(images, 2);
     }
 
     function markBoardScrollActive() {
@@ -5490,7 +5639,8 @@
 
     function applyGridLayout(items) {
       var wasGridMode = layoutMode === 'grid';
-      var firstRects = wasGridMode ? {} : captureCardRects();
+      var mobileLite = isMobileProductLite();
+      var firstRects = wasGridMode || mobileLite ? {} : captureCardRects();
       var previousBoardScrollTarget = boardScrollTarget;
       clearGridMotionTimers();
       cancelGridCardAnimations();
@@ -5503,7 +5653,7 @@
       sceneEl.classList.remove('is-wormhole-transition');
       sceneEl.classList.remove('is-grid-refining');
       if (searchBarEl) searchBarEl.classList.remove('is-grid-scanning');
-      gridMorphHoldUntil = !wasGridMode && !reducedMotion ? Date.now() + GRID_MORPH_DURATION + 70 : 0;
+      gridMorphHoldUntil = !wasGridMode && !reducedMotion && !mobileLite ? Date.now() + GRID_MORPH_DURATION + 70 : 0;
       sceneEl.style.cursor = 'default';
 
       var rankBySlug = {};
@@ -5512,10 +5662,12 @@
       });
 
       var boardSpace = getBoardWorkspace();
-      var cardGap = 20;
-      var minCardWidth = window.innerWidth < 900 ? 152 : 180;
-      var maxCardWidth = window.innerWidth < 900 ? 210 : 240;
+      var isNarrowMobileGrid = window.innerWidth < 760;
+      var cardGap = isNarrowMobileGrid ? 12 : 20;
+      var minCardWidth = isNarrowMobileGrid ? 128 : (window.innerWidth < 900 ? 152 : 180);
+      var maxCardWidth = isNarrowMobileGrid ? 176 : (window.innerWidth < 900 ? 210 : 240);
       var columns = Math.max(1, Math.min(items.length || 1, Math.floor((boardSpace.width + cardGap) / (minCardWidth + cardGap)) || 1));
+      if (isNarrowMobileGrid && items.length > 1) columns = Math.max(2, columns);
       var rows = Math.max(1, Math.ceil(items.length / columns));
       var cardWidth = Math.floor((boardSpace.width - cardGap * (columns - 1)) / columns);
       cardWidth = Math.max(minCardWidth, Math.min(maxCardWidth, cardWidth));
@@ -5563,10 +5715,10 @@
         card.style.setProperty('--grid-card-width', cardWidth + 'px');
         card.style.removeProperty('--grid-title-height');
         card.style.removeProperty('--grid-info-height');
-        if (!wasGridMode && !reducedMotion) setCardOpacityNow(card, 0);
+        if (!wasGridMode && !reducedMotion && !mobileLite) setCardOpacityNow(card, 0);
         else card.style.opacity = '1';
         card.style.visibility = 'visible';
-        card.style.pointerEvents = !wasGridMode && !reducedMotion ? 'none' : 'auto';
+        card.style.pointerEvents = !wasGridMode && !reducedMotion && !mobileLite ? 'none' : 'auto';
         visibleGridCards.push({
           card: card,
           product: product,
@@ -5576,9 +5728,9 @@
         });
       });
 
-      loadGalaxyImages(visibleGridCards.map(function(entry) {
+      loadGalaxyImages(visibleGridCards.slice(0, mobileLite ? 10 : visibleGridCards.length).map(function(entry) {
         return entry.card.querySelector('img[data-src]');
-      }), window.innerWidth < 760 ? 3 : 5);
+      }), mobileLite ? 2 : 5);
 
       var boardContentHeight = 0;
       var rowCursor = firstY;
@@ -5630,7 +5782,14 @@
       lastCanRevealTop = null;
       lastCanRevealBottom = null;
       applyBoardScrollFrame(true);
-      if (wasGridMode) {
+      if (mobileLite) {
+        visibleGridCards.forEach(function(entry) {
+          entry.card.classList.remove('is-grid-entering', 'is-grid-exiting', 'is-grid-scanned');
+          entry.card.style.opacity = '1';
+          entry.card.style.visibility = 'visible';
+          entry.card.style.pointerEvents = 'auto';
+        });
+      } else if (wasGridMode) {
         cancelGridCardAnimations();
       } else if (animateOrbitToBoard(firstRects, visibleGridCards, rankBySlug)) {
         visibleGridCards.forEach(function(entry) {
@@ -5640,7 +5799,7 @@
         animateGridExits(firstRects, rankBySlug, wasGridMode);
         animateGridEntrances(firstRects, visibleGridCards, wasGridMode);
       }
-      finishGridMotion(items, boardPose, wasGridMode ? 80 : GRID_MORPH_DURATION + 120);
+      finishGridMotion(items, boardPose, mobileLite ? 60 : (wasGridMode ? 80 : GRID_MORPH_DURATION + 120));
 
       if (filterMeta) {
         filterMeta.textContent = locale === 'vi'
@@ -5816,6 +5975,7 @@
 
     // Click backdrop (outside sphere) → collapse expanded card
     bindProductEvent(document, 'click', function(e) {
+      if (isProductShellClickTarget(e.target)) return;
       if (expandedCard && !e.target.closest('.galaxy-card') && !e.target.closest('.galaxy-modal') && !e.target.closest('.galaxy-filter-panel') && !e.target.closest('.galaxy-control-dock')) {
         collapseCard();
       }
@@ -5828,6 +5988,12 @@
 
     // ─── MODAL (click) ───
     function openModal(product) {
+      if (stabilizeMobileProductUi(460)) {
+        body.classList.add('is-product-modal-opening');
+        window.setTimeout(function() {
+          body.classList.remove('is-product-modal-opening');
+        }, 180);
+      }
       stopSphere('modal');
       var stock = product.stock || 0;
       var productIndex = Math.max(0, demoProducts.indexOf(product));
@@ -6251,6 +6417,7 @@
     }
 
     function shouldContinueGalaxyLoop() {
+      if (isProductMenuOpen()) return false;
       if (layoutMode === 'sphere') {
         return getCurrentPerformanceMode() === 'safe' ? hasActiveSphereMotion() : true;
       }
@@ -6265,9 +6432,17 @@
       if (!galaxyRafId) galaxyRafId = requestAnimationFrame(animGalaxy);
     }
 
+    function isProductMenuOpen() {
+      return Boolean(state.menuOpen || body.classList.contains('menu-open'));
+    }
+
     function animGalaxy(timestamp) {
       galaxyRafId = 0;
       var now = typeof timestamp === 'number' ? timestamp : (performance.now ? performance.now() : Date.now());
+      if (isProductMenuOpen()) {
+        lastGalaxyRenderTime = now;
+        return;
+      }
       var targetInterval = getProductOrbitFrameInterval();
       if (lastGalaxyRenderTime && now - lastGalaxyRenderTime < targetInterval) {
         if (shouldContinueGalaxyLoop()) requestGalaxyFrame();
@@ -6404,6 +6579,36 @@
     galaxyRuntimeStarted = true;
     requestGalaxyFrame();
     productPerfSampleTimer = setTimeout(sampleProductFrameHealth, 1400);
+
+    var productMenuWasOpen = isProductMenuOpen();
+    function syncProductMenuPause() {
+      var menuOpen = isProductMenuOpen();
+      if (menuOpen === productMenuWasOpen) return;
+      productMenuWasOpen = menuOpen;
+
+      if (menuOpen) {
+        clearHoverCandidate();
+        hideHoverPreview();
+        stopSphere('paused');
+        if (galaxyRafId) {
+          cancelAnimationFrame(galaxyRafId);
+          galaxyRafId = 0;
+        }
+        return;
+      }
+
+      resetGalaxyFrameClock();
+      if (layoutMode === 'sphere' && !modalEl.classList.contains('is-open')) resumeSphere(true);
+      if (galaxyRuntimeStarted) requestGalaxyFrame();
+    }
+
+    if (typeof MutationObserver === 'function') {
+      var productMenuObserver = new MutationObserver(syncProductMenuPause);
+      productMenuObserver.observe(body, { attributes: true, attributeFilter: ['class'] });
+      productCleanups.push(function() {
+        productMenuObserver.disconnect();
+      });
+    }
 
     // --- Search & Filter ---
     var activeFilter = 'all';
@@ -6543,6 +6748,7 @@
     function bindFilterDropdown(dropdownUi) {
       if (!dropdownUi || !dropdownUi.toggle || !dropdownUi.menu || !dropdownUi.field || !dropdownUi.select) return;
       dropdownUi.closeTimer = null;
+      dropdownUi.openedByFocusAt = 0;
 
       function openDropdown() {
         if (dropdownUi.closeTimer) {
@@ -6561,16 +6767,19 @@
 
       dropdownUi.toggle.addEventListener('click', function(e) {
         e.stopPropagation();
+        var focusOpenedRecently = dropdownUi.openedByFocusAt && Date.now() - dropdownUi.openedByFocusAt < 350;
         if (dropdownUi.closeTimer) {
           clearTimeout(dropdownUi.closeTimer);
           dropdownUi.closeTimer = null;
         }
-        setFilterMenuOpen(dropdownUi, !dropdownUi.menu.classList.contains('is-open'));
+        setFilterMenuOpen(dropdownUi, focusOpenedRecently || !dropdownUi.menu.classList.contains('is-open'));
+        dropdownUi.openedByFocusAt = 0;
       });
       dropdownUi.toggle.addEventListener('mouseenter', function() {
         openDropdown();
       });
       dropdownUi.toggle.addEventListener('focus', function() {
+        dropdownUi.openedByFocusAt = Date.now();
         openDropdown();
       });
       dropdownUi.menu.addEventListener('click', function(e) {
@@ -6642,17 +6851,42 @@
     });
     bindProductEvent(window, 'scroll', syncProductFilterBarFrame, { passive: true });
 
+    function isProductShellClickTarget(target) {
+      return Boolean(target && target.closest([
+        '.js-site-header',
+        '.header-shell',
+        '.js-menu-trigger',
+        '.js-menu-overlay',
+        '.menu-overlay',
+        '.welcome-theme-toggle',
+        '.header-lang-inline',
+        '.header-consult-btn',
+        '.galaxy-control-dock',
+        '.galaxy-modal',
+        '.galaxy-hover-preview'
+      ].join(',')));
+    }
+
+    function productHasActiveGridCriteria() {
+      var q = searchInput.value || '';
+      var categoryFilter = categorySelect ? categorySelect.value : 'all';
+      var sortMode = sortSelect ? sortSelect.value : 'default';
+      return Boolean(String(q).trim()) || categoryFilter !== 'all' || activeFilter !== 'all' || sortMode !== 'default';
+    }
+
     // Close results when clicking outside
     bindProductEvent(document, 'click', function(e) {
       if (productDetailNavigationPending) return;
-      if (!e.target.closest('.galaxy-filter-panel')) {
-        setPriceDropdownOpen(false);
-        setFilterMenuOpen(categoryDropdownUi, false);
-        setFilterMenuOpen(sortDropdownUi, false);
-        searchBrowseMode = false;
-        if (resultsPanel) resultsPanel.style.display = 'none';
-        renderResults();
-      }
+      if (e.target.closest('.galaxy-filter-panel')) return;
+      if (isProductShellClickTarget(e.target)) return;
+
+      var shouldReturnToSphere = !productHasActiveGridCriteria() && (searchBrowseMode || layoutMode === 'grid');
+      setPriceDropdownOpen(false);
+      setFilterMenuOpen(categoryDropdownUi, false);
+      setFilterMenuOpen(sortDropdownUi, false);
+      searchBrowseMode = false;
+      if (resultsPanel) resultsPanel.style.display = 'none';
+      if (shouldReturnToSphere) renderResults();
     });
 
     // Filter chips
@@ -6669,16 +6903,19 @@
     if (priceDropdown) {
       priceDropdown.addEventListener('click', function(e) {
         e.stopPropagation();
+        var focusOpenedRecently = priceOpenedByFocusAt && Date.now() - priceOpenedByFocusAt < 350;
         if (priceCloseTimer) {
           clearTimeout(priceCloseTimer);
           priceCloseTimer = null;
         }
-        setPriceDropdownOpen(!(priceMenu && priceMenu.classList.contains('is-open')));
+        setPriceDropdownOpen(focusOpenedRecently || !(priceMenu && priceMenu.classList.contains('is-open')));
+        priceOpenedByFocusAt = 0;
       });
       priceDropdown.addEventListener('mouseenter', function() {
         setPriceDropdownOpen(true);
       });
       priceDropdown.addEventListener('focus', function() {
+        priceOpenedByFocusAt = Date.now();
         setPriceDropdownOpen(true);
       });
     }
@@ -7606,7 +7843,15 @@
     const filtersForm = $(".js-tutorial-catalogue-filters", root);
     const results = $(".js-tutorial-catalogue-results", root);
     const count = $(".js-tutorial-catalogue-count", root);
+    const filterTrigger = $(".js-tutorial-filter-trigger", root);
+    const filterSummary = $(".js-tutorial-filter-summary", root);
+    const filterApply = $(".js-tutorial-filter-apply", root);
+    const filterClear = $(".js-tutorial-filter-clear", root);
+    const filterCloseButtons = $$(".js-tutorial-filter-close", root);
     const viewButtons = $$(".js-tutorial-view", root);
+    const mobileFilterQuery = typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia("(max-width: 760px)")
+      : null;
     if (!section || !filtersForm || !results) return;
 
     const filterModel = buildTutorialCatalogueFilterModel(items);
@@ -7630,11 +7875,15 @@
       view: storedView,
     };
 
-    $$("select[data-filter-key]", filtersForm).forEach((select) => {
-      const filterKey = select.dataset.filterKey;
-      if (!filterKey || !(filterKey in state)) return;
-      select.value = state[filterKey];
-    });
+    const syncFilterControls = () => {
+      $$("select[data-filter-key]", filtersForm).forEach((select) => {
+        const filterKey = select.dataset.filterKey;
+        if (!filterKey || !(filterKey in state)) return;
+        select.value = state[filterKey];
+      });
+    };
+
+    syncFilterControls();
 
     const compareTitle = (left, right) =>
       getText(left, "titleVi", "titleEn").localeCompare(getText(right, "titleVi", "titleEn"), locale === "vi" ? "vi" : "en", { sensitivity: "base" });
@@ -7673,12 +7922,44 @@
           ? `${filteredItems.length} bài giảng`
           : `${filteredItems.length} lessons`;
       }
+      if (filterSummary) {
+        const activeFilters = [state.category !== "all", state.difficulty !== "all", state.duration !== "all", state.sort !== "latest"].filter(Boolean).length;
+        const resultLabel = locale === "vi"
+          ? `${filteredItems.length} bài giảng`
+          : `${filteredItems.length} lessons`;
+        filterSummary.textContent = activeFilters
+          ? (locale === "vi" ? `${activeFilters} lọc · ${resultLabel}` : `${activeFilters} filters · ${resultLabel}`)
+          : resultLabel;
+      }
       results.innerHTML = filteredItems.length
         ? `<div class="tutorial-catalogue-grid">${filteredItems.map((item, index) => renderTutorialCatalogueCard(item, index)).join("")}</div>`
         : renderTutorialCatalogueEmptyState();
       hydrateDynamicMedia(results);
       refreshInteractiveLayers(results);
       updateView();
+    };
+
+    const isMobileFilterViewport = () => !mobileFilterQuery || mobileFilterQuery.matches;
+
+    const syncFilterVisibilityState = () => {
+      const isOpen = section.classList.contains("is-filter-open");
+      if (isMobileFilterViewport()) {
+        filtersForm.setAttribute("aria-hidden", isOpen ? "false" : "true");
+      } else {
+        filtersForm.removeAttribute("aria-hidden");
+      }
+    };
+
+    const setFilterOpen = (isOpen) => {
+      const nextOpen = Boolean(isOpen) && isMobileFilterViewport();
+      section.classList.toggle("is-filter-open", nextOpen);
+      if (filterTrigger) filterTrigger.setAttribute("aria-expanded", nextOpen ? "true" : "false");
+      syncFilterVisibilityState();
+      document.body.classList.toggle("is-tutorial-filter-open", nextOpen);
+      if (nextOpen) {
+        const firstSelect = $("select[data-filter-key]", filtersForm);
+        window.setTimeout(() => firstSelect && firstSelect.focus({ preventScroll: true }), 80);
+      }
     };
 
     const handleFilterChange = (event) => {
@@ -7700,13 +7981,49 @@
       updateView();
     };
 
+    const handleFilterTriggerClick = () => setFilterOpen(!section.classList.contains("is-filter-open"));
+
+    const handleFilterCloseClick = () => setFilterOpen(false);
+
+    const handleFilterClearClick = () => {
+      state.category = "all";
+      state.difficulty = "all";
+      state.duration = "all";
+      state.sort = "latest";
+      syncFilterControls();
+      renderResults();
+    };
+
+    const handleFilterKeydown = (event) => {
+      if (event.key === "Escape" && section.classList.contains("is-filter-open")) setFilterOpen(false);
+    };
+
+    const handleFilterViewportChange = () => {
+      if (!isMobileFilterViewport()) setFilterOpen(false);
+      else syncFilterVisibilityState();
+    };
+
     filtersForm.addEventListener("change", handleFilterChange);
     section.addEventListener("click", handleViewClick);
+    if (filterTrigger) filterTrigger.addEventListener("click", handleFilterTriggerClick);
+    if (filterApply) filterApply.addEventListener("click", handleFilterCloseClick);
+    if (filterClear) filterClear.addEventListener("click", handleFilterClearClick);
+    filterCloseButtons.forEach((button) => button.addEventListener("click", handleFilterCloseClick));
+    document.addEventListener("keydown", handleFilterKeydown);
+    window.addEventListener("resize", handleFilterViewportChange);
+    setFilterOpen(false);
     renderResults();
 
     registerPageCleanup(root, () => {
       filtersForm.removeEventListener("change", handleFilterChange);
       section.removeEventListener("click", handleViewClick);
+      if (filterTrigger) filterTrigger.removeEventListener("click", handleFilterTriggerClick);
+      if (filterApply) filterApply.removeEventListener("click", handleFilterCloseClick);
+      if (filterClear) filterClear.removeEventListener("click", handleFilterClearClick);
+      filterCloseButtons.forEach((button) => button.removeEventListener("click", handleFilterCloseClick));
+      document.removeEventListener("keydown", handleFilterKeydown);
+      window.removeEventListener("resize", handleFilterViewportChange);
+      document.body.classList.remove("is-tutorial-filter-open");
     });
   }
 
@@ -8104,6 +8421,11 @@
       sortLatest: locale === "vi" ? "Mới nhất" : "Newest",
       sortPopular: locale === "vi" ? "Xem nhiều" : "Most viewed",
       sortTitle: locale === "vi" ? "Tên A-Z" : "Title A-Z",
+      filterButton: locale === "vi" ? "Lọc" : "Filter",
+      filterTitle: locale === "vi" ? "Bộ lọc" : "Filters",
+      filterApply: locale === "vi" ? "Áp dụng" : "Apply",
+      filterClear: locale === "vi" ? "Xóa lọc" : "Clear",
+      filterClose: locale === "vi" ? "Đóng bộ lọc" : "Close filters",
       viewEditorial: locale === "vi" ? "Ảnh lớn" : "Large cards",
       viewGrid: locale === "vi" ? "Lưới đều" : "Grid view",
     };
@@ -8137,7 +8459,28 @@
                 </button>
               </div>
             </div>
-            <form class="tutorial-catalogue__filters js-tutorial-catalogue-filters" aria-label="${locale === "vi" ? "Bộ lọc bài giảng" : "Tutorial filters"}">
+            <button class="tutorial-catalogue__filter-trigger js-tutorial-filter-trigger" type="button" aria-expanded="false" aria-controls="tutorial-catalogue-filter-panel">
+              <span class="tutorial-catalogue__filter-trigger-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M4 6h16"></path>
+                  <path d="M7 12h10"></path>
+                  <path d="M10 18h4"></path>
+                </svg>
+              </span>
+              <span>${labels.filterButton}</span>
+              <strong class="js-tutorial-filter-summary">${locale === "vi" ? `${items.length} bài giảng` : `${items.length} lessons`}</strong>
+            </button>
+            <button class="tutorial-catalogue__filter-scrim js-tutorial-filter-close" type="button" aria-label="${labels.filterClose}" aria-hidden="true"></button>
+            <form id="tutorial-catalogue-filter-panel" class="tutorial-catalogue__filters js-tutorial-catalogue-filters" aria-label="${locale === "vi" ? "Bộ lọc bài giảng" : "Tutorial filters"}">
+              <div class="tutorial-catalogue__filter-head">
+                <strong>${labels.filterTitle}</strong>
+                <button class="tutorial-catalogue__filter-close js-tutorial-filter-close" type="button" aria-label="${labels.filterClose}">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+                    <path d="M6 6l12 12"></path>
+                    <path d="M18 6L6 18"></path>
+                  </svg>
+                </button>
+              </div>
               <label class="tutorial-catalogue__filter-field">
                 <span class="tutorial-catalogue__filter-caption">${labels.category}</span>
                 <div class="tutorial-catalogue__filter-control">
@@ -8180,6 +8523,10 @@
                 </div>
               </label>
               <p class="tutorial-catalogue__count js-tutorial-catalogue-count">${locale === "vi" ? `${items.length} bài giảng` : `${items.length} lessons`}</p>
+              <div class="tutorial-catalogue__filter-actions">
+                <button class="tutorial-catalogue__filter-clear js-tutorial-filter-clear" type="button">${labels.filterClear}</button>
+                <button class="tutorial-catalogue__filter-apply js-tutorial-filter-apply" type="button">${labels.filterApply}</button>
+              </div>
             </form>
           </header>
           <div class="tutorial-catalogue__results js-tutorial-catalogue-results" aria-live="polite"></div>
@@ -9182,10 +9529,25 @@
     const hero = $(".mission-hero", root);
     const layers = $$("[data-mission-layer]", root);
     const livePanels = $$("[data-mission-panel], .mission-hud__panel, .mission-hud__orbital, .process-step, .proof-collage__tile", root);
+    const staticMobileWelcome = page === "welcome" && isMobileViewport();
     const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
     let pointerRaf = 0;
     let scrollRaf = 0;
     let observer = null;
+
+    function applyStaticMobileFrame() {
+      scope.style.setProperty("--mission-x", "0");
+      scope.style.setProperty("--mission-y", "0");
+      scope.style.setProperty("--mission-tilt-x", "0deg");
+      scope.style.setProperty("--mission-tilt-y", "0deg");
+      scope.style.setProperty("--mission-scroll", "0");
+      scope.style.setProperty("--mission-hero-progress", "0");
+      layers.forEach((layer) => {
+        layer.style.setProperty("--layer-x", "0px");
+        layer.style.setProperty("--layer-y", "0px");
+      });
+      if (progressFill) progressFill.style.transform = "scaleX(0)";
+    }
 
     function applyPointerFrame() {
       pointerRaf = 0;
@@ -9244,11 +9606,15 @@
       livePanels.forEach((panel) => panel.classList.add("is-mission-live"));
     }
 
-    window.addEventListener("pointermove", handlePointer, { passive: true });
-    window.addEventListener("scroll", requestScrollFrame, { passive: true });
-    window.addEventListener("resize", requestScrollFrame);
-    applyPointerFrame();
-    applyScrollFrame();
+    if (staticMobileWelcome) {
+      applyStaticMobileFrame();
+    } else {
+      window.addEventListener("pointermove", handlePointer, { passive: true });
+      window.addEventListener("scroll", requestScrollFrame, { passive: true });
+      window.addEventListener("resize", requestScrollFrame);
+      applyPointerFrame();
+      applyScrollFrame();
+    }
 
     registerPageCleanup(root, () => {
       window.removeEventListener("pointermove", handlePointer);
@@ -9399,22 +9765,23 @@
           : body.dataset.theme === "light";
 
         if (isLightTheme) {
+          const isWelcomeCanvas = body.dataset.page === "welcome";
           return {
             key: "light",
-            opacity: isProductCanvas || body.dataset.page === "welcome" ? "0.78" : "0.82",
+            opacity: isProductCanvas ? "0.78" : (isWelcomeCanvas ? "0.92" : "0.82"),
             particles: [0x1230a8, 0xe24f1a, 0x071f35, 0x00b6ad],
             particleOpacity: 1,
             particleSize: lowPowerDevice ? 0.082 : 0.072,
             particleBlending: THREE.NormalBlending,
             gridPrimary: 0x006ea8,
             gridSecondary: 0x006ea8,
-            gridOpacity: isProductCanvas ? 0.52 : 0.46,
+            gridOpacity: isProductCanvas ? 0.52 : (isWelcomeCanvas ? 0.58 : 0.46),
             core: 0x00a7b5,
-            coreOpacity: isProductCanvas ? 0.52 : 0.62,
+            coreOpacity: isProductCanvas ? 0.52 : (isWelcomeCanvas ? 0.7 : 0.62),
             detailBlending: THREE.NormalBlending,
             orbitA: 0x2643d8,
             orbitB: 0xe24f1a,
-            orbitOpacity: isProductCanvas ? [0.64, 0.54, 0.44] : [0.72, 0.6, 0.48],
+            orbitOpacity: isProductCanvas ? [0.64, 0.54, 0.44] : (isWelcomeCanvas ? [0.82, 0.68, 0.54] : [0.72, 0.6, 0.48]),
           };
         }
 
@@ -9495,18 +9862,34 @@
         pointer.targetY = clamp((event.clientY / Math.max(window.innerHeight, 1) - 0.5) * 2, -1, 1);
       }
 
-      function handleVisibility() {
-        isVisible = !document.hidden;
-        if (!isVisible && rafId) {
-          window.cancelAnimationFrame(rafId);
-          rafId = 0;
-        } else if (isVisible && !rafId && supportsBackgroundMotion) {
+      function cancelLoop() {
+        if (!rafId) return;
+        window.cancelAnimationFrame(rafId);
+        rafId = 0;
+      }
+
+      function requestLoop() {
+        if (!rafId && supportsBackgroundMotion && isVisible && !isDisposed && !shouldPauseBackgroundForMenu()) {
           rafId = window.requestAnimationFrame(renderFrame);
         }
       }
 
+      function handleVisibility() {
+        isVisible = !document.hidden;
+        if (!isVisible) cancelLoop();
+        else requestLoop();
+      }
+
+      function syncMenuPause() {
+        lastRenderTime = 0;
+        lastTime = 0;
+        if (shouldPauseBackgroundForMenu()) cancelLoop();
+        else requestLoop();
+      }
+
       function renderFrame(timestamp) {
-        if (isDisposed || !isVisible) {
+        rafId = 0;
+        if (isDisposed || !isVisible || shouldPauseBackgroundForMenu()) {
           rafId = 0;
           return;
         }
@@ -9527,7 +9910,7 @@
 
         const targetInterval = motionProfile.interval + framePacer.intervalBoost;
         if (lastRenderTime && timestamp - lastRenderTime < targetInterval) {
-          rafId = window.requestAnimationFrame(renderFrame);
+          requestLoop();
           return;
         }
 
@@ -9573,7 +9956,7 @@
         }
 
         renderer.render(scene, camera);
-        rafId = supportsBackgroundMotion ? window.requestAnimationFrame(renderFrame) : 0;
+        requestLoop();
       }
 
       function disposeObject(object) {
@@ -9584,22 +9967,29 @@
       const unbindPerformanceMode = onPerformanceModeChange(() => {
         lastRenderTime = 0;
         resize();
+        requestLoop();
       });
+      let menuObserver = null;
+      if (typeof MutationObserver === "function") {
+        menuObserver = new MutationObserver(syncMenuPause);
+        menuObserver.observe(body, { attributes: true, attributeFilter: ["class"] });
+      }
       window.addEventListener("resize", resize);
       window.addEventListener("pointermove", handlePointer, { passive: true });
       document.addEventListener("visibilitychange", handleVisibility);
       resize();
       applyPalette();
       renderer.render(scene, camera);
-      if (supportsBackgroundMotion) rafId = window.requestAnimationFrame(renderFrame);
+      requestLoop();
 
       registerPageCleanup(root, () => {
         isDisposed = true;
         window.removeEventListener("resize", resize);
         window.removeEventListener("pointermove", handlePointer);
         document.removeEventListener("visibilitychange", handleVisibility);
+        if (menuObserver) menuObserver.disconnect();
         unbindPerformanceMode();
-        if (rafId) window.cancelAnimationFrame(rafId);
+        cancelLoop();
         scene.traverse(disposeObject);
         renderer.dispose();
       });
@@ -9690,14 +10080,28 @@
       pointer.targetY = clamp((event.clientY / Math.max(h, 1) - 0.5) * 2, -1, 1);
     }
 
-    function handleVisibility() {
-      isVisible = !document.hidden;
-      if (!isVisible && rafId) {
-        window.cancelAnimationFrame(rafId);
-        rafId = 0;
-      } else if (isVisible && !rafId && supportsBackgroundMotion) {
+    function cancelLoop() {
+      if (!rafId) return;
+      window.cancelAnimationFrame(rafId);
+      rafId = 0;
+    }
+
+    function requestLoop() {
+      if (!rafId && supportsBackgroundMotion && isVisible && !isDisposed && !shouldPauseBackgroundForMenu()) {
         rafId = window.requestAnimationFrame(loop);
       }
+    }
+
+    function handleVisibility() {
+      isVisible = !document.hidden;
+      if (!isVisible) cancelLoop();
+      else requestLoop();
+    }
+
+    function syncMenuPause() {
+      lastRenderTime = 0;
+      if (shouldPauseBackgroundForMenu()) cancelLoop();
+      else requestLoop();
     }
 
     window.addEventListener("resize", resize);
@@ -9706,7 +10110,13 @@
     const unbindPerformanceMode = onPerformanceModeChange(() => {
       lastRenderTime = 0;
       resize();
+      requestLoop();
     });
+    let menuObserver = null;
+    if (typeof MutationObserver === "function") {
+      menuObserver = new MutationObserver(syncMenuPause);
+      menuObserver.observe(body, { attributes: true, attributeFilter: ["class"] });
+    }
     resize();
 
     const nodes = [];
@@ -9722,17 +10132,18 @@
         : body.dataset.theme === "light";
 
       if (isLightTheme) {
+        const isWelcomeCanvas = body.dataset.page === "welcome";
         return {
           theme: "light",
-          opacity: isProductCanvas || body.dataset.page === "welcome" ? "0.78" : "0.82",
-          grid: "rgba(0, 102, 160, 0.16)",
+          opacity: isProductCanvas ? "0.78" : (isWelcomeCanvas ? "0.94" : "0.82"),
+          grid: isWelcomeCanvas ? "rgba(0, 102, 160, 0.24)" : "rgba(0, 102, 160, 0.16)",
           nodeRgb: "0, 92, 145",
-          nodeBoost: 1.42,
+          nodeBoost: isWelcomeCanvas ? 1.68 : 1.42,
           linkRgb: "0, 118, 200",
-          linkBoost: 0.96,
+          linkBoost: isWelcomeCanvas ? 1.18 : 0.96,
           fog: "rgba(248, 253, 255, 0.04)",
-          glowA: "rgba(0, 118, 200, 0.22)",
-          glowB: "rgba(209, 95, 36, 0.18)",
+          glowA: isWelcomeCanvas ? "rgba(0, 118, 200, 0.3)" : "rgba(0, 118, 200, 0.22)",
+          glowB: isWelcomeCanvas ? "rgba(209, 95, 36, 0.24)" : "rgba(209, 95, 36, 0.18)",
         };
       }
 
@@ -9925,16 +10336,14 @@
     }
 
     function loop() {
-      if (isDisposed || !isVisible) {
-        rafId = 0;
-        return;
-      }
+      rafId = 0;
+      if (isDisposed || !isVisible || shouldPauseBackgroundForMenu()) return;
 
       const motionProfile = getBackgroundMotionProfile(isProductCanvas, getProductSceneEl(), lowPowerDevice);
       const now = performance.now();
       const targetInterval = motionProfile.interval + framePacer.intervalBoost;
       if (lastRenderTime && now - lastRenderTime < targetInterval) {
-        rafId = window.requestAnimationFrame(loop);
+        requestLoop();
         return;
       }
       const frameDelta = lastRenderTime ? now - lastRenderTime : targetInterval;
@@ -9942,7 +10351,7 @@
       framePacer.observe(frameDelta, targetInterval);
       backgroundHealthSampler.observe(now, targetInterval);
       drawFrame(true);
-      rafId = supportsBackgroundMotion ? window.requestAnimationFrame(loop) : 0;
+      requestLoop();
     }
 
     registerPageCleanup(root, () => {
@@ -9950,13 +10359,14 @@
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", handlePointer);
       document.removeEventListener("visibilitychange", handleVisibility);
+      if (menuObserver) menuObserver.disconnect();
       unbindPerformanceMode();
-      if (rafId) window.cancelAnimationFrame(rafId);
+      cancelLoop();
     });
 
     drawFrame(false);
     markReady(true);
-    if (supportsBackgroundMotion) rafId = window.requestAnimationFrame(loop);
+    requestLoop();
 
     return canvas.__smartsteam3DReadyPromise;
   }
