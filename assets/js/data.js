@@ -340,7 +340,7 @@
       contact: media("contactHero"),
     },
     runtimeTuning: {
-      assetVersion: "20260606-smartsteam-mobile-flicker-r39",
+      assetVersion: "20260615-smartsteam-cpu-guard-r40",
       publicDataTimeoutMs: 9000,
       preloader: {
         firstVisitFallback: 900,

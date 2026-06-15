@@ -259,6 +259,8 @@
     return [
       details && details.webgl ? "webgl" : "no-webgl",
       details && details.softwareLike ? "software" : "gpu",
+      details && details.automationLike ? "automation" : "human",
+      details && details.headlessLike ? "headless" : "headed",
       details && details.weakGpu ? "weak" : "ok",
       details && details.lowCpu ? "lowcpu" : "cpu",
       details && details.lowMemory ? "lowmem" : "mem",
@@ -289,6 +291,8 @@
       vendor: "",
       renderer: "",
       softwareLike: false,
+      headlessLike: false,
+      automationLike: false,
       weakGpu: false,
       lowCpu: (navigator.hardwareConcurrency || 8) <= 4,
       lowMemory: Boolean(navigator.deviceMemory && navigator.deviceMemory <= 4),
@@ -317,6 +321,14 @@
     }
 
     const rendererText = (details.vendor + " " + details.renderer).toLowerCase();
+    const userAgentText = String(navigator.userAgent || "").toLowerCase();
+    let automationQuery = false;
+    try {
+      const params = new URLSearchParams(window.location.search || "");
+      automationQuery = params.has("codex-cdp") || params.get("automation") === "1" || params.get("headless") === "1";
+    } catch (error) {}
+    details.headlessLike = /headlesschrome|headless/.test(userAgentText);
+    details.automationLike = Boolean(navigator.webdriver || details.headlessLike || automationQuery);
     details.softwareLike = !details.webgl || /swiftshader|warp|microsoft basic|software|llvmpipe|basic render|mesa offscreen|softpipe|d3d11on12/.test(rendererText);
     details.weakGpu = !details.softwareLike && /intel\(r\) uhd|intel uhd|intel\(r\) hd|intel hd graphics|iris\(r\)|intel iris|mesa intel|radeon vega|uhd graphics/.test(rendererText);
     details.integratedGpu = !details.softwareLike && /intel|iris|uhd|hd graphics|radeon vega|apple m/.test(rendererText);
@@ -452,8 +464,15 @@
     return maxCount;
   }
 
+  function shouldFreezeBackgroundMotionForRuntime() {
+    const details = performanceModeState.details;
+    if (!details) return false;
+    if (details.automationLike || details.headlessLike) return true;
+    return performanceModeState.preference === "auto" && details.softwareLike;
+  }
+
   function pageSupportsBackgroundMotion() {
-    return BACKGROUND_3D_PAGES.has(page);
+    return BACKGROUND_3D_PAGES.has(page) && !shouldFreezeBackgroundMotionForRuntime();
   }
 
   function getBackgroundMotionProfile(isProductCanvas, sceneEl, lowPowerDevice) {
