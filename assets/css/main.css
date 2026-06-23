@@ -21861,3 +21861,226 @@ body[data-page="products"][data-theme="light"] .galaxy-filter-menu__option.is-ac
     letter-spacing: 0 !important;
   }
 }
+
+/* Product readability pass: make sphere preview, modal, and detail pages legible on the brand shell. */
+body[data-page="products"] .galaxy-scene.is-card-focused .galaxy-card:not(.galaxy-card--focused):not(.galaxy-card--focus-locked):not(.is-expanded) .galaxy-card__inner {
+  opacity: 0.46 !important;
+  filter: brightness(0.7) saturate(0.82) !important;
+}
+
+body[data-page="products"] .galaxy-spotlight {
+  border-color: rgba(126, 229, 255, 0.58) !important;
+  background:
+    linear-gradient(135deg, rgba(18, 118, 158, 0.96), rgba(5, 52, 82, 0.98) 48%, rgba(3, 32, 54, 0.99)),
+    #06334f !important;
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.58),
+    0 0 0 1px rgba(126, 229, 255, 0.16),
+    0 0 46px rgba(55, 199, 244, 0.22) !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+body[data-page="products"] .galaxy-spotlight__media {
+  background: #eef7fb !important;
+}
+
+body[data-page="products"] .galaxy-spotlight__body {
+  background: linear-gradient(180deg, rgba(8, 82, 120, 0.42), rgba(2, 27, 46, 0.28)) !important;
+}
+
+body[data-page="products"] .galaxy-spotlight__kicker {
+  color: #91efff !important;
+}
+
+body[data-page="products"] .galaxy-spotlight__name {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 8, 14, 0.44) !important;
+}
+
+body[data-page="products"] .galaxy-spotlight__price {
+  color: #a6f3ff !important;
+  font-family: "Manrope", "Inter", sans-serif !important;
+  font-weight: 900 !important;
+  text-shadow: 0 0 18px rgba(126, 229, 255, 0.28) !important;
+}
+
+body[data-page="products"] .galaxy-spotlight__summary,
+body[data-page="products"] .galaxy-spotlight__stock {
+  color: rgba(230, 248, 255, 0.9) !important;
+}
+
+body[data-page="products"] .galaxy-spotlight__state {
+  border-color: rgba(225, 248, 255, 0.26) !important;
+  background: rgba(225, 248, 255, 0.16) !important;
+  color: #ffffff !important;
+}
+
+body[data-page="products"] .galaxy-modal {
+  background: rgba(0, 9, 16, 0.82) !important;
+  backdrop-filter: blur(6px) !important;
+  -webkit-backdrop-filter: blur(6px) !important;
+}
+
+body[data-page="products"] .galaxy-modal__box {
+  border-color: rgba(126, 229, 255, 0.5) !important;
+  background:
+    linear-gradient(135deg, rgba(13, 101, 140, 0.96), rgba(4, 47, 78, 0.99) 46%, rgba(2, 24, 42, 0.99)),
+    #042b47 !important;
+  box-shadow:
+    0 34px 92px rgba(0, 0, 0, 0.68),
+    0 0 0 1px rgba(126, 229, 255, 0.14),
+    0 0 42px rgba(55, 199, 244, 0.18) !important;
+}
+
+body[data-page="products"] .galaxy-modal__left {
+  background: rgba(224, 244, 252, 0.2) !important;
+}
+
+body[data-page="products"] .galaxy-modal__img,
+body[data-page="products"] .galaxy-modal__img .media-frame {
+  background: #f4fbff !important;
+}
+
+body[data-page="products"] .galaxy-modal__thumbs {
+  background: rgba(224, 244, 252, 0.28) !important;
+  border-top-color: rgba(126, 229, 255, 0.28) !important;
+}
+
+body[data-page="products"] .galaxy-modal__thumb {
+  opacity: 0.72 !important;
+  border-color: rgba(255, 255, 255, 0.42) !important;
+  background: #eef7fb !important;
+}
+
+body[data-page="products"] .galaxy-modal__thumb.is-active {
+  opacity: 1 !important;
+  border-color: #91efff !important;
+  box-shadow: 0 0 0 1px rgba(145, 239, 255, 0.38), 0 0 18px rgba(145, 239, 255, 0.25) !important;
+}
+
+body[data-page="products"] .galaxy-modal__name,
+body[data-page="products"] .galaxy-modal__summary,
+body[data-page="products"] .galaxy-modal__qty-label,
+body[data-page="products"] .galaxy-modal__stock-note,
+body[data-page="products"] .galaxy-modal__facts dd {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 8, 14, 0.35) !important;
+}
+
+body[data-page="products"] .galaxy-modal__review-count,
+body[data-page="products"] .galaxy-modal__meta-line,
+body[data-page="products"] .galaxy-modal__facts dt,
+body[data-page="products"] .galaxy-modal__fulllink {
+  color: rgba(230, 248, 255, 0.76) !important;
+}
+
+body[data-page="products"] .galaxy-modal__price-panel {
+  border: 1px solid rgba(126, 229, 255, 0.32) !important;
+  background:
+    linear-gradient(180deg, rgba(225, 248, 255, 0.14), rgba(5, 62, 96, 0.28)),
+    rgba(3, 39, 65, 0.78) !important;
+}
+
+body[data-page="products"] .galaxy-modal__price {
+  color: #91efff !important;
+  text-shadow: 0 0 18px rgba(145, 239, 255, 0.28) !important;
+}
+
+body[data-page="products"] .galaxy-modal__facts div,
+body[data-page="products"] .galaxy-modal__qty-row {
+  border-color: rgba(126, 229, 255, 0.22) !important;
+  background: rgba(225, 248, 255, 0.12) !important;
+}
+
+body[data-page="products"] .galaxy-modal__close {
+  background: rgba(236, 250, 255, 0.92) !important;
+  color: #062a42 !important;
+}
+
+body[data-page="product-detail"] .product-detail-gallery-card,
+body[data-page="product-detail"] .product-detail-buy-card,
+body[data-page="product-detail"] .product-detail-side-card,
+body[data-page="product-detail"] .product-detail-tabs-shell {
+  border-color: rgba(126, 229, 255, 0.34) !important;
+  background:
+    linear-gradient(180deg, rgba(12, 99, 135, 0.9), rgba(3, 46, 75, 0.96)),
+    #062f4d !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+}
+
+body[data-page="product-detail"] .product-detail-title,
+body[data-page="product-detail"] .product-detail-tab-panel h2,
+body[data-page="product-detail"] .product-detail-tab-section h3,
+body[data-page="product-detail"] .product-detail-side-card h2 {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 8, 14, 0.35) !important;
+}
+
+body[data-page="product-detail"] .product-detail-summary,
+body[data-page="product-detail"] .product-detail-stock,
+body[data-page="product-detail"] .product-detail-rating,
+body[data-page="product-detail"] .product-detail-tab-panel p,
+body[data-page="product-detail"] .product-detail-tab-panel li,
+body[data-page="product-detail"] .product-detail-tab-panel dd,
+body[data-page="product-detail"] .product-detail-review-quote footer,
+body[data-page="product-detail"] .product-detail-breadcrumb,
+body[data-page="product-detail"] .product-detail-breadcrumb a {
+  color: rgba(230, 248, 255, 0.84) !important;
+}
+
+body[data-page="product-detail"] .product-detail-breadcrumb strong,
+body[data-page="product-detail"] .product-detail-qty-block,
+body[data-page="product-detail"] .product-detail-suggest-item strong,
+body[data-page="product-detail"] .product-detail-category-list a,
+body[data-page="product-detail"] .product-detail-link-list a {
+  color: #ffffff !important;
+}
+
+body[data-page="product-detail"] .product-detail-price-panel {
+  border-color: rgba(126, 229, 255, 0.34) !important;
+  background:
+    linear-gradient(180deg, rgba(225, 248, 255, 0.15), rgba(5, 60, 94, 0.32)),
+    rgba(2, 35, 59, 0.82) !important;
+}
+
+body[data-page="product-detail"] .product-detail-price {
+  color: #91efff !important;
+  text-shadow: 0 0 18px rgba(145, 239, 255, 0.26) !important;
+}
+
+body[data-page="product-detail"] .product-detail-main-media,
+body[data-page="product-detail"] .product-detail-main-media .media-frame,
+body[data-page="product-detail"] .product-detail-thumb .media-frame,
+body[data-page="product-detail"] .product-detail-suggest-thumb .media-frame {
+  background: #f4fbff !important;
+}
+
+body[data-page="product-detail"] .product-detail-thumb,
+body[data-page="product-detail"] .product-detail-qty-control,
+body[data-page="product-detail"] .product-detail-category-list a,
+body[data-page="product-detail"] .product-detail-link-list a,
+body[data-page="product-detail"] .product-detail-suggest-item {
+  border-color: rgba(126, 229, 255, 0.24) !important;
+  background: rgba(225, 248, 255, 0.12) !important;
+}
+
+body[data-page="product-detail"] .product-detail-category-list a.is-active,
+body[data-page="product-detail"] .product-detail-category-list a:hover,
+body[data-page="product-detail"] .product-detail-link-list a:hover,
+body[data-page="product-detail"] .product-detail-suggest-item:hover {
+  border-color: rgba(145, 239, 255, 0.52) !important;
+  background: rgba(33, 151, 196, 0.32) !important;
+}
+
+body[data-page="product-detail"] .product-detail-suggest-item span {
+  color: #91efff !important;
+}
+
+body[data-page="product-detail"] .product-detail-tab-btn {
+  color: rgba(230, 248, 255, 0.72) !important;
+}
+
+body[data-page="product-detail"] .product-detail-tab-btn.is-active {
+  color: #91efff !important;
+}

@@ -340,7 +340,7 @@
       contact: media("contactHero"),
     },
     runtimeTuning: {
-      assetVersion: "20260623-restore-products-bg-r65",
+      assetVersion: "20260623-products-contrast-r67",
       publicDataTimeoutMs: 9000,
       backgroundModel: {
         enabled: true,
