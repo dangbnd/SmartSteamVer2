@@ -1,7 +1,29 @@
 {
   "name": "ssteamer2",
   "compatibility_date": "2026-06-23",
+  "main": "src/worker.js",
   "assets": {
-    "directory": "."
+    "directory": ".",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/",
+      "/admin",
+      "/admin/*",
+      "/assets/js/admin.js",
+      "/assets/js/product-details.js",
+      "/assets/css/admin.css",
+      "/assets/vendor/tinymce/*",
+      "/migration-full-input",
+      "/migration-full-input/*",
+      "/migration-full.zip",
+      "/transformed-products.js",
+      "/out.txt",
+      "/parse-migration.js",
+      "/splice-data.js",
+      "/transform-products.js",
+      "/tools/*",
+      "/madi-demo.html"
+    ],
+    "not_found_handling": "404-page"
   }
 }

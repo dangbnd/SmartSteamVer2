@@ -19,6 +19,8 @@ scripts/
 tools/
 shots/
 tmp-stem-images/
+admin/
+migration-full-input/
 
 README.md
 package.json
@@ -27,4 +29,20 @@ bun.lock
 pnpm-lock.yaml
 yarn.lock
 .netlifyignore
+_redirects
 wrangler.jsonc
+
+assets/js/admin.js
+assets/js/product-details.js
+assets/css/admin.css
+assets/vendor/tinymce/
+
+madi-demo.html
+parse-migration.js
+splice-data.js
+transform-products.js
+transformed-products.js
+out.txt
+migration-full.zip
+products-wow2.png
+welcome-wow2.png
