@@ -252,7 +252,7 @@ async function smokePage(cdpPort, baseUrl, pagePath) {
   if (state.preloadHints !== 1) failures.push("hero preload hint missing or duplicated");
   if (pagesWithDataPreloads.has(state.page) && state.dataPreloadHints < 1) failures.push("data preload hint missing");
   if (!state.heroImageLoaded) failures.push("hero image did not finish loading");
-  if (state.page === "products" && state.cards > 0 && !state.motionChanged) failures.push("product sphere did not advance");
+  if (state.page === "products" && state.cards > 0 && state.perf !== "safe" && !state.motionChanged) failures.push("product sphere did not advance");
   if (filteredEvents.length) failures.push(`console events: ${filteredEvents.map((event) => `${event.type}:${event.text}`).join(" | ")}`);
 
   return { path: pagePath, state, failures };

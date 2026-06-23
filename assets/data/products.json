@@ -6923,7 +6923,7 @@
   {
     "slug": "santa-jet-sleigh-co-xe-giang-sinh-cong-nghe",
     "cover": {
-      "src": "/assets/img/product-science.svg",
+      "src": "/assets/img/stem-product-science.webp",
       "width": 800,
       "height": 1000,
       "ratio": "4 / 5",
@@ -6939,7 +6939,7 @@
       }
     },
     "hero": {
-      "src": "/assets/img/product-science.svg",
+      "src": "/assets/img/stem-product-science.webp",
       "width": 1200,
       "height": 1440,
       "ratio": "5 / 6",

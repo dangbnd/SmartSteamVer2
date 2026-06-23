@@ -1,0 +1,1536 @@
+[
+  {
+    "name": "390",
+    "topAudit": {
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "scroll": {
+        "w": 390,
+        "h": 4739,
+        "overflowX": 0
+      },
+      "canvasReady": "true",
+      "canvas": {
+        "cls": "hero-3d-canvas welcome-hero-canvas js-hero-3d-canvas",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 844
+        },
+        "opacity": "0.78",
+        "display": "block",
+        "zIndex": "-1",
+        "color": "rgb(9, 41, 65)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "heroImage": {
+        "cls": "media-frame scene-hero-visual__main is-loaded",
+        "rect": {
+          "x": -28,
+          "y": 366,
+          "w": 671,
+          "h": 671
+        },
+        "opacity": "0.92",
+        "display": "grid",
+        "zIndex": "4",
+        "color": "rgb(26, 39, 49)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "hud": {
+        "cls": "mission-hud",
+        "rect": {
+          "x": 5,
+          "y": 87,
+          "w": 380,
+          "h": 678
+        },
+        "opacity": "1",
+        "display": "block",
+        "zIndex": "7",
+        "color": "rgb(26, 39, 49)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "signal": {
+        "cls": "mission-hud__panel mission-hud__panel--signal is-mission-live",
+        "rect": {
+          "x": 234,
+          "y": 688,
+          "w": 129,
+          "h": 57
+        },
+        "opacity": "1",
+        "display": "grid",
+        "zIndex": "16",
+        "color": "rgb(26, 39, 49)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "reticle": {
+        "cls": "mission-visual__reticle",
+        "rect": {
+          "x": 15,
+          "y": 381,
+          "w": 375,
+          "h": 353
+        },
+        "opacity": "0.78",
+        "display": "block",
+        "zIndex": "5",
+        "color": "rgb(26, 39, 49)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "body": {
+        "cls": "scene-body scene-body--hero",
+        "rect": {
+          "x": 29,
+          "y": 268,
+          "w": 332,
+          "h": 52
+        },
+        "opacity": "1",
+        "display": "block",
+        "zIndex": "auto",
+        "color": "rgb(26, 39, 49)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "clipped": [
+        {
+          "tag": "DIV",
+          "cls": "container scene-grid scene-grid--hero mission-stage",
+          "text": "Trạm điều phối STEM learning universe Vũ trụ STEM sống động. Trẻ em bước vào khoa học, robotics, cod",
+          "w": 382,
+          "h": 680,
+          "sw": 647,
+          "sh": 965,
+          "cw": 380,
+          "ch": 678
+        },
+        {
+          "tag": "H1",
+          "cls": "display-title",
+          "text": "Vũ trụ STEM sống động.",
+          "w": 299,
+          "h": 93,
+          "sw": 299,
+          "sh": 98,
+          "cw": 299,
+          "ch": 93
+        },
+        {
+          "tag": "A",
+          "cls": "button button--primary",
+          "text": "Xem chương trình",
+          "w": 163,
+          "h": 42,
+          "sw": 541,
+          "sh": 112,
+          "cw": 163,
+          "ch": 42
+        },
+        {
+          "tag": "SECTION",
+          "cls": "scene scene--process tone-ink",
+          "text": "Scene 03 / Time, process, growth Thời gian học được nhìn như một quỹ đạo, không phải một widget. Sce",
+          "w": 390,
+          "h": 392,
+          "sw": 390,
+          "sh": 404,
+          "cw": 390,
+          "ch": 392
+        },
+        {
+          "tag": "DIV",
+          "cls": "container process-scene",
+          "text": "Scene 03 / Time, process, growth Thời gian học được nhìn như một quỹ đạo, không phải một widget. Sce",
+          "w": 378,
+          "h": 380,
+          "sw": 376,
+          "sh": 396,
+          "cw": 376,
+          "ch": 378
+        },
+        {
+          "tag": "DIV",
+          "cls": "process-scene__copy",
+          "text": "Scene 03 / Time, process, growth Thời gian học được nhìn như một quỹ đạo, không phải một widget. Sce",
+          "w": 355,
+          "h": 180,
+          "sw": 355,
+          "sh": 196,
+          "cw": 355,
+          "ch": 180
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Cho phép thử sai đủ nhiều để hiểu vì sao một hệ hoạt động.",
+          "w": 150,
+          "h": 31,
+          "sw": 155,
+          "sh": 48,
+          "cw": 155,
+          "ch": 32
+        },
+        {
+          "tag": "SECTION",
+          "cls": "scene scene--cluster tone-soft",
+          "text": "Scene 04 / Impact cluster Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa",
+          "w": 390,
+          "h": 418,
+          "sw": 390,
+          "sh": 445,
+          "cw": 390,
+          "ch": 418
+        },
+        {
+          "tag": "DIV",
+          "cls": "container cluster-layout",
+          "text": "Scene 04 / Impact cluster Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa",
+          "w": 378,
+          "h": 406,
+          "sw": 376,
+          "sh": 409,
+          "cw": 376,
+          "ch": 404
+        },
+        {
+          "tag": "DIV",
+          "cls": "cluster-layout__copy",
+          "text": "Scene 04 / Impact cluster Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa",
+          "w": 355,
+          "h": 188,
+          "sw": 355,
+          "sh": 204,
+          "cw": 355,
+          "ch": 188
+        },
+        {
+          "tag": "DIV",
+          "cls": "cluster-layout__grid",
+          "text": "School days Ngày trải nghiệm quy mô lớn để nhiều nhóm tuổi bước vào cùng một câu chuyện STEM. Family",
+          "w": 355,
+          "h": 185,
+          "sw": 355,
+          "sh": 201,
+          "cw": 355,
+          "ch": 185
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Ngày trải nghiệm quy mô lớn để nhiều nhóm tuổi bước vào cùng một câu chuyện STEM.",
+          "w": 153,
+          "h": 47,
+          "sw": 153,
+          "sh": 63,
+          "cw": 153,
+          "ch": 47
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Những buổi tối workshop giúp phụ huynh đọc được cách trẻ em suy nghĩ và thử nghiệm.",
+          "w": 153,
+          "h": 47,
+          "sw": 153,
+          "sh": 63,
+          "cw": 153,
+          "ch": 47
+        },
+        {
+          "tag": "SECTION",
+          "cls": "scene scene--values tone-paper",
+          "text": "Scene 05 / Values in rhythm Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng f",
+          "w": 390,
+          "h": 579,
+          "sw": 390,
+          "sh": 590,
+          "cw": 390,
+          "ch": 579
+        },
+        {
+          "tag": "DIV",
+          "cls": "container values-scene",
+          "text": "Scene 05 / Values in rhythm Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng f",
+          "w": 378,
+          "h": 567,
+          "sw": 383,
+          "sh": 583,
+          "cw": 376,
+          "ch": 565
+        },
+        {
+          "tag": "DIV",
+          "cls": "scene-header",
+          "text": "Scene 05 / Values in rhythm Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng f",
+          "w": 355,
+          "h": 135,
+          "sw": 355,
+          "sh": 151,
+          "cw": 355,
+          "ch": 135
+        },
+        {
+          "tag": "DIV",
+          "cls": "values-scene__layout",
+          "text": "01 Cấu trúc đủ rõ để chọn nhanh Mọi chương trình đều gắn độ tuổi, chủ đề, hình thức và mức thử thách",
+          "w": 355,
+          "h": 400,
+          "sw": 372,
+          "sh": 428,
+          "cw": 355,
+          "ch": 400
+        },
+        {
+          "tag": "DIV",
+          "cls": "values-spread__copy values-spread__copy--primary",
+          "text": "01 Cấu trúc đủ rõ để chọn nhanh Mọi chương trình đều gắn độ tuổi, chủ đề, hình thức và mức thử thách",
+          "w": 156,
+          "h": 128,
+          "sw": 156,
+          "sh": 133,
+          "cw": 156,
+          "ch": 128
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Mọi chương trình đều gắn độ tuổi, chủ đề, hình thức và mức thử thách để phụ huynh không phải đoán.",
+          "w": 156,
+          "h": 46,
+          "sw": 156,
+          "sh": 62,
+          "cw": 156,
+          "ch": 46
+        },
+        {
+          "tag": "ARTICLE",
+          "cls": "values-spread values-spread--secondary",
+          "text": "02 Trải nghiệm đủ mở để trẻ em tự kể lại quá trình của mình Khi sản phẩm cuối cùng hiện ra, website ",
+          "w": 173,
+          "h": 256,
+          "sw": 189,
+          "sh": 254,
+          "cw": 171,
+          "ch": 254
+        },
+        {
+          "tag": "DIV",
+          "cls": "values-spread__copy values-spread__copy--secondary",
+          "text": "02 Trải nghiệm đủ mở để trẻ em tự kể lại quá trình của mình Khi sản phẩm cuối cùng hiện ra, website ",
+          "w": 156,
+          "h": 145,
+          "sw": 156,
+          "sh": 149,
+          "cw": 156,
+          "ch": 145
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Khi sản phẩm cuối cùng hiện ra, website cũng có thêm một lớp bằng chứng để thuyết phục mà không cần ",
+          "w": 156,
+          "h": 46,
+          "sw": 156,
+          "sh": 78,
+          "cw": 156,
+          "ch": 46
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Chúng tôi không đóng gói STEM như một danh sách kỹ năng. Chúng tôi dựng nó như một chuỗi trải nghiệm",
+          "w": 154,
+          "h": 52,
+          "sw": 154,
+          "sh": 122,
+          "cw": 154,
+          "ch": 52
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Điều trẻ em nhớ lâu nhất không phải là bài giảng, mà là khoảnh khắc các em tự tay làm cho một ý tưởn",
+          "w": 154,
+          "h": 52,
+          "sw": 154,
+          "sh": 105,
+          "cw": 154,
+          "ch": 52
+        },
+        {
+          "tag": "DIV",
+          "cls": "container",
+          "text": "Scene 06 / Visual proof Bằng chứng thị giác cần giống một thế giới sống, không chỉ là thumbnail sản ",
+          "w": 378,
+          "h": 687,
+          "sw": 376,
+          "sh": 693,
+          "cw": 376,
+          "ch": 685
+        }
+      ]
+    },
+    "darkAudit": {
+      "viewport": {
+        "w": 390,
+        "h": 844
+      },
+      "scroll": {
+        "w": 390,
+        "h": 4739,
+        "overflowX": 0
+      },
+      "canvasReady": "true",
+      "canvas": {
+        "cls": "hero-3d-canvas welcome-hero-canvas js-hero-3d-canvas",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 390,
+          "h": 844
+        },
+        "opacity": "0.570266",
+        "display": "block",
+        "zIndex": "-1",
+        "color": "rgb(9, 41, 65)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "heroImage": {
+        "cls": "media-frame scene-hero-visual__main is-loaded",
+        "rect": {
+          "x": -8,
+          "y": 344,
+          "w": 671,
+          "h": 671
+        },
+        "opacity": "0.92",
+        "display": "grid",
+        "zIndex": "4",
+        "color": "rgb(244, 243, 239)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "hud": {
+        "cls": "mission-hud",
+        "rect": {
+          "x": 5,
+          "y": 87,
+          "w": 380,
+          "h": 678
+        },
+        "opacity": "1",
+        "display": "block",
+        "zIndex": "7",
+        "color": "rgb(244, 243, 239)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "signal": {
+        "cls": "mission-hud__panel mission-hud__panel--signal is-mission-live",
+        "rect": {
+          "x": 246,
+          "y": 674,
+          "w": 129,
+          "h": 57
+        },
+        "opacity": "1",
+        "display": "grid",
+        "zIndex": "16",
+        "color": "rgb(244, 243, 239)",
+        "bg": "rgba(7, 13, 22, 0.68)"
+      },
+      "reticle": {
+        "cls": "mission-visual__reticle",
+        "rect": {
+          "x": 7,
+          "y": 323,
+          "w": 420,
+          "h": 434
+        },
+        "opacity": "0.78",
+        "display": "block",
+        "zIndex": "5",
+        "color": "rgb(255, 253, 248)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "body": {
+        "cls": "scene-body scene-body--hero",
+        "rect": {
+          "x": 29,
+          "y": 268,
+          "w": 332,
+          "h": 52
+        },
+        "opacity": "1",
+        "display": "block",
+        "zIndex": "auto",
+        "color": "rgba(232, 244, 251, 0.78)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "clipped": [
+        {
+          "tag": "DIV",
+          "cls": "container scene-grid scene-grid--hero mission-stage",
+          "text": "Trạm điều phối STEM learning universe Vũ trụ STEM sống động. Trẻ em bước vào khoa học, robotics, cod",
+          "w": 382,
+          "h": 680,
+          "sw": 666,
+          "sh": 959,
+          "cw": 380,
+          "ch": 678
+        },
+        {
+          "tag": "H1",
+          "cls": "display-title",
+          "text": "Vũ trụ STEM sống động.",
+          "w": 299,
+          "h": 93,
+          "sw": 299,
+          "sh": 98,
+          "cw": 299,
+          "ch": 93
+        },
+        {
+          "tag": "A",
+          "cls": "button button--primary",
+          "text": "Xem chương trình",
+          "w": 163,
+          "h": 42,
+          "sw": 541,
+          "sh": 112,
+          "cw": 163,
+          "ch": 42
+        },
+        {
+          "tag": "SECTION",
+          "cls": "scene scene--process tone-ink",
+          "text": "Scene 03 / Time, process, growth Thời gian học được nhìn như một quỹ đạo, không phải một widget. Sce",
+          "w": 390,
+          "h": 392,
+          "sw": 390,
+          "sh": 404,
+          "cw": 390,
+          "ch": 392
+        },
+        {
+          "tag": "DIV",
+          "cls": "container process-scene",
+          "text": "Scene 03 / Time, process, growth Thời gian học được nhìn như một quỹ đạo, không phải một widget. Sce",
+          "w": 378,
+          "h": 380,
+          "sw": 376,
+          "sh": 396,
+          "cw": 376,
+          "ch": 378
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Cho phép thử sai đủ nhiều để hiểu vì sao một hệ hoạt động.",
+          "w": 150,
+          "h": 31,
+          "sw": 155,
+          "sh": 48,
+          "cw": 155,
+          "ch": 32
+        },
+        {
+          "tag": "SECTION",
+          "cls": "scene scene--cluster tone-soft",
+          "text": "Scene 04 / Impact cluster Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa",
+          "w": 390,
+          "h": 418,
+          "sw": 390,
+          "sh": 445,
+          "cw": 390,
+          "ch": 418
+        },
+        {
+          "tag": "DIV",
+          "cls": "container cluster-layout",
+          "text": "Scene 04 / Impact cluster Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa",
+          "w": 378,
+          "h": 406,
+          "sw": 376,
+          "sh": 409,
+          "cw": 376,
+          "ch": 404
+        },
+        {
+          "tag": "DIV",
+          "cls": "cluster-layout__copy",
+          "text": "Scene 04 / Impact cluster Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa",
+          "w": 355,
+          "h": 188,
+          "sw": 355,
+          "sh": 204,
+          "cw": 355,
+          "ch": 188
+        },
+        {
+          "tag": "DIV",
+          "cls": "cluster-layout__grid",
+          "text": "School days Ngày trải nghiệm quy mô lớn để nhiều nhóm tuổi bước vào cùng một câu chuyện STEM. Family",
+          "w": 355,
+          "h": 185,
+          "sw": 355,
+          "sh": 201,
+          "cw": 355,
+          "ch": 185
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Ngày trải nghiệm quy mô lớn để nhiều nhóm tuổi bước vào cùng một câu chuyện STEM.",
+          "w": 153,
+          "h": 47,
+          "sw": 153,
+          "sh": 63,
+          "cw": 153,
+          "ch": 47
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Những buổi tối workshop giúp phụ huynh đọc được cách trẻ em suy nghĩ và thử nghiệm.",
+          "w": 153,
+          "h": 47,
+          "sw": 153,
+          "sh": 63,
+          "cw": 153,
+          "ch": 47
+        },
+        {
+          "tag": "SECTION",
+          "cls": "scene scene--values tone-paper",
+          "text": "Scene 05 / Values in rhythm Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng f",
+          "w": 390,
+          "h": 579,
+          "sw": 390,
+          "sh": 590,
+          "cw": 390,
+          "ch": 579
+        },
+        {
+          "tag": "DIV",
+          "cls": "container values-scene",
+          "text": "Scene 05 / Values in rhythm Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng f",
+          "w": 378,
+          "h": 567,
+          "sw": 383,
+          "sh": 583,
+          "cw": 376,
+          "ch": 565
+        },
+        {
+          "tag": "DIV",
+          "cls": "scene-header",
+          "text": "Scene 05 / Values in rhythm Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng f",
+          "w": 355,
+          "h": 135,
+          "sw": 355,
+          "sh": 151,
+          "cw": 355,
+          "ch": 135
+        },
+        {
+          "tag": "DIV",
+          "cls": "values-scene__layout",
+          "text": "01 Cấu trúc đủ rõ để chọn nhanh Mọi chương trình đều gắn độ tuổi, chủ đề, hình thức và mức thử thách",
+          "w": 355,
+          "h": 400,
+          "sw": 372,
+          "sh": 428,
+          "cw": 355,
+          "ch": 400
+        },
+        {
+          "tag": "DIV",
+          "cls": "values-spread__copy values-spread__copy--primary",
+          "text": "01 Cấu trúc đủ rõ để chọn nhanh Mọi chương trình đều gắn độ tuổi, chủ đề, hình thức và mức thử thách",
+          "w": 156,
+          "h": 128,
+          "sw": 156,
+          "sh": 133,
+          "cw": 156,
+          "ch": 128
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Mọi chương trình đều gắn độ tuổi, chủ đề, hình thức và mức thử thách để phụ huynh không phải đoán.",
+          "w": 156,
+          "h": 46,
+          "sw": 156,
+          "sh": 62,
+          "cw": 156,
+          "ch": 46
+        },
+        {
+          "tag": "ARTICLE",
+          "cls": "values-spread values-spread--secondary",
+          "text": "02 Trải nghiệm đủ mở để trẻ em tự kể lại quá trình của mình Khi sản phẩm cuối cùng hiện ra, website ",
+          "w": 173,
+          "h": 256,
+          "sw": 189,
+          "sh": 254,
+          "cw": 171,
+          "ch": 254
+        },
+        {
+          "tag": "DIV",
+          "cls": "values-spread__copy values-spread__copy--secondary",
+          "text": "02 Trải nghiệm đủ mở để trẻ em tự kể lại quá trình của mình Khi sản phẩm cuối cùng hiện ra, website ",
+          "w": 156,
+          "h": 145,
+          "sw": 156,
+          "sh": 149,
+          "cw": 156,
+          "ch": 145
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Khi sản phẩm cuối cùng hiện ra, website cũng có thêm một lớp bằng chứng để thuyết phục mà không cần ",
+          "w": 156,
+          "h": 46,
+          "sw": 156,
+          "sh": 78,
+          "cw": 156,
+          "ch": 46
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Chúng tôi không đóng gói STEM như một danh sách kỹ năng. Chúng tôi dựng nó như một chuỗi trải nghiệm",
+          "w": 154,
+          "h": 52,
+          "sw": 154,
+          "sh": 122,
+          "cw": 154,
+          "ch": 52
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Điều trẻ em nhớ lâu nhất không phải là bài giảng, mà là khoảnh khắc các em tự tay làm cho một ý tưởn",
+          "w": 154,
+          "h": 52,
+          "sw": 154,
+          "sh": 105,
+          "cw": 154,
+          "ch": 52
+        },
+        {
+          "tag": "DIV",
+          "cls": "container",
+          "text": "Scene 06 / Visual proof Bằng chứng thị giác cần giống một thế giới sống, không chỉ là thumbnail sản ",
+          "w": 378,
+          "h": 687,
+          "sw": 376,
+          "sh": 693,
+          "cw": 376,
+          "ch": 685
+        },
+        {
+          "tag": "DIV",
+          "cls": "scene-header",
+          "text": "Scene 06 / Visual proof Bằng chứng thị giác cần giống một thế giới sống, không chỉ là thumbnail sản ",
+          "w": 355,
+          "h": 180,
+          "sw": 355,
+          "sh": 196,
+          "cw": 355,
+          "ch": 180
+        }
+      ]
+    },
+    "messages": [
+      {
+        "type": "warning",
+        "text": "[.WebGL-0x35bc0634ca00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0x35bc0634ca00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0x35bc0634ca00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0x35bc0634ca00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+      }
+    ]
+  },
+  {
+    "name": "430",
+    "topAudit": {
+      "viewport": {
+        "w": 430,
+        "h": 932
+      },
+      "scroll": {
+        "w": 430,
+        "h": 4637,
+        "overflowX": 0
+      },
+      "canvasReady": "true",
+      "canvas": {
+        "cls": "hero-3d-canvas welcome-hero-canvas js-hero-3d-canvas",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 430,
+          "h": 932
+        },
+        "opacity": "0.78",
+        "display": "block",
+        "zIndex": "-1",
+        "color": "rgb(9, 41, 65)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "heroImage": {
+        "cls": "media-frame scene-hero-visual__main is-loaded",
+        "rect": {
+          "x": -32,
+          "y": 366,
+          "w": 671,
+          "h": 671
+        },
+        "opacity": "0.92",
+        "display": "grid",
+        "zIndex": "4",
+        "color": "rgb(26, 39, 49)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "hud": {
+        "cls": "mission-hud",
+        "rect": {
+          "x": 5,
+          "y": 87,
+          "w": 420,
+          "h": 678
+        },
+        "opacity": "1",
+        "display": "block",
+        "zIndex": "7",
+        "color": "rgb(26, 39, 49)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "signal": {
+        "cls": "mission-hud__panel mission-hud__panel--signal is-mission-live",
+        "rect": {
+          "x": 274,
+          "y": 688,
+          "w": 129,
+          "h": 57
+        },
+        "opacity": "1",
+        "display": "grid",
+        "zIndex": "16",
+        "color": "rgb(26, 39, 49)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "reticle": {
+        "cls": "mission-visual__reticle",
+        "rect": {
+          "x": 32,
+          "y": 362,
+          "w": 383,
+          "h": 391
+        },
+        "opacity": "0.78",
+        "display": "block",
+        "zIndex": "5",
+        "color": "rgb(26, 39, 49)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "body": {
+        "cls": "scene-body scene-body--hero",
+        "rect": {
+          "x": 29,
+          "y": 276,
+          "w": 372,
+          "h": 58
+        },
+        "opacity": "1",
+        "display": "block",
+        "zIndex": "auto",
+        "color": "rgb(26, 39, 49)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "clipped": [
+        {
+          "tag": "DIV",
+          "cls": "container scene-grid scene-grid--hero mission-stage",
+          "text": "Trạm điều phối STEM learning universe Vũ trụ STEM sống động. Trẻ em bước vào khoa học, robotics, cod",
+          "w": 422,
+          "h": 680,
+          "sw": 642,
+          "sh": 965,
+          "cw": 420,
+          "ch": 678
+        },
+        {
+          "tag": "H1",
+          "cls": "display-title",
+          "text": "Vũ trụ STEM sống động.",
+          "w": 323,
+          "h": 101,
+          "sw": 323,
+          "sh": 107,
+          "cw": 323,
+          "ch": 101
+        },
+        {
+          "tag": "A",
+          "cls": "button button--primary",
+          "text": "Xem chương trình",
+          "w": 183,
+          "h": 42,
+          "sw": 606,
+          "sh": 119,
+          "cw": 183,
+          "ch": 42
+        },
+        {
+          "tag": "SECTION",
+          "cls": "scene scene--process tone-ink",
+          "text": "Scene 03 / Time, process, growth Thời gian học được nhìn như một quỹ đạo, không phải một widget. Sce",
+          "w": 430,
+          "h": 366,
+          "sw": 430,
+          "sh": 377,
+          "cw": 430,
+          "ch": 366
+        },
+        {
+          "tag": "DIV",
+          "cls": "container process-scene",
+          "text": "Scene 03 / Time, process, growth Thời gian học được nhìn như một quỹ đạo, không phải một widget. Sce",
+          "w": 418,
+          "h": 353,
+          "sw": 416,
+          "sh": 370,
+          "cw": 416,
+          "ch": 351
+        },
+        {
+          "tag": "DIV",
+          "cls": "process-scene__copy",
+          "text": "Scene 03 / Time, process, growth Thời gian học được nhìn như một quỹ đạo, không phải một widget. Sce",
+          "w": 395,
+          "h": 154,
+          "sw": 395,
+          "sh": 170,
+          "cw": 395,
+          "ch": 154
+        },
+        {
+          "tag": "SECTION",
+          "cls": "scene scene--cluster tone-soft",
+          "text": "Scene 04 / Impact cluster Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa",
+          "w": 430,
+          "h": 418,
+          "sw": 430,
+          "sh": 445,
+          "cw": 430,
+          "ch": 418
+        },
+        {
+          "tag": "DIV",
+          "cls": "container cluster-layout",
+          "text": "Scene 04 / Impact cluster Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa",
+          "w": 418,
+          "h": 406,
+          "sw": 416,
+          "sh": 409,
+          "cw": 416,
+          "ch": 404
+        },
+        {
+          "tag": "DIV",
+          "cls": "cluster-layout__copy",
+          "text": "Scene 04 / Impact cluster Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa",
+          "w": 395,
+          "h": 188,
+          "sw": 395,
+          "sh": 204,
+          "cw": 395,
+          "ch": 188
+        },
+        {
+          "tag": "DIV",
+          "cls": "cluster-layout__grid",
+          "text": "School days Ngày trải nghiệm quy mô lớn để nhiều nhóm tuổi bước vào cùng một câu chuyện STEM. Family",
+          "w": 395,
+          "h": 185,
+          "sw": 395,
+          "sh": 201,
+          "cw": 395,
+          "ch": 185
+        },
+        {
+          "tag": "SECTION",
+          "cls": "scene scene--values tone-paper",
+          "text": "Scene 05 / Values in rhythm Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng f",
+          "w": 430,
+          "h": 583,
+          "sw": 430,
+          "sh": 594,
+          "cw": 430,
+          "ch": 583
+        },
+        {
+          "tag": "DIV",
+          "cls": "container values-scene",
+          "text": "Scene 05 / Values in rhythm Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng f",
+          "w": 418,
+          "h": 571,
+          "sw": 423,
+          "sh": 587,
+          "cw": 416,
+          "ch": 569
+        },
+        {
+          "tag": "DIV",
+          "cls": "scene-header",
+          "text": "Scene 05 / Values in rhythm Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng f",
+          "w": 395,
+          "h": 135,
+          "sw": 395,
+          "sh": 151,
+          "cw": 395,
+          "ch": 135
+        },
+        {
+          "tag": "DIV",
+          "cls": "values-scene__layout",
+          "text": "01 Cấu trúc đủ rõ để chọn nhanh Mọi chương trình đều gắn độ tuổi, chủ đề, hình thức và mức thử thách",
+          "w": 395,
+          "h": 404,
+          "sw": 412,
+          "sh": 433,
+          "cw": 395,
+          "ch": 404
+        },
+        {
+          "tag": "DIV",
+          "cls": "values-spread__copy values-spread__copy--primary",
+          "text": "01 Cấu trúc đủ rõ để chọn nhanh Mọi chương trình đều gắn độ tuổi, chủ đề, hình thức và mức thử thách",
+          "w": 176,
+          "h": 128,
+          "sw": 176,
+          "sh": 133,
+          "cw": 176,
+          "ch": 128
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Mọi chương trình đều gắn độ tuổi, chủ đề, hình thức và mức thử thách để phụ huynh không phải đoán.",
+          "w": 176,
+          "h": 46,
+          "sw": 176,
+          "sh": 62,
+          "cw": 176,
+          "ch": 46
+        },
+        {
+          "tag": "ARTICLE",
+          "cls": "values-spread values-spread--secondary",
+          "text": "02 Trải nghiệm đủ mở để trẻ em tự kể lại quá trình của mình Khi sản phẩm cuối cùng hiện ra, website ",
+          "w": 193,
+          "h": 261,
+          "sw": 209,
+          "sh": 259,
+          "cw": 191,
+          "ch": 259
+        },
+        {
+          "tag": "DIV",
+          "cls": "values-spread__copy values-spread__copy--secondary",
+          "text": "02 Trải nghiệm đủ mở để trẻ em tự kể lại quá trình của mình Khi sản phẩm cuối cùng hiện ra, website ",
+          "w": 176,
+          "h": 145,
+          "sw": 176,
+          "sh": 149,
+          "cw": 176,
+          "ch": 145
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Khi sản phẩm cuối cùng hiện ra, website cũng có thêm một lớp bằng chứng để thuyết phục mà không cần ",
+          "w": 176,
+          "h": 46,
+          "sw": 176,
+          "sh": 62,
+          "cw": 176,
+          "ch": 46
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Chúng tôi không đóng gói STEM như một danh sách kỹ năng. Chúng tôi dựng nó như một chuỗi trải nghiệm",
+          "w": 174,
+          "h": 52,
+          "sw": 174,
+          "sh": 105,
+          "cw": 174,
+          "ch": 52
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Điều trẻ em nhớ lâu nhất không phải là bài giảng, mà là khoảnh khắc các em tự tay làm cho một ý tưởn",
+          "w": 174,
+          "h": 52,
+          "sw": 174,
+          "sh": 87,
+          "cw": 174,
+          "ch": 52
+        },
+        {
+          "tag": "DIV",
+          "cls": "container",
+          "text": "Scene 06 / Visual proof Bằng chứng thị giác cần giống một thế giới sống, không chỉ là thumbnail sản ",
+          "w": 418,
+          "h": 669,
+          "sw": 416,
+          "sh": 675,
+          "cw": 416,
+          "ch": 667
+        },
+        {
+          "tag": "DIV",
+          "cls": "scene-header",
+          "text": "Scene 06 / Visual proof Bằng chứng thị giác cần giống một thế giới sống, không chỉ là thumbnail sản ",
+          "w": 395,
+          "h": 162,
+          "sw": 395,
+          "sh": 178,
+          "cw": 395,
+          "ch": 162
+        },
+        {
+          "tag": "DIV",
+          "cls": "proof-collage",
+          "text": "Gia đình cùng khám phá Khoảnh workshop giúp phụ huynh và trẻ em cùng chăm chú vào một trải nghiệm ch",
+          "w": 395,
+          "h": 475,
+          "sw": 395,
+          "sh": 494,
+          "cw": 395,
+          "ch": 475
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Khoảnh workshop giúp phụ huynh và trẻ em cùng chăm chú vào một trải nghiệm chung.",
+          "w": 176,
+          "h": 29,
+          "sw": 178,
+          "sh": 44,
+          "cw": 178,
+          "ch": 29
+        }
+      ]
+    },
+    "darkAudit": {
+      "viewport": {
+        "w": 430,
+        "h": 932
+      },
+      "scroll": {
+        "w": 430,
+        "h": 4637,
+        "overflowX": 0
+      },
+      "canvasReady": "true",
+      "canvas": {
+        "cls": "hero-3d-canvas welcome-hero-canvas js-hero-3d-canvas",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "w": 430,
+          "h": 932
+        },
+        "opacity": "0.570279",
+        "display": "block",
+        "zIndex": "-1",
+        "color": "rgb(9, 41, 65)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "heroImage": {
+        "cls": "media-frame scene-hero-visual__main is-loaded",
+        "rect": {
+          "x": -11,
+          "y": 344,
+          "w": 671,
+          "h": 671
+        },
+        "opacity": "0.92",
+        "display": "grid",
+        "zIndex": "4",
+        "color": "rgb(244, 243, 239)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "hud": {
+        "cls": "mission-hud",
+        "rect": {
+          "x": 5,
+          "y": 87,
+          "w": 420,
+          "h": 678
+        },
+        "opacity": "1",
+        "display": "block",
+        "zIndex": "7",
+        "color": "rgb(244, 243, 239)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "signal": {
+        "cls": "mission-hud__panel mission-hud__panel--signal is-mission-live",
+        "rect": {
+          "x": 286,
+          "y": 674,
+          "w": 129,
+          "h": 57
+        },
+        "opacity": "1",
+        "display": "grid",
+        "zIndex": "16",
+        "color": "rgb(244, 243, 239)",
+        "bg": "rgba(7, 13, 22, 0.68)"
+      },
+      "reticle": {
+        "cls": "mission-visual__reticle",
+        "rect": {
+          "x": 13,
+          "y": 318,
+          "w": 449,
+          "h": 443
+        },
+        "opacity": "0.78",
+        "display": "block",
+        "zIndex": "5",
+        "color": "rgb(255, 253, 248)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "body": {
+        "cls": "scene-body scene-body--hero",
+        "rect": {
+          "x": 29,
+          "y": 276,
+          "w": 372,
+          "h": 58
+        },
+        "opacity": "1",
+        "display": "block",
+        "zIndex": "auto",
+        "color": "rgba(232, 244, 251, 0.78)",
+        "bg": "rgba(0, 0, 0, 0)"
+      },
+      "clipped": [
+        {
+          "tag": "DIV",
+          "cls": "container scene-grid scene-grid--hero mission-stage",
+          "text": "Trạm điều phối STEM learning universe Vũ trụ STEM sống động. Trẻ em bước vào khoa học, robotics, cod",
+          "w": 422,
+          "h": 680,
+          "sw": 662,
+          "sh": 959,
+          "cw": 420,
+          "ch": 678
+        },
+        {
+          "tag": "H1",
+          "cls": "display-title",
+          "text": "Vũ trụ STEM sống động.",
+          "w": 323,
+          "h": 101,
+          "sw": 323,
+          "sh": 107,
+          "cw": 323,
+          "ch": 101
+        },
+        {
+          "tag": "A",
+          "cls": "button button--primary",
+          "text": "Xem chương trình",
+          "w": 183,
+          "h": 42,
+          "sw": 606,
+          "sh": 119,
+          "cw": 183,
+          "ch": 42
+        },
+        {
+          "tag": "SECTION",
+          "cls": "scene scene--cluster tone-soft",
+          "text": "Scene 04 / Impact cluster Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa",
+          "w": 430,
+          "h": 418,
+          "sw": 430,
+          "sh": 445,
+          "cw": 430,
+          "ch": 418
+        },
+        {
+          "tag": "DIV",
+          "cls": "container cluster-layout",
+          "text": "Scene 04 / Impact cluster Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa",
+          "w": 418,
+          "h": 406,
+          "sw": 416,
+          "sh": 409,
+          "cw": 416,
+          "ch": 404
+        },
+        {
+          "tag": "DIV",
+          "cls": "cluster-layout__copy",
+          "text": "Scene 04 / Impact cluster Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa",
+          "w": 395,
+          "h": 188,
+          "sw": 395,
+          "sh": 204,
+          "cw": 395,
+          "ch": 188
+        },
+        {
+          "tag": "DIV",
+          "cls": "cluster-layout__grid",
+          "text": "School days Ngày trải nghiệm quy mô lớn để nhiều nhóm tuổi bước vào cùng một câu chuyện STEM. Family",
+          "w": 395,
+          "h": 185,
+          "sw": 395,
+          "sh": 201,
+          "cw": 395,
+          "ch": 185
+        },
+        {
+          "tag": "SECTION",
+          "cls": "scene scene--values tone-paper",
+          "text": "Scene 05 / Values in rhythm Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng f",
+          "w": 430,
+          "h": 583,
+          "sw": 430,
+          "sh": 594,
+          "cw": 430,
+          "ch": 583
+        },
+        {
+          "tag": "DIV",
+          "cls": "container values-scene",
+          "text": "Scene 05 / Values in rhythm Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng f",
+          "w": 418,
+          "h": 571,
+          "sw": 423,
+          "sh": 587,
+          "cw": 416,
+          "ch": 569
+        },
+        {
+          "tag": "DIV",
+          "cls": "scene-header",
+          "text": "Scene 05 / Values in rhythm Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng f",
+          "w": 395,
+          "h": 135,
+          "sw": 395,
+          "sh": 151,
+          "cw": 395,
+          "ch": 135
+        },
+        {
+          "tag": "DIV",
+          "cls": "values-scene__layout",
+          "text": "01 Cấu trúc đủ rõ để chọn nhanh Mọi chương trình đều gắn độ tuổi, chủ đề, hình thức và mức thử thách",
+          "w": 395,
+          "h": 404,
+          "sw": 412,
+          "sh": 433,
+          "cw": 395,
+          "ch": 404
+        },
+        {
+          "tag": "DIV",
+          "cls": "values-spread__copy values-spread__copy--primary",
+          "text": "01 Cấu trúc đủ rõ để chọn nhanh Mọi chương trình đều gắn độ tuổi, chủ đề, hình thức và mức thử thách",
+          "w": 176,
+          "h": 128,
+          "sw": 176,
+          "sh": 133,
+          "cw": 176,
+          "ch": 128
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Mọi chương trình đều gắn độ tuổi, chủ đề, hình thức và mức thử thách để phụ huynh không phải đoán.",
+          "w": 176,
+          "h": 46,
+          "sw": 176,
+          "sh": 62,
+          "cw": 176,
+          "ch": 46
+        },
+        {
+          "tag": "ARTICLE",
+          "cls": "values-spread values-spread--secondary",
+          "text": "02 Trải nghiệm đủ mở để trẻ em tự kể lại quá trình của mình Khi sản phẩm cuối cùng hiện ra, website ",
+          "w": 193,
+          "h": 261,
+          "sw": 209,
+          "sh": 259,
+          "cw": 191,
+          "ch": 259
+        },
+        {
+          "tag": "DIV",
+          "cls": "values-spread__copy values-spread__copy--secondary",
+          "text": "02 Trải nghiệm đủ mở để trẻ em tự kể lại quá trình của mình Khi sản phẩm cuối cùng hiện ra, website ",
+          "w": 176,
+          "h": 145,
+          "sw": 176,
+          "sh": 149,
+          "cw": 176,
+          "ch": 145
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Khi sản phẩm cuối cùng hiện ra, website cũng có thêm một lớp bằng chứng để thuyết phục mà không cần ",
+          "w": 176,
+          "h": 46,
+          "sw": 176,
+          "sh": 62,
+          "cw": 176,
+          "ch": 46
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Chúng tôi không đóng gói STEM như một danh sách kỹ năng. Chúng tôi dựng nó như một chuỗi trải nghiệm",
+          "w": 174,
+          "h": 52,
+          "sw": 174,
+          "sh": 105,
+          "cw": 174,
+          "ch": 52
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Điều trẻ em nhớ lâu nhất không phải là bài giảng, mà là khoảnh khắc các em tự tay làm cho một ý tưởn",
+          "w": 174,
+          "h": 52,
+          "sw": 174,
+          "sh": 87,
+          "cw": 174,
+          "ch": 52
+        },
+        {
+          "tag": "DIV",
+          "cls": "container",
+          "text": "Scene 06 / Visual proof Bằng chứng thị giác cần giống một thế giới sống, không chỉ là thumbnail sản ",
+          "w": 418,
+          "h": 669,
+          "sw": 416,
+          "sh": 675,
+          "cw": 416,
+          "ch": 667
+        },
+        {
+          "tag": "DIV",
+          "cls": "scene-header",
+          "text": "Scene 06 / Visual proof Bằng chứng thị giác cần giống một thế giới sống, không chỉ là thumbnail sản ",
+          "w": 395,
+          "h": 162,
+          "sw": 395,
+          "sh": 178,
+          "cw": 395,
+          "ch": 162
+        },
+        {
+          "tag": "DIV",
+          "cls": "proof-collage",
+          "text": "Gia đình cùng khám phá Khoảnh workshop giúp phụ huynh và trẻ em cùng chăm chú vào một trải nghiệm ch",
+          "w": 395,
+          "h": 475,
+          "sw": 395,
+          "sh": 494,
+          "cw": 395,
+          "ch": 475
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Khoảnh workshop giúp phụ huynh và trẻ em cùng chăm chú vào một trải nghiệm chung.",
+          "w": 176,
+          "h": 29,
+          "sw": 178,
+          "sh": 44,
+          "cw": 178,
+          "ch": 29
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Bộ kit gọn nhẹ để STEM tiếp tục sau giờ học, ngay trên bàn ăn hay góc học tập.",
+          "w": 176,
+          "h": 29,
+          "sw": 178,
+          "sh": 44,
+          "cw": 178,
+          "ch": 29
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Mỗi điểm dừng là một cụm trải nghiệm mở để kéo nhiều nhóm tuổi vào cùng một mạch câu chuyện.",
+          "w": 176,
+          "h": 29,
+          "sw": 178,
+          "sh": 58,
+          "cw": 178,
+          "ch": 29
+        },
+        {
+          "tag": "P",
+          "cls": "",
+          "text": "Từ storyboard đến mini game, kết quả luôn hữu hình để người học tự kể lại tiến trình của mình.",
+          "w": 176,
+          "h": 29,
+          "sw": 178,
+          "sh": 44,
+          "cw": 178,
+          "ch": 29
+        }
+      ]
+    },
+    "messages": [
+      {
+        "type": "warning",
+        "text": "[.WebGL-0x27c4025e0600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0x27c4025e0600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0x27c4025e0600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+      },
+      {
+        "type": "warning",
+        "text": "[.WebGL-0x27c4025e0600]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+      }
+    ]
+  }
+]

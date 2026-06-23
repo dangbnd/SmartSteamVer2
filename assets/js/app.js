@@ -105,6 +105,7 @@
   const transitionTuning = runtimeTuning.transitions || {};
   const ASSET_VERSION = runtimeTuning.assetVersion ? `?v=${runtimeTuning.assetVersion}` : "";
   const THREE_MODULE_URL = "/assets/vendor/three/three.module.min.js";
+  const GLTF_LOADER_MODULE_URL = "/assets/vendor/three/GLTFLoader.js";
   const PUBLIC_ARCHIVE_ENDPOINT = `/assets/data/archive.json${ASSET_VERSION}`;
   const PUBLIC_PRODUCTS_ENDPOINT = `/assets/data/products.json${ASSET_VERSION}`;
   const PUBLIC_PROJECTS_ENDPOINT = `/assets/data/projects.json${ASSET_VERSION}`;
@@ -158,12 +159,13 @@
   const THEME_DEFAULT_VERSION_STORAGE_KEY = "smartsteam:theme-default-version";
   const LIGHT_THEME_DEFAULT_VERSION = "20260604-light";
   const PROJECT_ARCHIVE_SCROLL_KEY = "smartsteam:project-archive-scroll";
-  const PERFORMANCE_PROFILE_STORAGE_KEY = "smartsteam:performance-profile:v3";
+  const PERFORMANCE_PROFILE_STORAGE_KEY = "smartsteam:performance-profile:v4";
   const PERFORMANCE_MODES = ["auto", "full", "balanced", "safe"];
   const PERFORMANCE_MODE_RANK = { full: 0, balanced: 1, safe: 2 };
   const BACKGROUND_3D_PAGES = new Set(["welcome", "products", "projects", "tutorials", "news", "contact"]);
   const SHARED_3D_BACKGROUND_PAGES = new Set(["projects", "tutorials", "news", "contact"]);
   let threeModulePromise = null;
+  let gltfLoaderModulePromise = null;
 
   const performanceModeListeners = new Set();
   const performanceModeState = {
@@ -202,6 +204,11 @@
     return getPerformanceQueryMode() || "auto";
   }
 
+  function shouldEnableHeavyBackground() {
+    const requestedMode = getPerformanceQueryMode();
+    return requestedMode === "balanced" || requestedMode === "full";
+  }
+
   function isMobileViewport() {
     return Math.min(window.innerWidth || 9999, window.innerHeight || 9999) <= 760;
   }
@@ -235,7 +242,7 @@
     }
     try {
       const profile = JSON.parse(localStorage.getItem(PERFORMANCE_PROFILE_STORAGE_KEY) || "null");
-      if (!profile || profile.version !== 3) return null;
+      if (!profile || profile.version !== 4) return null;
       if (profile.signature !== getPerformanceSignature(details)) return null;
       const mode = normalizePerformanceMode(profile.mode);
       if (!mode || mode === "auto") return null;
@@ -275,7 +282,7 @@
   function createPerformanceProfile(details) {
     const mode = chooseAutoPerformanceMode(details);
     const profile = {
-      version: 3,
+      version: 4,
       mode,
       signature: getPerformanceSignature(details),
       createdAt: Date.now(),
@@ -337,14 +344,7 @@
   }
 
   function chooseAutoPerformanceMode(details) {
-    if (!details || !details.webgl) return "safe";
-    if (reducedMotion) return "safe";
-    if (details.softwareLike) return isMobilePerformanceTarget(details) ? "safe" : "safe";
-    if (isMobilePerformanceTarget(details) && (details.lowCpu || details.lowMemory)) return "safe";
-    if (isMobilePerformanceTarget(details) && details.pixelWork > 2600000) return "balanced";
-    if (details.weakGpu || details.lowCpu || details.lowMemory) return "balanced";
-    if (details.integratedGpu && details.pixelWork > 2600000) return "balanced";
-    return "full";
+    return "safe";
   }
 
   function applyPerformanceModeState(reason) {
@@ -413,7 +413,7 @@
     if (nextMode === currentMode) return false;
     const details = performanceModeState.details || detectPerformanceDetails();
     savePerformanceProfile({
-      version: 3,
+      version: 4,
       mode: nextMode,
       signature: getPerformanceSignature(details),
       createdAt: Date.now(),
@@ -472,7 +472,7 @@
   }
 
   function pageSupportsBackgroundMotion() {
-    return BACKGROUND_3D_PAGES.has(page) && !shouldFreezeBackgroundMotionForRuntime();
+    return BACKGROUND_3D_PAGES.has(page) && shouldEnableHeavyBackground() && !shouldFreezeBackgroundMotionForRuntime();
   }
 
   function getBackgroundMotionProfile(isProductCanvas, sceneEl, lowPowerDevice) {
@@ -815,6 +815,11 @@
   function loadThreeModule() {
     if (!threeModulePromise) threeModulePromise = import(THREE_MODULE_URL);
     return threeModulePromise;
+  }
+
+  function loadGltfLoaderModule() {
+    if (!gltfLoaderModulePromise) gltfLoaderModulePromise = import(`${GLTF_LOADER_MODULE_URL}${ASSET_VERSION}`);
+    return gltfLoaderModulePromise;
   }
 
   function getWelcomeThemeLabels() {
@@ -3824,7 +3829,7 @@
     var RADIUS = window.innerWidth < 900 ? 380 : 520;
     var TOTAL = demoProducts.length;
     var goldenAngle = Math.PI * (3 - Math.sqrt(5));
-    var mobileProductCardImagesInline = window.innerWidth < 760;
+    var mobileProductCardImagesInline = false;
 
     // Store card positions for hover-to-center
     var cardPositions = [];
@@ -3920,26 +3925,26 @@
       var mobile = window.innerWidth < 760;
       if (mode === 'safe') {
         return {
-          visibleLimit: mobile ? 4 : 8,
-          visibleBatch: mobile ? 2 : 3,
-          firstBatch: mobile ? 5 : 12,
-          firstBatchSize: mobile ? 2 : 3,
-          firstDelay: 260,
-          idleBatchSize: mobile ? 2 : 3,
-          idleMaxBatch: mobile ? 0 : 4,
-          idleStartDelay: 1250,
-          idleStepDelay: 260,
+          visibleLimit: mobile ? 8 : 14,
+          visibleBatch: mobile ? 3 : 5,
+          firstBatch: mobile ? 24 : 54,
+          firstBatchSize: mobile ? 4 : 6,
+          firstDelay: 120,
+          idleBatchSize: mobile ? 3 : 5,
+          idleMaxBatch: mobile ? 3 : 5,
+          idleStartDelay: 900,
+          idleStepDelay: 320,
         };
       }
       if (mode === 'balanced') {
         return {
           visibleLimit: mobile ? 5 : 10,
           visibleBatch: mobile ? 3 : 4,
-          firstBatch: mobile ? 7 : 18,
+          firstBatch: mobile ? 5 : 10,
           firstBatchSize: mobile ? 3 : 5,
           firstDelay: 180,
           idleBatchSize: mobile ? 2 : 4,
-          idleMaxBatch: mobile ? 0 : 6,
+          idleMaxBatch: 0,
           idleStartDelay: 980,
           idleStepDelay: 210,
         };
@@ -3947,11 +3952,11 @@
       return {
         visibleLimit: mobile ? 6 : 12,
         visibleBatch: mobile ? 4 : 6,
-        firstBatch: mobile ? 9 : 24,
+        firstBatch: mobile ? 6 : 12,
         firstBatchSize: mobile ? 4 : 7,
         firstDelay: 110,
         idleBatchSize: mobile ? 3 : 5,
-        idleMaxBatch: mobile ? 0 : 8,
+        idleMaxBatch: 0,
         idleStartDelay: 760,
         idleStepDelay: 170,
       };
@@ -3963,6 +3968,7 @@
     var galaxyVisibleImageFrame = 0;
     var lastVisibleImageLoadAt = 0;
     var lastGridImageLoadAt = 0;
+    var safeVisibleImageBudget = window.innerWidth < 760 ? 32 : 54;
 
     function isMobileProductLite() {
       return window.innerWidth < 760;
@@ -3995,8 +4001,15 @@
 
     function loadVisibleGalaxyImages(force) {
       if (layoutMode !== 'sphere') return;
+      if (getCurrentPerformanceMode() === 'safe' && !force) {
+        var loadedCount = cardNodes.filter(function(card) {
+          var image = card.querySelector('img[data-media-loaded="true"]');
+          return !!image;
+        }).length;
+        if (loadedCount >= safeVisibleImageBudget) return;
+      }
       var now = performance.now ? performance.now() : Date.now();
-      if (!force && now - lastVisibleImageLoadAt < 260) return;
+      if (!force && now - lastVisibleImageLoadAt < (getCurrentPerformanceMode() === 'safe' ? 420 : 260)) return;
       lastVisibleImageLoadAt = now;
       var plan = getGalaxyImageLoadPlan();
       loadGalaxyImages(getVisibleGalaxyImages(plan.visibleLimit), plan.visibleBatch);
@@ -4206,7 +4219,7 @@
     }
 
     function getAutoSpinSpeed() {
-      return AUTO_SPIN_SPEED;
+      return getCurrentPerformanceMode() === 'safe' ? 0.03 : AUTO_SPIN_SPEED;
     }
 
     function pauseSphereByUser() {
@@ -5747,9 +5760,9 @@
         });
       });
 
-      loadGalaxyImages(visibleGridCards.slice(0, mobileLite ? 10 : visibleGridCards.length).map(function(entry) {
+      loadGalaxyImages(visibleGridCards.slice(0, mobileLite ? 8 : 18).map(function(entry) {
         return entry.card.querySelector('img[data-src]');
-      }), mobileLite ? 2 : 5);
+      }), mobileLite ? 2 : 4);
 
       var boardContentHeight = 0;
       var rowCursor = firstY;
@@ -6423,6 +6436,7 @@
     function getProductOrbitFrameInterval() {
       var mode = getCurrentPerformanceMode();
       if (layoutMode === 'grid') return mode === 'safe' ? 66 : (mode === 'balanced' ? 42 : 16);
+      if (mode === 'safe') return 33;
       return PRODUCT_SPHERE_FRAME_INTERVAL;
     }
 
@@ -9548,7 +9562,7 @@
     const hero = $(".mission-hero", root);
     const layers = $$("[data-mission-layer]", root);
     const livePanels = $$("[data-mission-panel], .mission-hud__panel, .mission-hud__orbital, .process-step, .proof-collage__tile", root);
-    const staticMobileWelcome = page === "welcome" && isMobileViewport();
+    const staticWelcome = page === "welcome" && (isMobileViewport() || getCurrentPerformanceMode() === "safe");
     const pointer = { x: 0, y: 0, targetX: 0, targetY: 0 };
     let pointerRaf = 0;
     let scrollRaf = 0;
@@ -9625,7 +9639,7 @@
       livePanels.forEach((panel) => panel.classList.add("is-mission-live"));
     }
 
-    if (staticMobileWelcome) {
+    if (staticWelcome) {
       applyStaticMobileFrame();
     } else {
       window.addEventListener("pointermove", handlePointer, { passive: true });
@@ -9669,6 +9683,44 @@
 
       const stage = new THREE.Group();
       scene.add(stage);
+
+      function pickBackgroundModelValue(value, fallback) {
+        if (value && typeof value === "object" && !Array.isArray(value)) {
+          if (Object.prototype.hasOwnProperty.call(value, page)) return value[page];
+          if (isProductCanvas && Object.prototype.hasOwnProperty.call(value, "products")) return value.products;
+          if (Object.prototype.hasOwnProperty.call(value, "default")) return value.default;
+        }
+        return value === undefined ? fallback : value;
+      }
+
+      function readModelTuple(value, fallback) {
+        const source = Array.isArray(value) ? value : [];
+        return [0, 1, 2].map((index) => {
+          const nextValue = Number(source[index]);
+          return Number.isFinite(nextValue) ? nextValue : fallback[index];
+        });
+      }
+
+      function getBackgroundModelConfig() {
+        const modelConfig = runtimeTuning.backgroundModel || {};
+        if (!modelConfig || modelConfig.enabled === false) return null;
+        const allowedPages = Array.isArray(modelConfig.pages) ? modelConfig.pages : [];
+        if (allowedPages.length && !allowedPages.includes(page)) return null;
+        const source = resolveAssetSource(pickBackgroundModelValue(modelConfig.src, ""));
+        if (!source) return null;
+        const defaultPosition = isProductCanvas ? [0, 1.15, -19] : [4.6, 1.2, -19];
+        const fitSize = Number(pickBackgroundModelValue(modelConfig.fitSize, isProductCanvas ? 7.2 : 5.4));
+        return {
+          src: source,
+          fitSize: Number.isFinite(fitSize) && fitSize > 0 ? fitSize : (isProductCanvas ? 7.2 : 5.4),
+          position: readModelTuple(pickBackgroundModelValue(modelConfig.position, defaultPosition), defaultPosition),
+          rotation: readModelTuple(pickBackgroundModelValue(modelConfig.rotation, [0, 0, 0]), [0, 0, 0]),
+          spin: readModelTuple(pickBackgroundModelValue(modelConfig.spin, [0.0002, 0.001, 0.00008]), [0.0002, 0.001, 0.00008]),
+          showCoreWithModel: Boolean(modelConfig.showCoreWithModel),
+        };
+      }
+
+      const backgroundModelConfig = getBackgroundModelConfig();
 
       const particleCount = !supportsBackgroundMotion
         ? 180
@@ -9714,6 +9766,13 @@
       grid.rotation.z = 0.03;
       stage.add(grid);
 
+      const ambientLight = new THREE.AmbientLight(0xdffaff, isProductCanvas ? 1.35 : 1.15);
+      const keyLight = new THREE.DirectionalLight(0xffffff, isProductCanvas ? 2.25 : 1.75);
+      keyLight.position.set(-4.5, 5.2, 9);
+      const rimLight = new THREE.DirectionalLight(0x73e6ff, isProductCanvas ? 1.3 : 1.0);
+      rimLight.position.set(4.8, -1.8, 5.4);
+      scene.add(ambientLight, keyLight, rimLight);
+
       const coreMaterial = new THREE.MeshBasicMaterial({
         color: 0x86ddff,
         wireframe: true,
@@ -9725,6 +9784,106 @@
       const core = new THREE.Mesh(new THREE.IcosahedronGeometry(isProductCanvas ? 3.2 : 2.55, 2), coreMaterial);
       core.position.set(isProductCanvas ? 0 : 4.6, 1.2, -19);
       stage.add(core);
+
+      const backgroundModelHost = new THREE.Group();
+      backgroundModelHost.visible = false;
+      stage.add(backgroundModelHost);
+      let backgroundModelReady = false;
+      const backgroundModelSpin = new THREE.Vector3(0, 0, 0);
+
+      function markBackgroundModelFallback() {
+        backgroundModelReady = false;
+        backgroundModelHost.visible = false;
+        core.visible = true;
+        canvas.dataset.backgroundModel = backgroundModelConfig ? "fallback" : "off";
+      }
+
+      function readBackgroundModelBounds(modelRoot) {
+        const bounds = new THREE.Box3().setFromObject(modelRoot);
+        const size = new THREE.Vector3();
+        const center = new THREE.Vector3();
+        bounds.getSize(size);
+        bounds.getCenter(center);
+        const maxSize = Math.max(size.x, size.y, size.z);
+        if (!Number.isFinite(maxSize) || maxSize <= 0 || bounds.isEmpty()) return null;
+        return { center, maxSize };
+      }
+
+      function tuneBackgroundModelMaterial(material) {
+        if (!material) return;
+        material.depthWrite = true;
+        material.depthTest = true;
+        if ("envMapIntensity" in material) material.envMapIntensity = Math.max(material.envMapIntensity || 0, 0.8);
+        if ("roughness" in material) material.roughness = Math.min(Math.max(material.roughness || 0.38, 0.18), 0.72);
+        if ("metalness" in material) material.metalness = Math.min(Math.max(material.metalness || 0.12, 0), 0.65);
+        material.needsUpdate = true;
+      }
+
+      function prepareBackgroundModel(modelRoot) {
+        modelRoot.traverse((object) => {
+          eachMaterial(object.material, tuneBackgroundModelMaterial);
+          if (object.isMesh) {
+            object.castShadow = false;
+            object.receiveShadow = false;
+          }
+        });
+
+        modelRoot.updateWorldMatrix(true, true);
+        const modelBounds = readBackgroundModelBounds(modelRoot);
+        if (!modelBounds) return false;
+
+        modelRoot.position.sub(modelBounds.center);
+        backgroundModelHost.scale.setScalar(backgroundModelConfig.fitSize / modelBounds.maxSize);
+        backgroundModelHost.position.fromArray(backgroundModelConfig.position);
+        backgroundModelHost.rotation.set(
+          backgroundModelConfig.rotation[0],
+          backgroundModelConfig.rotation[1],
+          backgroundModelConfig.rotation[2]
+        );
+        backgroundModelSpin.fromArray(backgroundModelConfig.spin);
+        return true;
+      }
+
+      async function backgroundModelSourceExists(source) {
+        if (!source || source.startsWith("data:")) return Boolean(source);
+        try {
+          const response = await fetch(source, { method: "HEAD", cache: "force-cache" });
+          if (response.ok) return true;
+          return response.status === 405 || response.status === 501;
+        } catch (error) {
+          return isRemoteMediaSource(source);
+        }
+      }
+
+      async function loadBackgroundModel() {
+        markBackgroundModelFallback();
+        if (!backgroundModelConfig) return;
+        const sourceExists = await backgroundModelSourceExists(backgroundModelConfig.src);
+        if (!sourceExists || isDisposed) return;
+
+        try {
+          const { GLTFLoader } = await loadGltfLoaderModule();
+          if (isDisposed) return;
+          const loader = new GLTFLoader();
+          const gltf = await loader.loadAsync(backgroundModelConfig.src);
+          if (isDisposed) return;
+          const modelRoot = gltf.scene || (Array.isArray(gltf.scenes) && gltf.scenes[0]);
+          if (!modelRoot || !prepareBackgroundModel(modelRoot)) {
+            markBackgroundModelFallback();
+            return;
+          }
+          backgroundModelHost.clear();
+          backgroundModelHost.add(modelRoot);
+          backgroundModelHost.visible = true;
+          backgroundModelReady = true;
+          core.visible = backgroundModelConfig.showCoreWithModel;
+          canvas.dataset.backgroundModel = "ready";
+          renderer.render(scene, camera);
+          requestLoop();
+        } catch (error) {
+          markBackgroundModelFallback();
+        }
+      }
 
       function createOrbit(radius, squash, color, opacity, tilt) {
         const points = [];
@@ -9968,6 +10127,11 @@
           grid.position.z = -18 + ((elapsed * 8.5) % 6);
           core.rotation.x += 0.0012 * motionDelta;
           core.rotation.y += 0.0016 * motionDelta;
+          if (backgroundModelReady) {
+            backgroundModelHost.rotation.x += backgroundModelSpin.x * motionDelta;
+            backgroundModelHost.rotation.y += backgroundModelSpin.y * motionDelta;
+            backgroundModelHost.rotation.z += backgroundModelSpin.z * motionDelta;
+          }
           orbits.forEach((orbit, index) => {
             orbit.rotation.z += (index === 1 ? -1 : 1) * (0.00072 + index * 0.00018) * motionDelta;
             orbit.rotation.y += (index === 1 ? 0.00042 : -0.00034) * motionDelta;
@@ -9999,6 +10163,7 @@
       resize();
       applyPalette();
       renderer.render(scene, camera);
+      loadBackgroundModel();
       requestLoop();
 
       registerPageCleanup(root, () => {
@@ -10024,6 +10189,13 @@
       if (canvas.isConnected) canvas.dataset.hero3dReady = "true";
       return value;
     };
+
+    if (!shouldEnableHeavyBackground()) {
+      canvas.dataset.renderer = "static";
+      canvas.dataset.performanceMode = getCurrentPerformanceMode();
+      canvas.__smartsteam3DReadyPromise = Promise.resolve(markReady(false));
+      return canvas.__smartsteam3DReadyPromise;
+    }
 
     if (canvas.dataset.fallback2d !== "true" && supportsWebGLCanvas()) {
       canvas.__smartsteam3DReadyPromise = initThreeHero3DCanvas(root, canvas).then(() => markReady(true)).catch(() => {

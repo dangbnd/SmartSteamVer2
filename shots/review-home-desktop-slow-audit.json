@@ -1,0 +1,220 @@
+{
+  "height": 8017,
+  "sections": [
+    {
+      "i": 0,
+      "cls": "welcome-flow js-mission-experience",
+      "y": 120,
+      "h": 7374,
+      "visibleText": "TRẠM ĐIỀU PHỐI STEM LEARNING UNIVERSE Vũ trụ STEM sống động. Trẻ em bước vào khoa học, robotics, coding và sáng tạo qua "
+    },
+    {
+      "i": 1,
+      "cls": "scene scene--hero mission-hero tone-dawn",
+      "y": 120,
+      "h": 800,
+      "visibleText": "TRẠM ĐIỀU PHỐI STEM LEARNING UNIVERSE Vũ trụ STEM sống động. Trẻ em bước vào khoa học, robotics, coding và sáng tạo qua "
+    },
+    {
+      "i": 2,
+      "cls": "scene scene--discovery tone-paper",
+      "y": 952,
+      "h": 691,
+      "visibleText": "STEM STORYTELLING STUDIO Khám phá thế giới qua những câu chuyện STEM Chúng tôi truyền cảm hứng cho thế hệ trẻ khám phá k"
+    },
+    {
+      "i": 3,
+      "cls": "scene scene--process tone-ink",
+      "y": 1675,
+      "h": 754,
+      "visibleText": "SCENE 03 / TIME, PROCESS, GROWTH Thời gian học được nhìn như một quỹ đạo, không phải một widget. Scene này thay chiếc đồ"
+    },
+    {
+      "i": 4,
+      "cls": "scene scene--cluster tone-soft",
+      "y": 2461,
+      "h": 828,
+      "visibleText": "SCENE 04 / IMPACT CLUSTER Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa lớp học, gia đình v"
+    },
+    {
+      "i": 5,
+      "cls": "scene scene--values tone-paper",
+      "y": 3321,
+      "h": 1434,
+      "visibleText": "SCENE 05 / VALUES IN RHYTHM Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng feature card tròn trị"
+    },
+    {
+      "i": 6,
+      "cls": "scene scene--collage tone-light",
+      "y": 4787,
+      "h": 1841,
+      "visibleText": "SCENE 06 / VISUAL PROOF Bằng chứng thị giác cần giống một thế giới sống, không chỉ là thumbnail sản phẩm. Các tile ảnh c"
+    },
+    {
+      "i": 7,
+      "cls": "scene scene--closing tone-night",
+      "y": 6661,
+      "h": 801,
+      "visibleText": "SCENE 07 / RESOLUTION Nếu bạn đã đọc tới đây, có lẽ điều cần tiếp theo không phải thêm thông tin. Đó là một cuộc trò chu"
+    }
+  ],
+  "post": {
+    "scroll": {
+      "w": 1425,
+      "h": 8017,
+      "overflowX": -15
+    },
+    "sections": [
+      {
+        "i": 0,
+        "cls": "welcome-flow js-mission-experience",
+        "y": 120,
+        "h": 7374,
+        "text": "TRẠM ĐIỀU PHỐI STEM LEARNING UNIVERSE Vũ trụ STEM sống động. Trẻ em bước vào khoa học, robotics, coding và sáng tạo qua những mô hình có thể chạm, thử, sửa và k",
+        "opacity": "1"
+      },
+      {
+        "i": 1,
+        "cls": "scene scene--hero mission-hero tone-dawn",
+        "y": 120,
+        "h": 800,
+        "text": "TRẠM ĐIỀU PHỐI STEM LEARNING UNIVERSE Vũ trụ STEM sống động. Trẻ em bước vào khoa học, robotics, coding và sáng tạo qua những mô hình có thể chạm, thử, sửa và k",
+        "opacity": "1"
+      },
+      {
+        "i": 2,
+        "cls": "scene scene--discovery tone-paper",
+        "y": 952,
+        "h": 691,
+        "text": "STEM STORYTELLING STUDIO Khám phá thế giới qua những câu chuyện STEM Chúng tôi truyền cảm hứng cho thế hệ trẻ khám phá khoa học và công nghệ thông qua những câu",
+        "opacity": "1"
+      },
+      {
+        "i": 3,
+        "cls": "scene scene--process tone-ink",
+        "y": 1675,
+        "h": 754,
+        "text": "SCENE 03 / TIME, PROCESS, GROWTH Thời gian học được nhìn như một quỹ đạo, không phải một widget. Scene này thay chiếc đồng hồ demo cũ bằng một bố cục quỹ đạo: b",
+        "opacity": "1"
+      },
+      {
+        "i": 4,
+        "cls": "scene scene--cluster tone-soft",
+        "y": 2461,
+        "h": 828,
+        "text": "SCENE 04 / IMPACT CLUSTER Tác động không đến từ một điểm chạm duy nhất, mà từ mạng lưới kết nối giữa lớp học, gia đình và trường học. Thay vì ba card giống nhau",
+        "opacity": "1"
+      },
+      {
+        "i": 5,
+        "cls": "scene scene--values tone-paper",
+        "y": 3321,
+        "h": 1434,
+        "text": "SCENE 05 / VALUES IN RHYTHM Ba khác biệt cốt lõi được kể theo nhịp biên tập xen kẽ. Không còn hàng feature card tròn trịa. Phần này đổi sang những khối so le để",
+        "opacity": "1"
+      },
+      {
+        "i": 6,
+        "cls": "scene scene--collage tone-light",
+        "y": 4787,
+        "h": 1841,
+        "text": "SCENE 06 / VISUAL PROOF Bằng chứng thị giác cần giống một thế giới sống, không chỉ là thumbnail sản phẩm. Các tile ảnh cao thấp khác nhau cho cảm giác world-bui",
+        "opacity": "1"
+      },
+      {
+        "i": 7,
+        "cls": "scene scene--closing tone-night",
+        "y": 6661,
+        "h": 801,
+        "text": "SCENE 07 / RESOLUTION Nếu bạn đã đọc tới đây, có lẽ điều cần tiếp theo không phải thêm thông tin. Đó là một cuộc trò chuyện ngắn. Từ độ tuổi, quy mô nhóm đến bố",
+        "opacity": "1"
+      }
+    ],
+    "blankish": [
+      {
+        "cls": "values-spread values-spread--primary",
+        "text": "01 Cấu trúc đủ rõ để chọn nhanh Mọi chương trình đều gắn độ tuổi, chủ đề, hình t",
+        "opacity": "0",
+        "visibility": "visible"
+      },
+      {
+        "cls": "values-spread values-spread--secondary",
+        "text": "02 Trải nghiệm đủ mở để trẻ em tự kể lại quá trình của mình Khi sản phẩm cuối cù",
+        "opacity": "0",
+        "visibility": "visible"
+      },
+      {
+        "cls": "values-spread__media values-spread__media--secondary",
+        "text": "",
+        "opacity": "0",
+        "visibility": "visible"
+      },
+      {
+        "cls": "scene-quote values-scene__quote-main",
+        "text": "Chúng tôi không đóng gói STEM như một danh sách kỹ năng. Chúng tôi dựng nó như m",
+        "opacity": "0",
+        "visibility": "visible"
+      },
+      {
+        "cls": "scene-quote scene-quote--compact values-scene__quote-side",
+        "text": "Điều trẻ em nhớ lâu nhất không phải là bài giảng, mà là khoảnh khắc các em tự ta",
+        "opacity": "0",
+        "visibility": "visible"
+      },
+      {
+        "cls": "proof-collage__tile proof-collage__fragment-panel proof-collage__tile--fragment proof-collage__tile--quiet proof-collage__tile--caption-compact",
+        "text": "Makerspace roadshow Mỗi điểm dừng là một cụm trải nghiệm mở để kéo nhiều nhóm tu",
+        "opacity": "0",
+        "visibility": "visible"
+      },
+      {
+        "cls": "proof-collage__tile proof-collage__process-panel proof-collage__tile--process proof-collage__tile--soft proof-collage__tile--caption-stack",
+        "text": "Creative coding Từ storyboard đến mini game, kết quả luôn hữu hình để người học ",
+        "opacity": "0",
+        "visibility": "visible"
+      },
+      {
+        "cls": "proof-collage__tile proof-collage__banner-panel proof-collage__tile--banner proof-collage__tile--focus proof-collage__tile--caption-stack is-mission-live is-inview",
+        "text": "STEM Expo Khoảnh khắc tổng kết biến quá trình học thành điều có thể nhìn thấy và",
+        "opacity": "0",
+        "visibility": "visible"
+      },
+      {
+        "cls": "container closing-panel is-inview",
+        "text": "SCENE 07 / RESOLUTION Nếu bạn đã đọc tới đây, có lẽ điều cần tiếp theo không phả",
+        "opacity": "0",
+        "visibility": "visible"
+      },
+      {
+        "cls": "scene-actions",
+        "text": "Nhận tư vấn Xem archive dự án",
+        "opacity": "0",
+        "visibility": "visible"
+      },
+      {
+        "cls": "closing-panel__media is-inview",
+        "text": "",
+        "opacity": "0",
+        "visibility": "visible"
+      }
+    ]
+  },
+  "messages": [
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x24ec04bbf200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x24ec04bbf200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x24ec04bbf200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels"
+    },
+    {
+      "type": "warning",
+      "text": "[.WebGL-0x24ec04bbf200]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)"
+    }
+  ]
+}
